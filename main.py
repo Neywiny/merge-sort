@@ -1,7 +1,8 @@
 from random import randint
 from tqdm import tqdm
+from better import mergeSort
 
-def mergeSort(arr: list) -> dict():
+""" def mergeSort(arr: list) -> dict():
     comparisons: dict = dict()
     if len(arr) > 1: 
         mid:int = len(arr)//2 #Finding the mid of the array 
@@ -72,7 +73,7 @@ def mergeSort(arr: list) -> dict():
             arr[arrIndex] = R[rightIndex] 
             rightIndex += 1
             arrIndex += 1
-    return comparisons
+    return comparisons """
 
 if __name__ == "__main__":
     lMax:int = 100
@@ -80,19 +81,21 @@ if __name__ == "__main__":
         for i in range(lMax):
             f.write(str(i) + ',')
         f.write('\n')
-        for i in range(10):#tqdm(range(10)):
+        for i in tqdm(range(1000)):
             known:dict = dict()
-            l:list = [randint(0, lMax) for i in range(lMax)]
+            l:list = [randint(0, lMax - 1) for i in range(lMax)]
             sL = sorted(l)
             global count
-            count = 0
-            comparisons:dict = mergeSort(l)
-            for i in range(100):
-                if i in comparisons:
-                    f.write(str(comparisons[i]) + ',')
-                else:
-                    f.write("0,")
+            comp = mergeSort(l)
+            counts = dict()
+            for n in range(lMax):
+                counts[n] = 0
+            for comparison in comp.compHistory:
+                counts[comparison[0]] += 1
+                counts[comparison[1]] += 1
+            for n in range(lMax):
+                f.write(str(counts[n]) + ',')
             f.write('\n')
             if sL != l:
                 print("woops")
-            print(count)
+                print(l, sL)
