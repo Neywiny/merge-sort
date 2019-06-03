@@ -1,7 +1,7 @@
 from comparator import Comparator
 
-def mergeSort(arr: list):
-    comp = Comparator(arr,True)
+def mergeSort(arr: list, level = 2):
+    comp = Comparator(arr,level)
     if len(arr) != 0:
         sizes: list = [1 for i in range(len(arr))]
     #merge partitions

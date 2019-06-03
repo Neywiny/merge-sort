@@ -1,7 +1,7 @@
 class Comparator:
-    def __init__(self, objects: list = None, optimizing: bool = False):
+    def __init__(self, objects: list = None, level: int = 2):
         self.clearHistory()
-        self.optimizing = optimizing
+        self.level = level
         if objects != None:
             self.genLookup(objects)
     def compare(self, a, b):
@@ -14,10 +14,11 @@ class Comparator:
                 res = a < b
                 self.compHistory.append((a,b))
                 #print(a,b)
-                self.lookup[a][b] = res
-                self.lookup[b][a] = not res
+                if self.level > 0:
+                    self.lookup[a][b] = res
+                    self.lookup[b][a] = not res
 
-                if self.optimizing:
+                if self.level > 1:
                     #single optimization
                     for c in self.lookup[b].keys():
                         # for all c s.t. we know the relationship b/t b and c
