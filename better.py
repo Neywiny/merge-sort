@@ -1,6 +1,7 @@
 from comparator import Comparator
 
-def mergeSort(arr: list, level=3):
+    
+def mergeSort(arr: list, level=3) -> list:
     """mergeSort(arr: list, level=3)
     merge sorts the list arr with 'level' amount of optimization
     returns the Comparator object used"""
@@ -9,10 +10,10 @@ def mergeSort(arr: list, level=3):
         sizes: list = [1 for i in range(len(arr))]
     #merge partitions
     while sizes[0] < len(arr):
-        i = 0
-        start = 0
+        i:int = 0
+        start:int = 0
         while i < len(sizes) - 1:
-            size = sizes[i]
+            size:int = sizes[i]
             if merge(comp, arr, start, start + size, start + size + sizes[i + 1]):
                 if i + 1 < len(sizes):
                     sizes[i] += sizes[i + 1]
@@ -21,10 +22,10 @@ def mergeSort(arr: list, level=3):
                 start += size + sizes[i + 1]
             i += 1
             #print(arr, sizes)
-    return comp
+        yield arr
 
 
-def merge(comp, arr: list, start: int, mid: int, stop: int):
+def merge(comp, arr: list, start: int, mid: int, stop: int) -> bool:
     i = j = 0
     k = start
     L = arr[start:mid]
@@ -57,7 +58,7 @@ def merge(comp, arr: list, start: int, mid: int, stop: int):
     return True if R else False
 
 if __name__ == "__main__":
-    l = [2,6,8,9,6,4,2,4,7]
+    l:list = [2,6,8,9,6,4,2,4,7]
     print(l)
     mergeSort(l)
     print(l)
