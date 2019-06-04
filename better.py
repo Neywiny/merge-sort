@@ -1,6 +1,9 @@
 from comparator import Comparator
 
-def mergeSort(arr: list, level = 2):
+def mergeSort(arr: list, level=3):
+    """mergeSort(arr: list, level=3)
+    merge sorts the list arr with 'level' amount of optimization
+    returns the Comparator object used"""
     comp = Comparator(arr,level)
     if len(arr) != 0:
         sizes: list = [1 for i in range(len(arr))]
