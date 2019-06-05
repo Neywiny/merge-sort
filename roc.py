@@ -2,13 +2,18 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 from random import random
+from math import tanh
 
 from nearlySorted import nearlySorted
 
 def bLen(*args):
+    """bLen(*args) -> len(args)
+    a better version of len, which takes args because in python3 everything is a generator"""
     return len(args)
 
 def genROC(threshold:int, predicted:tuple):
+    """genROC(threshold:int, predicted:tuple) -> FPF, TPF
+    generates FPF and TPF numbers for a given threshold"""
     #predicted = tuple(map(lambda x: int(x > threshold), predicted))
     actual:tuple = tuple(int(i > threshold) for i in range(length))
     # generate sensitivity and specificity by totalling TP and TN, dividing by actually P and actually N
@@ -35,7 +40,7 @@ def genROC(threshold:int, predicted:tuple):
 
 if __name__ == "__main__":
     length:int = 100
-    predicted:list = [random() <  i/length for i in range(length)]
+    predicted:list = [random() <  1+tanh(1.5*(i/length - 1)) for i in range(length)]
     #predicted = [i < 50 for i in range(length)]
     print(predicted)
     line = []

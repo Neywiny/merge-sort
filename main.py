@@ -7,10 +7,13 @@ from nearlySorted import nearlySorted
 from roc import genROC
 
 def calcPC(arr:list) -> float:
-    #calc % correct
+    # calc % correct
     pc = 0
+
+    # add up all the times a pair is in order
     for i in range(len(arr) - 1):
         pc += 1 if arr[i] < arr[i + 1] else 0
+    # divide by total to get the average
     pc /= (i + 1)
     return pc
 
@@ -20,8 +23,8 @@ if __name__ == "__main__":
     levelMax:int = 3
     compLens = [0] * (levelMax + 1)
     with open("results.csv", "w") as f:
-        #level:int = 3
-        #if True:
+        # level:int = 3
+        # if True:
         for level in trange(levelMax + 1):
             counts:dict = dict()
             for n in range(lMax):

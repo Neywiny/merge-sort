@@ -8,6 +8,7 @@ def nearlySorted(maxi:int, factor:int) -> list:
     l:list = [i for i in range(maxi)]
     output:list = []
     pos:int = 0
+    # basic scheme: move through the array taking steps back randomly
     for i in range(maxi):
         if random() > (0.5 + (factor/100)):
             pos += 1

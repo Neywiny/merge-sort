@@ -10,13 +10,13 @@ class Comparator:
         based on optimization level, will not optimize, store result, or do abc association"""
         try:
             if b in self.lookup[a].keys():
-                #print("cache hit")
+                # print("cache hit")
                 return self.lookup[a][b]
             elif a in self.lookup[b].keys():
-                #print("cache hit")
+                # print("cache hit")
                 return self.lookup[b][a]
             else:
-                #print("cache miss", a, b)
+                # print("cache miss", a, b)
                 res:bool = a < b
                 self.compHistory += 1
                 if self.level > 0:
@@ -24,22 +24,22 @@ class Comparator:
                     self.lookup[b][a]:bool = not res
 
                 if self.level > 1:
-                    #print("optimizing")
-                    #single optimization
+                    # print("optimizing")
+                    # single optimization
                     for c in self.lookup[b].keys():
                         # for all c s.t. we know the relationship b/t b and c
-                        if self.lookup[b][c] == res:#a < b < c or a > b > c
-                            #print("optimized", a, c)
-                            self.lookup[a][c]:bool = res  #a < c or a > c 
+                        if self.lookup[b][c] == res:# a < b < c or a > b > c
+                            # print("optimized", a, c)
+                            self.lookup[a][c]:bool = res  # a < c or a > c 
                             self.lookup[c][a]:bool = not res
                     for c in self.lookup[a].keys():
                         # for all c s.t. we know the relationship b/t b and c
-                        if self.lookup[a][c] == (not res):#a < b < c or a > b > c
-                            #print("optimized", b, c)
-                            self.lookup[b][c]:bool = not res  #a < c or a > c 
+                        if self.lookup[a][c] == (not res):# a < b < c or a > b > c
+                            # print("optimized", b, c)
+                            self.lookup[b][c]:bool = not res  # a < c or a > c 
                             self.lookup[c][b]:bool = res
                 if self.level > 2:
-                    #O(n!) optimization. Make sure to use a copy of objects
+                    # O(n!) optimization. Make sure to use a copy of objects
                     Comparator.optimize(list(self.lookup.keys()), self.lookup, res, a, b)
                 return res
         except AttributeError as e:
@@ -58,11 +58,11 @@ class Comparator:
         if objects:
             nObjects:list = []
             for c in list(lookup[b]): 
-                #for all c s.t. c is a neighbor of b
+                # for all c s.t. c is a neighbor of b
                 if c in objects and lookup[b][c] == res and c != a and c not in lookup[a]: 
-                    #s.t. a > b > c or a < b < c
+                    # s.t. a > b > c or a < b < c
                     nObjects.append(c)
-                    #print("optimized", a, c)
+                    # print("optimized", a, c)
                     lookup[a][c]:bool = res
                     lookup[c][a]:bool = not res
                     Comparator.optimize(nObjects, lookup, res, b, c)
