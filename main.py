@@ -1,5 +1,5 @@
-from random import choice
-from tqdm import tqdm
+from random import choice, randint
+from tqdm import tqdm, trange
 from sklearn import metrics
 
 from better import mergeSort
@@ -16,27 +16,26 @@ def calcPC(arr:list) -> float:
 
 if __name__ == "__main__":
     lMax:int = 100
-    iters:int = 1
-    levelMax:int = 0
+    iters:int = 1000
+    levelMax:int = 3
+    compLens = [0] * (levelMax + 1)
     with open("results.csv", "w") as f:
-        for i in range(lMax):
-            f.write(str(i) + ',')
-        f.write('\n')
-        level:int = 0
-        if True:
-        #for level in tqdm(range(levelMax + 1)):
+        #level:int = 3
+        #if True:
+        for level in trange(levelMax + 1):
             counts:dict = dict()
             for n in range(lMax):
                 counts[n] = 0
-            for i in range(iters):#tqdm(range(iters)):
+            for i in trange(iters):
                 known:dict = dict()
                 lCopy:list = nearlySorted(lMax, 0)
                 actual = [*range(lMax)]
-                for arr in mergeSort(lCopy, level):
+                for arr,comp in mergeSort(lCopy, level, True):
+                    continue
                     print("PC:",calcPC(arr))
                     predictions = [arr.index(i) for i in range(lMax)]
                     confusion_matrix = metrics.confusion_matrix(actual, predictions)
-                    #print(confusion_matrix)
                     print("Jaccard:",metrics.jaccard_score(actual, predictions, average='weighted'))
-                    #print(genROC(arr, [*range(lMax//2)], [*range(lMax//2, lMax)]))
-            
+                compLens[level] += comp.compHistory
+            compLens[level] /= iters
+        print(compLens)

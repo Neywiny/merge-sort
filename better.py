@@ -1,7 +1,7 @@
 from comparator import Comparator
 
     
-def mergeSort(arr: list, level=3) -> list:
+def mergeSort(arr: list, level=3, retComp = False) -> list:
     """mergeSort(arr: list, level=3)
     merge sorts the list arr with 'level' amount of optimization
     returns the Comparator object used"""
@@ -22,7 +22,7 @@ def mergeSort(arr: list, level=3) -> list:
                 start += size + sizes[i + 1]
             i += 1
             #print(arr, sizes)
-        yield arr
+        yield arr, comp if retComp else arr
 
 
 def merge(comp, arr: list, start: int, mid: int, stop: int) -> bool:
