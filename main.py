@@ -2,43 +2,34 @@ from random import choice, randint
 from tqdm import tqdm, trange
 from sklearn import metrics
 
-from better import mergeSort
-from nearlySorted import nearlySorted
-from roc import genROC
-
-def calcPC(arr:list) -> float:
-    # calc % correct
-    pc = 0
-
-    # add up all the times a pair is in order
-    for i in range(len(arr) - 1):
-        pc += 1 if arr[i] < arr[i + 1] else 0
-    # divide by total to get the average
-    pc /= (i + 1)
-    return pc
+from DylSort import mergeSort
+from DylRand import nearlySorted, randomDisease
+from DylMath import graphROCs
+from DylUtils import *
 
 if __name__ == "__main__":
-    lMax:int = 100
-    iters:int = 1000
-    levelMax:int = 3
+    lMax: int = 256
+    iters: int = 1
+    levelMax: int = 1
     compLens = [0] * (levelMax + 1)
     with open("results.csv", "w") as f:
-        # level:int = 3
-        # if True:
-        for level in trange(levelMax + 1):
+        level: int = 1
+        if True:
+        #for level in trange(levelMax + 1):
             counts:dict = dict()
             for n in range(lMax):
                 counts[n] = 0
-            for i in trange(iters):
+            for i in range(iters):
                 known:dict = dict()
-                lCopy:list = nearlySorted(lMax, 0)
+                #lCopy: list = nearlySorted(lMax, 0)
+                lCopy = randomDisease(lMax)
                 actual = [*range(lMax)]
-                for arr,comp in mergeSort(lCopy, level, True):
-                    continue
-                    print("PC:",calcPC(arr))
-                    predictions = [arr.index(i) for i in range(lMax)]
-                    confusion_matrix = metrics.confusion_matrix(actual, predictions)
-                    print("Jaccard:",metrics.jaccard_score(actual, predictions, average='weighted'))
+                arrs = [tuple(lCopy)]
+                print("sorting")
+                for arr,comp in tqdm(mergeSort(lCopy, level, True)):
+                    arrs.append(tuple(arr))
+                print("generating ROC's")
+                graphROCs(arrs)
                 compLens[level] += comp.compHistory
             compLens[level] /= iters
         print(compLens)
