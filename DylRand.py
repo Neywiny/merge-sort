@@ -37,7 +37,7 @@ if __name__ == "__main__":
     maxi: int = 100
 
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(121, projection='3d')
     for factor in range(50):
         output: list = nearlySorted(maxi, factor)
         outputs.append(output)
@@ -48,8 +48,18 @@ if __name__ == "__main__":
     Z = np.array(outputs)
 
     ax.plot_surface(X, Y, Z)
-
+    ax.view_init(azim=150,elev=20)
     ax.set_xlabel('i')
     ax.set_ylabel('factor')
     ax.set_zlabel('l[pos]')
+    
+    ax = fig.add_subplot(122)
+    maxi = 100
+    ax.plot(*zip(*enumerate(randomDisease(maxi))))
+    ax.plot((0,maxi), (maxi//2,maxi//2), c='r', ls=':')
+    ax.plot((maxi//2,maxi//2), (0,maxi), c='g', ls=':')
+
+    ax.set_xlabel('index')
+    ax.set_ylabel('guess')
+
     plt.show()
