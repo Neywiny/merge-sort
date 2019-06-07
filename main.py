@@ -1,6 +1,5 @@
-from random import choice, randint
 from tqdm import tqdm, trange
-from sklearn import metrics
+from math import log, ceil
 
 from DylSort import mergeSort
 from DylRand import nearlySorted, randomDisease
@@ -8,7 +7,7 @@ from DylMath import graphROCs
 from DylUtils import *
 
 if __name__ == "__main__":
-    lMax: int = 256
+    lMax: int = 2048
     iters: int = 1
     levelMax: int = 1
     compLens = [0] * (levelMax + 1)
@@ -26,7 +25,7 @@ if __name__ == "__main__":
                 actual = [*range(lMax)]
                 arrs = [tuple(lCopy)]
                 print("sorting")
-                for arr,comp in tqdm(mergeSort(lCopy, level, True)):
+                for arr,comp in tqdm(mergeSort(lCopy, level, True), total=ceil(log(len(lCopy), 2))):
                     arrs.append(tuple(arr))
                 print("generating ROC's")
                 graphROCs(arrs)

@@ -79,10 +79,8 @@ def graphROCs(arrays: list):
     fig, axes = plt.subplots(rows, cols, sharex=True, sharey=True, num="plots")
     fig.suptitle("ROC curves")
     
-    print("pooling")
-    with Pool(5) as p:
-        print("pooled")
-        results = p.map(genROC,arrays)
+    with Pool(processes=8) as p:
+        results = list(tqdm(p.imap(genROC,arrays), total=len(arrays)))
         print("resulted")
     for i,ax in enumerate(axes.flat):
         ax.set(xlabel="False Positive Fraction", ylabel="True Positive Fraction")
