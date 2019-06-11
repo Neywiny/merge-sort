@@ -1,7 +1,11 @@
+import ROC1
 import numpy as np
+np.set_printoptions(threshold=np.inf)
 import matplotlib
 matplotlib.use('QT4Agg')
 import matplotlib.pyplot as plt
+from matplotlib.collections import PatchCollection
+from matplotlib.patches import Rectangle
 from sklearn.metrics import roc_curve, auc
 from random import random
 from math import tanh, sqrt
@@ -11,11 +15,9 @@ from p_tqdm import p_map
 
 from DylRand import nearlySorted
 from DylUtils import *
+from DylData import *
 
-def var(arr: list) -> float:
-    """var(arr) -> binomial variance of the array"""
-    return pc*(1-pc)/len(arr)
-
+unbiasedMeanMatrixVar = ROC1.unbiasedMeanMatrixVar
 def stdev(inp: list) -> float:
     """std(inp) -> standard deviation of the input
     inp can be a list or the variance of that list"""
@@ -33,16 +35,22 @@ def pc(arr: list) -> float:
     # divide by total to get the average
     return sum((arr[i] < len(arr)/2) == (i < len(arr)/2) for i in range(len(arr))) / (len(arr) - 1)
 
+def var(arr: list, npc=None) -> float:
+    """var(arr) -> binomial variance of the array"""
+    if npc == None:
+        npc = pc(arr)
+    return npc*(1-npc)/len(arr)
+
 def auc(results: tuple) -> float:
     if type(results[0]) != tuple and type(results[0]) != list:
         results = genROC(results)
     total: float = 0.0
-    for i,(x,y) in enumerate(results):
-        try:
-            total += y * (x - results[i + 1][0])
-        except IndexError:
-            pass
+    for i,(x,y) in enumerate(results[:-1]):
+        total += y * (x - results[i + 1][0])
     return total
+
+def aucSM(sm) -> float:
+    return np.mean(sm)
 
 def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple: 
     def genFPFTPF(threshold: int, predicted: tuple, D0: tuple, D1: tuple):
@@ -62,8 +70,9 @@ def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple:
     actual: tuple = tuple(int(i > length/2 - 1) for i in range(length))
     if D0 == None:
         D0 = tuple((i for i in range(length//2)))
+    if D1 ==  None:
         D1 =  tuple((i for i in range(length//2, length)))
-    points = []
+    points: list = list()
     for i in range(length):
         points.append(genFPFTPF(i, predicted, D0, D1))
     points.append((0,0))
@@ -79,54 +88,88 @@ def graphROC(predicted: tuple, D0=None, D1=None):
     plt.gca().set(xlabel="False Positive Fraction", ylabel="True Positive Fraction") 
     plt.show()
 
-def graphROCs(arrays: list):
-    rows = 1
-    if not (len(arrays) % 2):
-        rows = 2
-    if not (len(arrays) % 3):
-        rows = 3
-    if not (len(arrays) % 4):
-        rows = 4
+def graphROCs(arrays: list, withPatches=False, withLine=True):
+    rows = int(sqrt(len(arrays)))
     cols = len(arrays) // rows
     fig, axes = plt.subplots(rows, cols, sharex=True, sharey=True, num="plots")
     fig.suptitle("ROC curves")
     
     #with Pool(processes=8) as p:
     #    results = list(tqdm(p.imap(genROC,arrays), total=len(arrays)))
-    results = p_map(genROC, arrays)
-
+    if withLine:
+        if len(arrays[0]) < 1024:
+            results = list(map(genROC, arrays))
+        else:
+            results = p_map(genROC, arrays)
+    if withPatches:
+        pbar = tqdm(total=len(arrays)*(len(arrays[0])//2)**2)
     for i,ax in enumerate(axes.flat):
         ax.set(xlabel="False Positive Fraction", ylabel="True Positive Fraction")
         ax.label_outer()
-        ax.plot(*zip(*results[i]), c='blue')
         ax.plot((0,1),(0,1),c='red', linestyle=":")
-        ax.set_title(f"Iteration #{i} PC: {int(pc(arrays[i]) * 100)}% AUC: {auc(results[i]):.2f}")
-    
+        if withLine:
+            ax.plot(*zip(*results[i]), c='blue')
+            ax.set_ylim(top=1.01, bottom=0)
+            ax.set_xlim(left=-0.01, right=1)
+            if not withPatches:
+                ax.set_title(f"Iteration #{i} AUC: {auc(results[i]):.2f}")
+        if withPatches:
+            sm = successMatrix(arrays[i])
+            yes = []
+            no = []
+            for (y,x), value in np.ndenumerate(sm):
+                if value:
+                    yes.append(Rectangle((x/(len(arrays[0])//2),y/(len(arrays[0])//2)),1/(len(arrays[0])//2),1/(len(arrays[0])//2)))
+                else:
+                    no.append(Rectangle((x/(len(arrays[0])//2),y/(len(arrays[0])//2)),1/(len(arrays[0])//2),1/(len(arrays[0])//2)))
+                pbar.update(1)
+            patches = PatchCollection(no, facecolor = 'r', alpha=0.75, edgecolor='None')
+            ax.add_collection(patches)
+            patches = PatchCollection(yes, facecolor = 'g', alpha=0.75, edgecolor='None')
+            ax.add_collection(patches)
+            area: float = 0.0
+            for box in yes:
+                area += box.get_height()*box.get_width()
+            ax.set_ylim(top=1, bottom=0)
+            ax.set_xlim(left=0, right=1)
+            #ax.set_title(f"Iteration #{i} PC: {int(len(yes)/(len(yes)+len(no)) * 100)}% AUC: {area:.2f}")
+            ax.set_title(f"Iteration #{i} PC: {int(pc(arrays[i])*100)}% AUC: {area:.2f}")
+    if withPatches:
+        pbar.close()
     figManager = plt.get_current_fig_manager()
     figManager.window.showMaximized()
     
     plt.show()
 
+def successMatrix(predicted: list, D0: list=None, D1: list=None):
+    if D0 == None:
+        D0 = [i for i in range(len(predicted) // 2)]
+    if D1 == None:
+        D1 = [i for i in range(len(predicted) // 2, len(predicted))]
+
+    arr = np.full((len(D1), len(D0)), -1)
+    for col, x in enumerate(reversed(D0)):
+        for row, y in enumerate(D1):
+            arr[row, col] = int(predicted.index(y) > predicted.index(x))
+    return arr
+
 if __name__ == "__main__":
-    data = []
-    D0 = []
-    D1 = []
-    with open("sampledata.csv") as f:
-        for i,line in enumerate(f):
-            if len(line) > 10:
-                line = line.strip().split(" ")
-                point = float(line[2])
-                data.append(point)
-                if line[1] == "1": # case should be positive
-                    D1.append(i)
-                else: # case should be negative
-                    D0.append(i)
-    newData = [-1 for i in range(len(data))]
-    #print(data)
-    for i, d in enumerate(sorted(data)):
-        newData[i] = data.index(d)
-    D0.sort()
-    D1.sort()
-    #print(D0, D1)
-    print(auc(genROC(newData)))
-    graphROC(newData, D0, D1)
+    from DylSort import mergeSort
+    test = 3
+    if test == 1:
+        #print(D0, D1) 
+        newData, D0, D1 = continuousScale("sampledata.csv")
+        print(auc(genROC(newData)))
+        arrays = [newData[:]]
+        for _ in mergeSort(newData):
+            arrays.append(newData[:])
+        print(arrays)
+        graphROCs(arrays)
+    elif test == 2:
+        predicted = [0, 1, 5, 2, 3, 6, 4, 7, 8, 9]
+        mat = successMatrix(predicted)
+        print(mat)
+        graphROC(predicted)
+    elif test == 3:
+        predicted = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+        print(aucSM(successMatrix(predicted, [*range(10)], [*range(10,20)])))

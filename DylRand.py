@@ -9,7 +9,7 @@ def nearlySorted(maxi: int, factor: int) -> list:
     the smoothness of the data is decided by 'factor'"""
 
     l: list = [i for i in range(maxi)]
-    output: list = []
+    output: list = list()
     pos: int = 0
     # basic scheme: move through the array taking steps back randomly
     for i in range(maxi):
@@ -26,14 +26,14 @@ def nearlySorted(maxi: int, factor: int) -> list:
     return output
 def randomDisease(lMax: int) -> list:
     data: list = list(range(lMax))
-    output: tuple = [data.pop(0) if (random() >  1+tanh(1.5*(i/lMax - 1))) else data.pop(len(data) - 1) for i in range(lMax)]
+    output: tuple = [data.pop(0) if (random() >  1+tanh(1.5*(i/lMax - 1))) else data.pop(-1) for i in range(lMax)]
     return output
 
 if __name__ == "__main__":
     from mpl_toolkits.mplot3d import Axes3D
     import matplotlib.pyplot as plt
     import numpy as np
-    outputs: list = []
+    outputs: list = list()
     maxi: int = 100
 
     fig = plt.figure()
