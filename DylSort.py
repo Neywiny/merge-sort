@@ -1,9 +1,9 @@
+import numpy as np
+
 from DylComp import Comparator
 from DylRand import *
 from DylMath import *
 from DylUtils import *
-
-from tqdm import tqdm, trange
 
 def swap(arr: list, indexA: int, indexB: int, sizes: list=None):
     if sizes == None: # swap elements
@@ -85,12 +85,13 @@ class Merger:
         return (self.indexA > self.indexARight) and (self.indexB > self.indexBRight)
         #return (self.outIndex == len(self.output)) or (self.outIndex == self.indexORight)
 
-def mergeSort(arr: list, level: int=3, retStats: bool=False, rand: bool=False) -> list:
+def mergeSort(arr: list, comp: Comparator=None, shuffle: bool=False, retStats: bool=False) -> list:
     """mergeSort(arr: list, level=3)
     merge sorts the list arr with 'level' amount of optimization
     yields the arr after each pass through
     also yields the stats used if retStats"""
-    comp = Comparator(arr,level, rand)
+    if comp == None:
+        comp = Comparator(arr,level, rand)
 
     # do this after comp created just in case
     if not arr:
@@ -109,7 +110,7 @@ def mergeSort(arr: list, level: int=3, retStats: bool=False, rand: bool=False) -
             #last group, odd one out
             if i + 1 >= len(sizes):
                 break
-            if level == 4:
+            if shuffle:
                 #if the next group comes before the current group:
                 s = 0
                 groups = []
@@ -124,7 +125,7 @@ def mergeSort(arr: list, level: int=3, retStats: bool=False, rand: bool=False) -
             #    print("switch places", arr, sizes, arr[start], arr[start + size + sizes[i + 1] - 1])
             
                              # if the current groups comes before the next group
-            elif level != 4 or comp(arr[start + size], arr[start + size - 1]): # if out of order
+            elif (not shuffle) or comp(arr[start + size], arr[start + size - 1]): # if out of order
                 # if there was a merge (will be false on the last of odd # partitions)
                 mid = start + size
                 stop = start + size + sizes[i + 1]
@@ -170,7 +171,8 @@ def mergeSort(arr: list, level: int=3, retStats: bool=False, rand: bool=False) -
             aucs.append(aucSM(sm))
             vars.append(unbiasedMeanMatrixVar(sm))
             start += size
-        stats = [sum(aucs) / len(sizes), sum(vars) / len(vars)]
+        npvar = np.var(aucs, ddof=1) / len(aucs)
+        stats = [sum(aucs) / len(sizes), sum(vars) / len(vars), float(npvar)]
         yield arr, stats if retStats else arr
 
 def merge(comp, arr: list, start: int, mid: int, stop: int) -> bool:

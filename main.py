@@ -1,12 +1,28 @@
-from tqdm import tqdm, trange
 from math import log, ceil
+import pickle
+import sys
+from multiprocessing import Pool
+from warnings import filterwarnings
 
 from DylSort import mergeSort, combsort
-from DylRand import *
 from DylMath import *
 from DylUtils import *
+from DylComp import Comparator
+
+def sort(tid):
+    results = list()
+    data = continuousScale(256)
+    sm = successMatrix(data)
+    comp = Comparator(data, level=3, rand=True)
+    for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True)):
+        stats.extend([len(comp), list(comp.minSeps.items())])
+        results.append(stats)
+    results.append(comp.compHistory)
+    return results
+
 
 if __name__ == "__main__":
+    filterwarnings('ignore')
     test = 3
     if test == 1:
         lMax: int = 2048
@@ -54,19 +70,15 @@ if __name__ == "__main__":
             #print(successMatrix(data))
         graphROCs(arrays, withLine=True,withPatches=True)
     elif test == 3:
-        iters = 1000
-        with open("variances.csv", "w") as vars:
-            with open("aucs.csv", "w") as aucs:
-                for i in trange(iters):
-                    data = continuousScale(256)
-                    sm = successMatrix(data)
-                    aucs.write(str(auc(data)) + ',')
-                    vars.write(str(unbiasedMeanMatrixVar(sm)) + ',')
-                    arrays = [data[:]]
-                    for arr, stats in mergeSort(data, level=0, retStats=True, rand=True):
-                        arrays.append(data[:])
-                        aucs.write(str(stats[0]) + ',')
-                        vars.write(str(stats[1]) + ',')
-                    aucs.write('\n')
-                    vars.write('\n')
-        #graphROCs(arrays, withPatches=False, withLine=True)
+        results = list()
+        if len(sys.argv) > 1:
+            iters = int(sys.argv[2])
+            ids = [*range(iters)]
+            with Pool() as p:
+                results = p.map(sort, ids)
+        else:
+            iters = 2
+            results = [sort(0) for i in range(iters)]
+        #change output file if requested to do so
+        with open('results/results'+str(sys.argv[1] if len(sys.argv) > 1 else ''), 'wb') as f:
+            pickle.dump(results, f)

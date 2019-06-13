@@ -1,5 +1,5 @@
 import numpy as np
-
+np.seterr(all="ignore")
 from DylUtils import *
 
 class Comparator:
@@ -7,6 +7,9 @@ class Comparator:
         self.clearHistory()
         self.rand = rand
         if rand:
+            from os import getpid, uname
+            # get a random seed for each node and each process on that node
+            np.random.seed(int(str(ord(uname()[1][-1])) + str(getpid())))
             self.neg = list(np.random.normal(size=len(objects)//2,loc=0))
             self.pos = list(np.random.normal(size=len(objects)//2,loc=1.7))
         self.level: int = level
@@ -34,59 +37,69 @@ class Comparator:
                 return self.lookup[b][a]
             else:
                 #only gets it right 80% of the time
+                needComp = True
                 if self.rand:
                     if a < len(self.objects) // 2: # a is neg dist
+                        aNeg = True
                         aScore = self.neg[a]
                     else: #a is pos dist
+                        aNeg = False
                         aScore = self.pos[a - len(self.objects) // 2]
 
                     if b < len(self.objects) // 2: # b is neg dist
+                        bNeg = True
                         bScore = self.neg[b]
                     else: #b is pos dist
+                        bNeg = False
                         bScore = self.pos[b - len(self.objects) // 2]
-                    res: bool = aScore < bScore
+
+                    if aNeg == bNeg: # no need to actually compare?
+                        needComp = False
+                        res: bool = True
+                    else:
+                        res: bool = aScore < bScore
                 else:
                     res: bool = a < b
+                if needComp:
+                    self.counts[a] += 1
+                    self.counts[b] += 1
 
-                self.counts[a] += 1
-                self.counts[b] += 1
+                    #count minimum separations
+                    for i,(compA, compB) in enumerate(reversed(self.compHistory)):
+                        if i < self.minSeps[a] and (a == compA or a == compB):
+                            self.minSeps[a] = i
+                        if i < self.minSeps[b] and (b == compA or b == compB):
+                            self.minSeps[b] = i
 
-                #count minimum separations
-                for i,(compA, compB) in enumerate(reversed(self.compHistory)):
-                    if i < self.minSeps[a] and (a == compA or a == compB):
-                        self.minSeps[a] = i
-                    if i < self.minSeps[b] and (b == compA or b == compB):
-                        self.minSeps[b] = i
+                    self.compHistory.append([a,b])
+                    if self.last:
+                        if a in self.last or b in self.last:
+                            self.dupCount += 1
+                    self.last = ((a, b))
+                    if self.level > 0:
+                        self.lookup[a][b]:bool = res
+                        self.lookup[b][a]:bool = not res
 
-                self.compHistory.append([a,b])
-                if self.last:
-                    if a in self.last or b in self.last:
-                        self.dupCount += 1
-                self.last = ((a, b))
-                if self.level > 0:
-                    self.lookup[a][b]:bool = res
-                    self.lookup[b][a]:bool = not res
-
-                if self.level > 1:
-                    # print("optimizing")
-                    # single optimization
-                    for c in self.lookup[b].keys():
-                        # for all c s.t. we know the relationship b/t b and c
-                        if self.lookup[b][c] == res:# a < b < c or a > b > c
-                            # print("optimized", a, c)
-                            self.lookup[a][c]:bool = res  # a < c or a > c 
-                            self.lookup[c][a]:bool = not res
-                            self.optCount += 1
-                    for c in self.lookup[a].keys():
-                        # for all c s.t. we know the relationship b/t b and c
-                        if self.lookup[a][c] == (not res):# a < b < c or a > b > c
-                            # print("optimized", b, c)
-                            self.lookup[b][c]:bool = not res  # a < c or a > c 
-                            self.lookup[c][b]:bool = res
-                            self.optCount += 1
-                if self.level > 2:
-                    # O(n!) optimization. Make sure to use a copy of objects
-                    self.optCount += Comparator.optimize(list(self.lookup.keys()), self.lookup, res, a, b)
+                    if self.level > 1:
+                        # print("optimizing")
+                        # single optimization
+                        for c in self.lookup[b].keys():
+                            # for all c s.t. we know the relationship b/t b and c
+                            if self.lookup[b][c] == res:# a < b < c or a > b > c
+                                # print("optimized", a, c)
+                                self.lookup[a][c]:bool = res  # a < c or a > c 
+                                self.lookup[c][a]:bool = not res
+                                self.optCount += 1
+                        for c in self.lookup[a].keys():
+                            # for all c s.t. we know the relationship b/t b and c
+                            if self.lookup[a][c] == (not res):# a < b < c or a > b > c
+                                # print("optimized", b, c)
+                                self.lookup[b][c]:bool = not res  # a < c or a > c 
+                                self.lookup[c][b]:bool = res
+                                self.optCount += 1
+                    if self.level > 2:
+                        # O(n!) optimization. Make sure to use a copy of objects
+                        self.optCount += Comparator.optimize(list(self.lookup.keys()), self.lookup, res, a, b)
                 return res
         except AttributeError as e:
             raise LookupError("You need to generate the lookup first")

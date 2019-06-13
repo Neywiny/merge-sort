@@ -1,17 +1,21 @@
 import ROC1
 import numpy as np
 np.set_printoptions(threshold=np.inf)
-import matplotlib
-matplotlib.use('QT4Agg')
-import matplotlib.pyplot as plt
-from matplotlib.collections import PatchCollection
-from matplotlib.patches import Rectangle
-from sklearn.metrics import roc_curve, auc
+np.seterr(all="ignore")
 from random import random
 from math import tanh, sqrt
 from tqdm import trange, tqdm
 from multiprocessing import Pool
-from p_tqdm import p_map
+#from p_tqdm import p_map
+try:
+    import alweifubwaef
+    import matplotlib
+    matplotlib.use('QT4Agg')
+    import matplotlib.pyplot as plt
+    from matplotlib.collections import PatchCollection
+    from matplotlib.patches import Rectangle
+except BaseException as e:
+    pass
 
 from DylRand import nearlySorted
 from DylUtils import *
@@ -72,7 +76,7 @@ def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple:
         D0 = tuple((i for i in range(length//2)))
     if D1 ==  None:
         D1 =  tuple((i for i in range(length//2, length)))
-    points: list = list()
+    points: list = [(1,1)]
     for i in range(length):
         points.append(genFPFTPF(i, predicted, D0, D1))
     points.append((0,0))
@@ -94,13 +98,12 @@ def graphROCs(arrays: list, withPatches=False, withLine=True):
     fig, axes = plt.subplots(rows, cols, sharex=True, sharey=True, num="plots")
     fig.suptitle("ROC curves")
     
-    #with Pool(processes=8) as p:
-    #    results = list(tqdm(p.imap(genROC,arrays), total=len(arrays)))
     if withLine:
         if len(arrays[0]) < 1024:
             results = list(map(genROC, arrays))
         else:
-            results = p_map(genROC, arrays)
+            with Pool(processes=8) as p:
+                results = list(tqdm(p.imap(genROC,arrays), total=len(arrays)))
     if withPatches:
         pbar = tqdm(total=len(arrays)*(len(arrays[0])//2)**2)
     for i,ax in enumerate(axes.flat):
@@ -109,7 +112,7 @@ def graphROCs(arrays: list, withPatches=False, withLine=True):
         ax.plot((0,1),(0,1),c='red', linestyle=":")
         if withLine:
             ax.plot(*zip(*results[i]), c='blue')
-            ax.set_ylim(top=1.01, bottom=0)
+            ax.set_ylim(top=1.02, bottom=0)
             ax.set_xlim(left=-0.01, right=1)
             if not withPatches:
                 ax.set_title(f"Iteration #{i} AUC: {auc(results[i]):.2f}")
