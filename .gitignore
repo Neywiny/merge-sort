@@ -1,2 +1,7 @@
 __pycache__/*
 .~lock.*
+dist/*
+build/*
+results/
+jobs
+node

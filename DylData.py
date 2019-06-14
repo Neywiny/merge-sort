@@ -2,6 +2,9 @@ import numpy as np
 np.seterr(all="ignore")
 
 def continuousScale(*args):
+    """creates a set of continuous scale data. 
+    If provided a filename, returns the indecies for sorting, D0, and D1
+    If provided a number, just creates and returns the indecies alternating from D0 and D1 indecies"""
     if isinstance(args[0], str):
         filename = args[0]
         data = []

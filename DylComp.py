@@ -3,15 +3,14 @@ np.seterr(all="ignore")
 from DylUtils import *
 
 class Comparator:
+    """A class for comparing 2 values.
+        Controlled with the optimizaiton level and if you want random decisions or not
+        Either provide objects in init or call .genLookup before you do any comparing
+        Optimization levels: will not optimize, store result, do abc association, do recursive association
+    """
     def __init__(self, objects: list = None, level: int = 3, rand: bool=False):
         self.clearHistory()
         self.rand = rand
-        if rand:
-            from os import getpid, uname
-            # get a random seed for each node and each process on that node
-            np.random.seed(int(str(ord(uname()[1][-1])) + str(getpid())))
-            self.neg = list(np.random.normal(size=len(objects)//2,loc=0))
-            self.pos = list(np.random.normal(size=len(objects)//2,loc=1.7))
         self.level: int = level
         self.compHistory = list()
         self.dupCount = 0
@@ -22,12 +21,13 @@ class Comparator:
             self.genLookup(objects)
         self.last: tuple = None
     def __len__(self):
+        """returns either the number of comparisons done"""
         return self.compHistory if type(self.compHistory) == int else len(self.compHistory)
     def __call__(self, a, b):
+        """returns a < b"""
         return self.compare(a,b)
     def compare(self, a, b) -> bool:
-        """returns a < b
-        based on optimization level, will not optimize, store result, or do abc association"""
+        """returns a < b"""
         try:
             if b in self.lookup[a].keys():
                 # print("cache hit")
@@ -104,26 +104,42 @@ class Comparator:
         except AttributeError as e:
             raise LookupError("You need to generate the lookup first")
     def genLookup(self, objects: list):
+        """generate the lookup table and statistics for each object provided"""
         self.lookup:dict = dict()
         self.objects: list = objects
         for object in objects:
             self.lookup[object] = dict()
             self.counts[object] = 0
             self.minSeps[object] = 2*len(objects)
+        if self.rand:
+            from os import getpid, uname
+            # get a random seed for each node and each process on that node
+            np.random.seed(int(str(ord(uname()[1][-1])) + str(getpid())))
+            self.neg = list(np.random.normal(size=len(objects)//2,loc=0))
+            self.pos = list(np.random.normal(size=len(objects)//2,loc=1.7))
     
     def clearHistory(self):
+        """clear the history statistics of comparisons"""
         self.compHistory = list()
+        self.last = None
+        self.dupCount = None
+        for object in self.objects:
+            self.counts[object] = 0
+            self.minSeps[object] = 2*len(objects)
 
     def learn(self, arr: list):
+        """learn the order of the array provided, assuming the current optimization level allows it"""
         if self.level > 1:
             for i, a in enumerate(arr):
                 for b in arr[i + 1:]:
                     self.lookup[a][b] = True
                     self.lookup[b][a] = False
-                    Comparator.optimize(self.objects, self.lookup, True, a, b)
+                    if self.level > 2:
+                        Comparator.optimize(self.objects, self.lookup, True, a, b)
 
     @staticmethod
     def optimize(objects: list, lookup: dict, res: bool, a, b):
+        """recursive optimization algorithm for adding a node to a fully connected graph"""
         if objects:
             nObjects: list = []
             for c in list(lookup[b]): 

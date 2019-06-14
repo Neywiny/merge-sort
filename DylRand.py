@@ -24,9 +24,10 @@ def nearlySorted(maxi: int, factor: int) -> list:
         output.append(l[pos])
         l.pop(pos)
     return output
-def randomDisease(lMax: int) -> list:
+def randomDisease(lMax: int, sharpness: float=1.5) -> list:
+    """creates a distribution of disease/nondisease as described by the tanh sigmoid with sharpness value either 1.5 or as provided"""
     data: list = list(range(lMax))
-    output: tuple = [data.pop(0) if (random() >  1+tanh(1.5*(i/lMax - 1))) else data.pop(-1) for i in range(lMax)]
+    output: tuple = [data.pop(0) if (random() >  1+tanh(sharpness*(i/lMax - 1))) else data.pop(-1) for i in range(lMax)]
     return output
 
 if __name__ == "__main__":

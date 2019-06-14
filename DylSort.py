@@ -6,6 +6,7 @@ from DylMath import *
 from DylUtils import *
 
 def swap(arr: list, indexA: int, indexB: int, sizes: list=None):
+    """swaps in arr either the indecies indexA and indexB, or the slices of the array as defined by 'sizes'"""
     if sizes == None: # swap elements
         temp = arr[indexA]
         arr[indexA] = arr[indexB]
@@ -23,6 +24,10 @@ def swap(arr: list, indexA: int, indexB: int, sizes: list=None):
             arr[start + index] = temp[index]
 
 class Merger:
+    """A class for merging 2 arrays into 1 array
+    Must feed it a comparator object. It can also hold onto start/stop indecies if you ask
+    'Toggle' parameter defines if you want to do a cocktail merge, as in switch which end you're merging from each call of inc()
+    """
     def __init__(self, groupA: list, groupB: list, comp: Comparator, start=0, stop=0, toggle:bool=True):
         self.groupA: list = groupA
         self.groupB: list = groupB
@@ -42,7 +47,9 @@ class Merger:
         #hold onto these for the parent object, they're a secret tool that will help us later
         self.start = start
         self.stop = stop
-    def inc(self):
+    def inc(self) -> bool:
+        """do a merge, and if configured, switch which end the next merge will be done from
+        returns True if the merge is completed"""
         if self.indexB == len(self.groupB):
             while self.indexA <= self.indexARight:
                 self.output[self.outIndex] = self.groupA[self.indexA]
@@ -87,6 +94,7 @@ class Merger:
 
 def mergeSort(arr: list, comp: Comparator=None, shuffle: bool=False, retStats: bool=False) -> list:
     """mergeSort(arr: list, level=3)
+    Can either be provided a comparator or will make its own
     merge sorts the list arr with 'level' amount of optimization
     yields the arr after each pass through
     also yields the stats used if retStats"""
@@ -175,15 +183,15 @@ def mergeSort(arr: list, comp: Comparator=None, shuffle: bool=False, retStats: b
         stats = [sum(aucs) / len(sizes), sum(vars) / len(vars), float(npvar)]
         yield arr, stats if retStats else arr
 
-def merge(comp, arr: list, start: int, mid: int, stop: int) -> bool:
+def merge(comp, arr: list, start: int, mid: int, stop: int):
+    """merges 2 slices of the array in place, as defined by arr[start] -> arr[mid], arr[mid] -> arr[stop]
+    no return value"""
     i = j = 0
     k = start
     L = arr[start:mid]
     if stop > len(arr):
         stop = len(arr)
     R = arr[mid:stop]
-    if len(L) != len(R):
-        print("unequal lengths", L, R)
     # print(start, mid, stop, L, R)
     # Copy data to temp arrays L[] and R[] 
     while i < len(L) and j < len(R): 
@@ -207,8 +215,11 @@ def merge(comp, arr: list, start: int, mid: int, stop: int) -> bool:
         j+=1
         k+=1
 
-def combsort(arr: list, level: int=3, retComp: bool=False, rand: bool=False) -> list:
-    comp = Comparator(arr, level)
+def combsort(arr: list, comp: Comparator=None level: int=3, retComp: bool=False, rand: bool=False) -> list:
+    """performs a combsort sorting algorithm either with the given comparator or a default one
+    yields the array and (if configured to to) the comparator after each pass through the array"""
+    if comp == None:
+        comp = Comparator(arr,level, rand)
     gap = len(arr)
     shrink = 1.3
     sorted = False
