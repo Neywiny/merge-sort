@@ -1,6 +1,5 @@
 import numpy as np
 np.seterr(all="ignore")
-from DylUtils import *
 
 class Comparator:
     """A class for comparing 2 values.
