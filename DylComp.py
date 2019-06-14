@@ -120,12 +120,13 @@ class Comparator:
     
     def clearHistory(self):
         """clear the history statistics of comparisons"""
-        self.compHistory = list()
-        self.last = None
-        self.dupCount = None
-        for object in self.objects:
-            self.counts[object] = 0
-            self.minSeps[object] = 2*len(objects)
+        if hasattr(self, "objects"):
+            self.compHistory = list()
+            self.last = None
+            self.dupCount = None
+            for object in self.objects:
+                self.counts[object] = 0
+                self.minSeps[object] = 2*len(objects)
 
     def learn(self, arr: list):
         """learn the order of the array provided, assuming the current optimization level allows it"""

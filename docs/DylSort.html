@@ -1,0 +1,93 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module DylSort</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>DylSort</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/nashome/merge-sort/DylSort.py">/nashome/merge-sort/DylSort.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ROC1.html">ROC1</a><br>
+</td><td width="25%" valign=top><a href="math.html">math</a><br>
+</td><td width="25%" valign=top><a href="matplotlib.html">matplotlib</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="DylSort.html#Merger">Merger</a>
+</font></dt></dl>
+</dd>
+</dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="Merger">class <strong>Merger</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;for&nbsp;merging&nbsp;2&nbsp;arrays&nbsp;into&nbsp;1&nbsp;array<br>
+Must&nbsp;feed&nbsp;it&nbsp;a&nbsp;comparator&nbsp;<a href="builtins.html#object">object</a>.&nbsp;It&nbsp;can&nbsp;also&nbsp;hold&nbsp;onto&nbsp;start/stop&nbsp;indecies&nbsp;if&nbsp;you&nbsp;ask<br>
+'Toggle'&nbsp;parameter&nbsp;defines&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;do&nbsp;a&nbsp;cocktail&nbsp;merge,&nbsp;as&nbsp;in&nbsp;switch&nbsp;which&nbsp;end&nbsp;you're&nbsp;merging&nbsp;from&nbsp;each&nbsp;call&nbsp;of&nbsp;<a href="#Merger-inc">inc</a>()<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="Merger-__init__"><strong>__init__</strong></a>(self, groupA:list, groupB:list, comp:DylComp.Comparator, start=0, stop=0, toggle:bool=True)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
+
+<dl><dt><a name="Merger-inc"><strong>inc</strong></a>(self) -&gt; bool</dt><dd><tt>do&nbsp;a&nbsp;merge,&nbsp;and&nbsp;if&nbsp;configured,&nbsp;switch&nbsp;which&nbsp;end&nbsp;the&nbsp;next&nbsp;merge&nbsp;will&nbsp;be&nbsp;done&nbsp;from<br>
+returns&nbsp;True&nbsp;if&nbsp;the&nbsp;merge&nbsp;is&nbsp;completed</tt></dd></dl>
+
+<hr>
+Data descriptors defined here:<br>
+<dl><dt><strong>__dict__</strong></dt>
+<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+<dl><dt><strong>__weakref__</strong></dt>
+<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
+</dl>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-combsort"><strong>combsort</strong></a>(arr:list, comp:DylComp.Comparator=None, level:int=3, retComp:bool=False, rand:bool=False) -&gt; list</dt><dd><tt>performs&nbsp;a&nbsp;combsort&nbsp;sorting&nbsp;algorithm&nbsp;either&nbsp;with&nbsp;the&nbsp;given&nbsp;comparator&nbsp;or&nbsp;a&nbsp;default&nbsp;one<br>
+yields&nbsp;the&nbsp;array&nbsp;and&nbsp;(if&nbsp;configured&nbsp;to&nbsp;to)&nbsp;the&nbsp;comparator&nbsp;after&nbsp;each&nbsp;pass&nbsp;through&nbsp;the&nbsp;array</tt></dd></dl>
+ <dl><dt><a name="-merge"><strong>merge</strong></a>(comp, arr:list, start:int, mid:int, stop:int)</dt><dd><tt>merges&nbsp;2&nbsp;slices&nbsp;of&nbsp;the&nbsp;array&nbsp;in&nbsp;place,&nbsp;as&nbsp;defined&nbsp;by&nbsp;arr[start]&nbsp;-&gt;&nbsp;arr[mid],&nbsp;arr[mid]&nbsp;-&gt;&nbsp;arr[stop]<br>
+no&nbsp;return&nbsp;value</tt></dd></dl>
+ <dl><dt><a name="-mergeSort"><strong>mergeSort</strong></a>(arr:list, comp:DylComp.Comparator=None, shuffle:bool=False, retStats:bool=False, level=3, rand=False) -&gt; list</dt><dd><tt><a href="#-mergeSort">mergeSort</a>(arr:&nbsp;list,&nbsp;level=3)<br>
+Can&nbsp;either&nbsp;be&nbsp;provided&nbsp;a&nbsp;comparator&nbsp;or&nbsp;will&nbsp;make&nbsp;its&nbsp;own<br>
+merge&nbsp;sorts&nbsp;the&nbsp;list&nbsp;arr&nbsp;with&nbsp;'level'&nbsp;amount&nbsp;of&nbsp;optimization<br>
+yields&nbsp;the&nbsp;arr&nbsp;after&nbsp;each&nbsp;pass&nbsp;through<br>
+also&nbsp;yields&nbsp;the&nbsp;stats&nbsp;used&nbsp;if&nbsp;retStats</tt></dd></dl>
+ <dl><dt><a name="-random"><strong>random</strong></a>(...)<font color="#909090"><font face="helvetica, arial"> method of <a href="random.html#Random">random.Random</a> instance</font></font></dt><dd><tt><a href="#-random">random</a>()&nbsp;-&gt;&nbsp;x&nbsp;in&nbsp;the&nbsp;interval&nbsp;[0,&nbsp;1).</tt></dd></dl>
+ <dl><dt><a name="-swap"><strong>swap</strong></a>(arr:list, indexA:int, indexB:int, sizes:list=None)</dt><dd><tt>swaps&nbsp;in&nbsp;arr&nbsp;either&nbsp;the&nbsp;indecies&nbsp;indexA&nbsp;and&nbsp;indexB,&nbsp;or&nbsp;the&nbsp;slices&nbsp;of&nbsp;the&nbsp;array&nbsp;as&nbsp;defined&nbsp;by&nbsp;'sizes'</tt></dd></dl>
+ <dl><dt><a name="-tanh"><strong>tanh</strong></a>(...)</dt><dd><tt><a href="#-tanh">tanh</a>(x)<br>
+&nbsp;<br>
+Return&nbsp;the&nbsp;hyperbolic&nbsp;tangent&nbsp;of&nbsp;x.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__annotations__</strong> = {}</td></tr></table>
+</body></html>

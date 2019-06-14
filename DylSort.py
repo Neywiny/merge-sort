@@ -3,7 +3,6 @@ import numpy as np
 from DylComp import Comparator
 from DylRand import *
 from DylMath import *
-from DylUtils import *
 
 def swap(arr: list, indexA: int, indexB: int, sizes: list=None):
     """swaps in arr either the indecies indexA and indexB, or the slices of the array as defined by 'sizes'"""
@@ -92,7 +91,7 @@ class Merger:
         return (self.indexA > self.indexARight) and (self.indexB > self.indexBRight)
         #return (self.outIndex == len(self.output)) or (self.outIndex == self.indexORight)
 
-def mergeSort(arr: list, comp: Comparator=None, shuffle: bool=False, retStats: bool=False) -> list:
+def mergeSort(arr: list, comp: Comparator=None, shuffle: bool=False, retStats: bool=False, level=3, rand=False) -> list:
     """mergeSort(arr: list, level=3)
     Can either be provided a comparator or will make its own
     merge sorts the list arr with 'level' amount of optimization
@@ -215,7 +214,7 @@ def merge(comp, arr: list, start: int, mid: int, stop: int):
         j+=1
         k+=1
 
-def combsort(arr: list, comp: Comparator=None level: int=3, retComp: bool=False, rand: bool=False) -> list:
+def combsort(arr: list, comp: Comparator=None, level: int=3, retComp: bool=False, rand: bool=False) -> list:
     """performs a combsort sorting algorithm either with the given comparator or a default one
     yields the array and (if configured to to) the comparator after each pass through the array"""
     if comp == None:
@@ -264,10 +263,10 @@ if __name__ == "__main__":
         print(m.output)
         print(m.comp.compHistory)
     elif test == 4:
-        data = continuousScale(256)
+        data = continuousScale(128)
         arrays = [data[:]]
         print(data)
-        for _ in mergeSort(data, rand=True):
+        for _ in mergeSort(data):
             arrays.append(data[:])
             print(data)
         graphROCs(arrays, True)

@@ -1,4 +1,4 @@
-from math import log, ceil
+import math
 import pickle
 import sys
 from multiprocessing import Pool
@@ -6,7 +6,6 @@ from warnings import filterwarnings
 
 from DylSort import mergeSort, combsort
 from DylMath import *
-from DylUtils import *
 from DylComp import Comparator
 
 def sort(tid):
@@ -45,7 +44,7 @@ if __name__ == "__main__":
                         known:dict = dict()
                         actual = [*range(lMax)]
                         arrs = [data[:]]
-                        for arr,comp in sorter(data, level, True):#, total=ceil(log(len(lCopy), 2)):
+                        for arr,comp in sorter(data, level, True):#, total=math.cail(math.log(len(lCopy), 2)):
                             f.write(writer(comp.minSeps.values()) + ', ' + str(unbiasedMeanMatrixVar(successMatrix(data))) + '\n')
                             arrs.append(data[:])
                     for key, value in comp.counts.items():

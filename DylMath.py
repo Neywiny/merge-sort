@@ -3,12 +3,11 @@ import numpy as np
 np.set_printoptions(threshold=np.inf)
 np.seterr(all="ignore")
 from random import random
-from math import tanh, sqrt
+import math
 from tqdm import trange, tqdm
 from multiprocessing import Pool
 #from p_tqdm import p_map
 try:
-    import alweifubwaef
     import matplotlib
     matplotlib.use('QT4Agg')
     import matplotlib.pyplot as plt
@@ -18,20 +17,19 @@ except BaseException as e:
     pass
 
 from DylRand import nearlySorted
-from DylUtils import *
 from DylData import *
 
 unbiasedMeanMatrixVar = ROC1.unbiasedMeanMatrixVar
 def stdev(inp: list) -> float:
     """std(inp) -> standard deviation of the input
     inp can be a list or the variance of that list"""
-    return sqrt(var(inp)) if type(inp) == list else sqrt(inp)
+    return math.sqrt(var(inp)) if type(inp) == list else math.sqrt(inp)
 
 def se(inp: list, n=None) -> float:
     """se(inp) -> standard error of the input
     inp can be a list or the stdev of the list, in which case
     n needs to be provided"""
-    return stdev(inp) / sqrt(len(n) if n != None else len(inp))
+    return stdev(inp) / math.sqrt(len(n) if n != None else len(inp))
 
 def pc(arr: list) -> float:
     # calc % correct
@@ -93,7 +91,7 @@ def graphROC(predicted: tuple, D0=None, D1=None):
     plt.show()
 
 def graphROCs(arrays: list, withPatches=False, withLine=True):
-    rows = int(sqrt(len(arrays)))
+    rows = int(math.sqrt(len(arrays)))
     cols = len(arrays) // rows
     fig, axes = plt.subplots(rows, cols, sharex=True, sharey=True, num="plots")
     fig.suptitle("ROC curves")
@@ -120,11 +118,12 @@ def graphROCs(arrays: list, withPatches=False, withLine=True):
             sm = successMatrix(arrays[i])
             yes = []
             no = []
+            length = len(arrays[0])//2
             for (y,x), value in np.ndenumerate(sm):
                 if value:
-                    yes.append(Rectangle((x/(len(arrays[0])//2),y/(len(arrays[0])//2)),1/(len(arrays[0])//2),1/(len(arrays[0])//2)))
+                    yes.append(Rectangle((x/length,y/length),1/length,1/length))
                 else:
-                    no.append(Rectangle((x/(len(arrays[0])//2),y/(len(arrays[0])//2)),1/(len(arrays[0])//2),1/(len(arrays[0])//2)))
+                    no.append(Rectangle((x/length,y/length),1/length,1/length))
                 pbar.update(1)
             patches = PatchCollection(no, facecolor = 'r', alpha=0.75, edgecolor='None')
             ax.add_collection(patches)
