@@ -1,15 +1,19 @@
 import numpy as np
 np.seterr(all="ignore")
+from warnings import filterwarnings
+filterwarnings("ignore")
 
 class Comparator:
     """A class for comparing 2 values.
         Controlled with the optimizaiton level and if you want random decisions or not
         Either provide objects in init or call .genLookup before you do any comparing
         Optimization levels: will not optimize, store result, do abc association, do recursive association
+        withComp: configures if the comparator will compare pos/pos neg/neg
     """
-    def __init__(self, objects: list = None, level: int = 3, rand: bool=False):
+    def __init__(self, objects: list = None, level: int = 3, rand: bool=False, withComp: bool=True):
         self.clearHistory()
         self.rand = rand
+        self.withComp = withComp
         self.level: int = level
         self.compHistory = list()
         self.dupCount = 0
@@ -52,7 +56,7 @@ class Comparator:
                         bNeg = False
                         bScore = self.pos[b - len(self.objects) // 2]
 
-                    if aNeg == bNeg: # no need to actually compare?
+                    if not self.withComp and (aNeg == bNeg): # no need to actually compare?
                         needComp = False
                         res: bool = True
                     else:
@@ -102,6 +106,16 @@ class Comparator:
                 return res
         except AttributeError as e:
             raise LookupError("You need to generate the lookup first")
+
+    def getLatentScore(self, index: int) -> float:
+        """gets the latent score of a given index"""
+        if self.rand:
+            if index < len(self.objects) // 2: # index is neg dist
+                aScore = self.neg[index]
+            else: #index is pos dist
+                aScore = self.pos[index - len(self.objects) // 2]
+            return aScore
+
     def genLookup(self, objects: list):
         """generate the lookup table and statistics for each object provided"""
         self.lookup:dict = dict()
@@ -112,8 +126,9 @@ class Comparator:
             self.minSeps[object] = 2*len(objects)
         if self.rand:
             from os import getpid, uname
-            # get a random seed for each node and each process on that node
-            np.random.seed(int(str(ord(uname()[1][-1])) + str(getpid())))
+            from time import time
+            # get a random seed for each node and each process on that node, and the time
+            np.random.seed(int(str(ord(uname()[1][-1])) + str(getpid()) + str(int(time()))) % 2**31)
             self.neg = list(np.random.normal(size=len(objects)//2,loc=0))
             self.pos = list(np.random.normal(size=len(objects)//2,loc=1.7))
     
@@ -154,7 +169,7 @@ class Comparator:
         return 0
 
 if __name__ == "__main__":
-    test = 1
+    test = 3
     if test == 1:
         comp = Comparator([i for i in range(10)], 2)
         print(comp.compare(0, 1))
@@ -163,3 +178,20 @@ if __name__ == "__main__":
         print(comp.compare(2, 0))
         print(comp.compare(0, 3))
         print(comp.compare(2, 3))
+    elif test == 2:
+        comp = Comparator([i for i in range(10)], level=3, rand=True)
+        print(comp.neg)
+        print(comp.pos)
+    elif test == 3:
+        from DylData import continuousScale
+        from DylSort import mergeSort
+
+        for withComp in [True, False]:
+            print(f"Comparing pos-pos neg-neg? {withComp}")
+            objects = continuousScale(8)
+            comp = Comparator(objects, rand=True, withComp=withComp)
+            for obj in objects:
+                print(f"Image number {obj} has latent score {comp.getLatentScore(obj)}")
+            print(objects)
+            for arr, stats in mergeSort(objects, comp):
+                print(arr)

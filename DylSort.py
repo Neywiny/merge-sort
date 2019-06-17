@@ -61,6 +61,7 @@ class Merger:
                 self.outIndex += 1
                 self.indexB += 1
             return True
+        
         if self.left:
             iA = self.indexA
             iB = self.indexB
@@ -78,6 +79,16 @@ class Merger:
             iB = self.indexBRight
             iO = self.indexORight
             # if the element from A is less than the element from B
+
+            try: 
+                self.groupB[iB]
+            except IndexError as e: # done with group b
+                while self.indexARight >= self.indexA:
+                    self.output[self.outIndex] = self.groupA[self.indexA]
+                    self.indexA += 1
+                    self.outIndex += 1
+                return True
+
             if self.comp(self.groupA[iA], self.groupB[iB]):
                 self.output[iO] = self.groupB[iB]
                 self.indexBRight -= 1
@@ -98,7 +109,7 @@ def mergeSort(arr: list, comp: Comparator=None, shuffle: bool=False, retStats: b
     yields the arr after each pass through
     also yields the stats used if retStats"""
     if comp == None:
-        comp = Comparator(arr,level, rand)
+        comp = Comparator(arr, level, rand)
 
     # do this after comp created just in case
     if not arr:
@@ -238,16 +249,20 @@ def combsort(arr: list, comp: Comparator=None, level: int=3, retComp: bool=False
         yield arr, comp if retComp else arr
 
 if __name__ == "__main__":
-    test = 4
+    test = 1
     if test == 1:
-        maxi = 512
-        l: list = randomDisease(maxi)
-        for arr, comp in mergeSort(l, level = 4, retComp=True):
-            print(len(comp), comp.dupHistory, min(comp.minSeps.values()), comp.optHistory)
-
-        l: list = randomDisease(maxi)
-        for arr, comp in combsort(l, level = 4, retComp=True):
-            print(len(comp), comp.dupHistory, min(comp.minSeps.values()), comp.optHistory)
+        from random import shuffle, seed
+        from tqdm import trange
+        for maxi in trange(1000):
+            seed(maxi)
+            arr = list(range(199))#199 is prime
+            shuffle(arr)
+            seed(100)
+            sArr = sorted(arr)
+            for _ in mergeSort(arr, level=0):
+                pass
+            if arr != sArr:
+                print(maxi)
     elif test == 2:
         maxi = 1024
         l: list = randomDisease(maxi)

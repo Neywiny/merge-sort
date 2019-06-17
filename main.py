@@ -1,3 +1,5 @@
+#!/usr/bin/python3.6
+
 import math
 import pickle
 import sys
@@ -8,11 +10,11 @@ from DylSort import mergeSort, combsort
 from DylMath import *
 from DylComp import Comparator
 
-def sort(tid):
+def sort(tid, i=0):
     results = list()
     data = continuousScale(256)
     sm = successMatrix(data)
-    comp = Comparator(data, level=3, rand=True)
+    comp = Comparator(data, level=0, rand=True, withComp=withComp)
     for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True)):
         stats.extend([len(comp), list(comp.minSeps.items())])
         results.append(stats)
@@ -71,13 +73,21 @@ if __name__ == "__main__":
     elif test == 3:
         results = list()
         if len(sys.argv) > 1:
-            iters = int(sys.argv[2])
+            args = list(map(lambda x: eval(x), sys.argv[2:]))
+            iters = args[0]
             ids = [*range(iters)]
+            withComp = args[1]
             with Pool() as p:
-                results = p.map(sort, ids)
+                i = 1
+                for result in p.imap_unordered(sort, ids):
+                    print(f'{i} / {iters}', end='\r', flush=True)
+                    i += 1
+                    results.append(result)
+            print('\n')
         else:
-            iters = 2
-            results = [sort(0) for i in range(iters)]
+            withComp = False
+            iters = 1
+            results = [sort(0, i) for i in range(iters)]
         #change output file if requested to do so
         with open('results/results'+str(sys.argv[1] if len(sys.argv) > 1 else ''), 'wb') as f:
             pickle.dump(results, f)
