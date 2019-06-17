@@ -257,13 +257,13 @@ if __name__ == "__main__":
 
         for maxi in trange(10000):
             seed(maxi)
-            arr = list(range(79))#79 is prime
+            arr = list(range(maxi))#79 is prime
             shuffle(arr)
             sArr = sorted(arr)
             for _ in mergeSort(arr, level=0, retStats=False):
                 pass
             if arr != sArr:
-                print("woops")
+                print(arr)
     elif test == 2:
         maxi = 1024
         l: list = randomDisease(maxi)

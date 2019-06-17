@@ -31,6 +31,8 @@ class Comparator:
         return self.compare(a,b)
     def compare(self, a, b) -> bool:
         """returns a < b"""
+        if not self.rand and self.level == 0:
+            return a < b
         try:
             if b in self.lookup[a].keys():
                 # print("cache hit")
