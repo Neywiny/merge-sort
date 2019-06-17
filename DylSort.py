@@ -41,7 +41,7 @@ class Merger:
         self.indexORight: int = len(self.output) - 1
         self.comp: Comparator = comp
         self.left: bool = True
-        self.toggle: bool = True
+        self.toggle: bool = toggle
     
         #hold onto these for the parent object, they're a secret tool that will help us later
         self.start = start
@@ -78,17 +78,19 @@ class Merger:
             iA = self.indexARight
             iB = self.indexBRight
             iO = self.indexORight
-            # if the element from A is less than the element from B
-
-            try: 
-                self.groupB[iB]
-            except IndexError as e: # done with group b
+            if iB < 0:
                 while self.indexARight >= self.indexA:
                     self.output[self.outIndex] = self.groupA[self.indexA]
                     self.indexA += 1
                     self.outIndex += 1
+                if self.output != sorted(self.output):
+                    print("was done with group b")
+                    print(self.groupA)
+                    print(self.groupB)
+                    print(self.output)
                 return True
 
+            # if the element from A is less than the element from B
             if self.comp(self.groupA[iA], self.groupB[iB]):
                 self.output[iO] = self.groupB[iB]
                 self.indexBRight -= 1
@@ -176,6 +178,8 @@ def mergeSort(arr: list, comp: Comparator=None, shuffle: bool=False, retStats: b
                     #print(merger.output)
                     start = merger.start
                     comp.learn(merger.output)
+                    if merger.output != sorted(merger.output):
+                        print("woops")
                     for i, v in enumerate(merger.output):
                         arr[start + i] = v
                     mergers.remove(merger)
@@ -253,16 +257,15 @@ if __name__ == "__main__":
     if test == 1:
         from random import shuffle, seed
         from tqdm import trange
-        for maxi in trange(1000):
+
+        for maxi in trange(10000):
             seed(maxi)
-            arr = list(range(199))#199 is prime
+            arr = list(range(23))#23 is prime
             shuffle(arr)
             seed(100)
             sArr = sorted(arr)
             for _ in mergeSort(arr, level=0):
                 pass
-            if arr != sArr:
-                print(maxi)
     elif test == 2:
         maxi = 1024
         l: list = randomDisease(maxi)
