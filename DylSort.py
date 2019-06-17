@@ -78,16 +78,12 @@ class Merger:
             iA = self.indexARight
             iB = self.indexBRight
             iO = self.indexORight
-            if iB < 0:
+
+            if iB < 0: # done with group B
                 while self.indexARight >= self.indexA:
                     self.output[self.outIndex] = self.groupA[self.indexA]
                     self.indexA += 1
                     self.outIndex += 1
-                if self.output != sorted(self.output):
-                    print("was done with group b")
-                    print(self.groupA)
-                    print(self.groupB)
-                    print(self.output)
                 return True
 
             # if the element from A is less than the element from B
@@ -178,8 +174,6 @@ def mergeSort(arr: list, comp: Comparator=None, shuffle: bool=False, retStats: b
                     #print(merger.output)
                     start = merger.start
                     comp.learn(merger.output)
-                    if merger.output != sorted(merger.output):
-                        print("woops")
                     for i, v in enumerate(merger.output):
                         arr[start + i] = v
                     mergers.remove(merger)
