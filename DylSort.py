@@ -179,17 +179,20 @@ def mergeSort(arr: list, comp: Comparator=None, shuffle: bool=False, retStats: b
                     mergers.remove(merger)
 
         # run dem stats
-        aucs, vars = list(), list()
-        start = 0
-        for size in sizes:
-            curr = arr[start:size + start]
-            sm = successMatrix(curr, list(sorted(curr))[:len(curr)//2], list(sorted(curr))[len(curr)//2:])
-            aucs.append(aucSM(sm))
-            vars.append(unbiasedMeanMatrixVar(sm))
-            start += size
-        npvar = np.var(aucs, ddof=1) / len(aucs)
-        stats = [sum(aucs) / len(sizes), sum(vars) / len(vars), float(npvar)]
-        yield arr, stats if retStats else arr
+        if retStats:
+            aucs, vars = list(), list()
+            start = 0
+            for size in sizes:
+                curr = arr[start:size + start]
+                sm = successMatrix(curr, list(sorted(curr))[:len(curr)//2], list(sorted(curr))[len(curr)//2:])
+                aucs.append(aucSM(sm))
+                vars.append(unbiasedMeanMatrixVar(sm))
+                start += size
+            npvar = np.var(aucs, ddof=1) / len(aucs)
+            stats = [sum(aucs) / len(sizes), sum(vars) / len(vars), float(npvar)]
+            yield arr, stats
+        else:
+            yield arr
 
 def merge(comp, arr: list, start: int, mid: int, stop: int):
     """merges 2 slices of the array in place, as defined by arr[start] -> arr[mid], arr[mid] -> arr[stop]
@@ -254,12 +257,13 @@ if __name__ == "__main__":
 
         for maxi in trange(10000):
             seed(maxi)
-            arr = list(range(23))#23 is prime
+            arr = list(range(79))#79 is prime
             shuffle(arr)
-            seed(100)
             sArr = sorted(arr)
-            for _ in mergeSort(arr, level=0):
+            for _ in mergeSort(arr, level=0, retStats=False):
                 pass
+            if arr != sArr:
+                print("woops")
     elif test == 2:
         maxi = 1024
         l: list = randomDisease(maxi)
