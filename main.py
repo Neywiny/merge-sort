@@ -6,7 +6,7 @@ import sys
 from multiprocessing import Pool
 from warnings import filterwarnings
 
-from DylSort import mergeSort, combsort
+from DylSort import mergeSort
 from DylMath import *
 from DylComp import Comparator
 
@@ -14,8 +14,8 @@ def sort(tid, i=0):
     results = list()
     data = continuousScale(256)
     sm = successMatrix(data)
-    comp = Comparator(data, level=0, rand=True, withComp=withComp)
-    for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True)):
+    comp = Comparator(data, level=0, rand=True)
+    for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=retMid)):
         stats.extend([len(comp), list(comp.minSeps.items())])
         results.append(stats)
     results.append(comp.compHistory)
@@ -76,7 +76,7 @@ if __name__ == "__main__":
             args = list(map(lambda x: eval(x), sys.argv[2:]))
             iters = args[0]
             ids = [*range(iters)]
-            withComp = args[1]
+            retMid = args[1]
             with Pool() as p:
                 i = 1
                 for result in p.imap_unordered(sort, ids):
@@ -85,7 +85,7 @@ if __name__ == "__main__":
                     results.append(result)
             print('\n')
         else:
-            withComp = False
+            retMid = False
             iters = 1
             results = [sort(0, i) for i in range(iters)]
         #change output file if requested to do so

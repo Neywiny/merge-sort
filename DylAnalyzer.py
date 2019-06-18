@@ -1,6 +1,7 @@
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import trange, tqdm
 
 iters = 19*2560
 
@@ -18,12 +19,10 @@ for withComp in [True, False]:
     aucs = [[0 for __ in range(layers)] for _ in range(iters)]
     #i = ''
     #if True:
-    for i in range(1, 20) if withComp else range(20, 39):
-        print("opening", i, end=' ')
+    for i in trange(1, 20) if withComp else trange(20, 39):
         with open("results/results"+str(i), "rb") as f:
-            print("loading")
             results = pickle.load(f)
-            for iIter, iteration in enumerate(results):
+            for iIter, iteration in enumerate(tqdm(results)):
                 for iLevel, (auc,smVAR,npVAR,compLen,minSeps) in enumerate(iteration[:-1]):
                     aucs[iIter][iLevel] = auc
                     avgAUC[iLevel] += auc
