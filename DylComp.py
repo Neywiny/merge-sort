@@ -25,7 +25,7 @@ class Comparator:
         self.last: tuple = None
     def __len__(self):
         """returns either the number of comparisons done"""
-        return self.compHistory if type(self.compHistory) == int else len(self.compHistory)
+        return self.compHistory if isinstance(self.compHistory, int) else len(self.compHistory)
     def __call__(self, a, b):
         """returns a < b"""
         return self.compare(a,b)

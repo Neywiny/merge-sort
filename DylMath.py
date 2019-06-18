@@ -23,7 +23,7 @@ unbiasedMeanMatrixVar = ROC1.unbiasedMeanMatrixVar
 def stdev(inp: list) -> float:
     """std(inp) -> standard deviation of the input
     inp can be a list or the variance of that list"""
-    return math.sqrt(var(inp)) if type(inp) == list else math.sqrt(inp)
+    return math.sqrt(var(inp)) if isinstance(inp, (list, tuple)) else math.sqrt(inp)
 
 def se(inp: list, n=None) -> float:
     """se(inp) -> standard error of the input
@@ -44,7 +44,7 @@ def var(arr: list, npc=None) -> float:
     return npc*(1-npc)/len(arr)
 
 def auc(results: tuple) -> float:
-    if type(results[0]) != tuple and type(results[0]) != list:
+    if not isinstance(results[0], (list, tuple)):
         results = genROC(results)
     total: float = 0.0
     for i,(x,y) in enumerate(results[:-1]):

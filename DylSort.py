@@ -1,7 +1,5 @@
 import numpy as np
 
-from DylComp import Comparator
-from DylRand import *
 from DylMath import *
 
 def swap(arr: list, indexA: int, indexB: int, sizes: list=None):
@@ -107,6 +105,7 @@ def mergeSort(arr: list, comp: Comparator=None, shuffle: bool=False, retStats: b
     yields the arr after each pass through
     also yields the stats used if retStats"""
     if comp == None:
+        from DylComp import Comparator
         comp = Comparator(arr, level, rand)
 
     # do this after comp created just in case
@@ -226,31 +225,42 @@ def merge(comp, arr: list, start: int, mid: int, stop: int):
         j+=1
         k+=1
 
-def combsort(arr: list, comp: Comparator=None, level: int=3, retComp: bool=False, rand: bool=False) -> list:
-    """performs a combsort sorting algorithm either with the given comparator or a default one
-    yields the array and (if configured to to) the comparator after each pass through the array"""
-    if comp == None:
-        comp = Comparator(arr,level, rand)
-    gap = len(arr)
-    shrink = 1.3
-    sorted = False
+#https://en.wikipedia.org/wiki/Batcher_odd%E2%80%93even_mergesort
+def oddeven_merge_sort(length):
+    """ "length" is the length of the list to be sorted.
+    Returns a list of pairs of indices starting with 0 """
+    def oddeven_merge_sort_range(lo, hi):
+        """ sort the part of x with indices between lo and hi.
 
-    while sorted == False:
-        gap = int(gap / shrink)
-        if gap <= 1:
-            gap = 1
-            sorted = True
+        Note: endpoints (lo and hi) are included.
+        """
+        def oddeven_merge(lo, hi, r):
+            step = r * 2
+            if step < hi - lo:
+                yield from oddeven_merge(lo, hi, step)
+                yield from oddeven_merge(lo + r, hi, step)
+                yield from [(i, i + r) for i in range(lo + r, hi - r, step)]
+            else:
+                yield (lo, lo + r)
 
-        i = 0
-        while i + gap < len(arr):
-            if comp(arr[i + gap], arr[i]):
-                swap(arr, i, i + gap)
-                sorted = False
-            i = i + 1
-        yield arr, comp if retComp else arr
+        if (hi - lo) >= 1:
+            # if there is more than one element, split the input
+            # down the middle and first sort the first and second
+            # half, followed by merging them.
+            mid = lo + ((hi - lo) // 2)
+            yield from oddeven_merge_sort_range(lo, mid)
+            yield from oddeven_merge_sort_range(mid + 1, hi)
+            yield from oddeven_merge(lo, hi, 1)
+    yield from oddeven_merge_sort_range(0, length - 1)
+
+def compare_and_swap(comp, x, a, b):
+    if comp(x[b], x[a]):
+        x[a], x[b] = x[b], x[a]
 
 if __name__ == "__main__":
-    test = 1
+    from DylRand import *
+    
+    test = 5
     if test == 1:
         from random import shuffle, seed
         from tqdm import trange
@@ -286,3 +296,14 @@ if __name__ == "__main__":
             arrays.append(data[:])
             print(data)
         graphROCs(arrays, True)
+    elif test == 5:
+        from random import shuffle
+        data = [i for i in range(256)]
+        pairs_to_compare = list(oddeven_merge_sort(len(data)))
+        for i in range(10):
+            shuffle(data)
+            comp = Comparator(data, level=3, rand=False, withComp=True)
+            for i in pairs_to_compare: compare_and_swap(comp, data, *i)
+            if data != sorted(data):
+                print("woops", data, sorted(data))
+            print(len(comp))
