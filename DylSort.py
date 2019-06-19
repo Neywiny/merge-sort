@@ -1,6 +1,7 @@
 import numpy as np
 
 from DylMath import *
+from DylMerger import Merger
 
 def swap(arr: list, indexA: int, indexB: int, sizes: list=None):
     """swaps in arr either the indecies indexA and indexB, or the slices of the array as defined by 'sizes'"""
@@ -19,150 +20,6 @@ def swap(arr: list, indexA: int, indexB: int, sizes: list=None):
         start = sum(sizes[:indexB])
         for index in range(start, sizes[indexA]):
             arr[start + index] = temp[index]
-
-class Merger:
-    """A class for merging 2 arrays into 1 array
-    Must feed it a comparator object. It can also hold onto start/stop indecies if you ask
-    'Toggle' parameter defines if you want to do a cocktail merge, as in switch which end you're merging from each call of inc()
-    """
-    def __init__(self, groupA: list, groupB: list, comp, start=0, stop=0, LL=None, LR=None, RL=None, RR=None, toggle:bool=True):
-        self.groupA: list = groupA
-        self.groupB: list = groupB
-        comp.learn(groupA)
-        comp.learn(groupB)
-        self.output: list = [-1 for i in [*groupA, *groupB]]
-        self.indexA: int = 0
-        self.indexB: int = 0
-        self.outIndex: int = 0
-        self.indexARight: int = len(groupA) - 1
-        self.indexBRight: int = len(groupB) - 1
-        self.indexORight: int = len(self.output) - 1
-        self.comp = comp
-        self.left: bool = True
-        self.toggle: bool = toggle
-
-        #hold onto these for the parent object, they're a secret tool that will help us later
-        self.start = start
-        self.stop = stop
-
-        self.passedA = groupA[:]
-        self.passedB = groupB[:]
-
-        if LL == None:
-            return
-        if LL > 0 and LR > 0 and RL > 0 and RR > 0:
-            self.vals = {'RR':RR, 'LR':LR, 'LL': LL, 'RL': RL}
-
-            if LL + LR == len(groupA):
-                #put the groupB in the middle of groupA
-                for i, val in enumerate(groupA):
-                    if i < LL:
-                        self.output[i] = val
-                        self.outIndex += 1
-                    if i + LR >= len(groupA):
-                        self.output[i + len(groupB)] = val
-                for i, val in enumerate(groupB):
-                    self.output[i + self.outIndex] = val
-                self.left = -3
-                return
-
-            if RL + RR == len(groupB):
-                #put the groupA in the middle of groupB
-                for i, val in enumerate(groupB):
-                    if i < RL:
-                        self.output[i] = val
-                        self.outIndex += 1
-                    if i + RR >= len(groupB):
-                        self.output[i + len(groupA)] = val
-                for i, val in enumerate(groupA):
-                    self.output[i + self.outIndex] = val
-                self.left = -3
-                return
-            return
-                
-            for self.indexA, l in enumerate(groupA[:LL]):
-                self.output[self.indexA] = l
-
-            for self.indexB, r in enumerate(groupB[:RL]):
-                self.output[LL + self.indexB] = r
-
-            for i, l in enumerate(groupA[-LR:]):
-                self.output[len(self.output) - LR + i] = l
-
-            for i, r in enumerate(groupB[-RR:]):
-                self.output[len(self.output) - LR - RR + i] = r
-
-            self.groupA = groupA[LL:len(self.groupA) - LR]
-            self.groupB = groupB[RL:len(self.groupB) - RR]
-
-            if len(self.groupA) != 0 or len(self.groupB) != 0:
-                print(self.groupA, self.groupB)
-
-            self.indexARight = len(self.groupA) - 1
-            self.indexBRight = len(self.groupB) - 1
-
-            self.outIndex = LL + RL
-            self.indexORight -= RR + LR
-
-            if self.indexA == self.indexARight and self.indexB == self.indexBRight:
-                self.left = -3 # in inc you're done
-            return
-    
-    def inc(self) -> bool:
-        """do a merge, and if configured, switch which end the next merge will be done from
-        returns True if the merge is completed"""
-        if self.indexB >= len(self.groupB) and self.left != -3:
-            while self.indexA <= self.indexARight:
-                self.output[self.outIndex] = self.groupA[self.indexA]
-                self.outIndex += 1
-                self.indexA += 1
-            return True
-        if self.indexA >= len(self.groupA) and self.left != -3:
-            while self.indexB <= self.indexBRight:
-                self.output[self.outIndex] = self.groupB[self.indexB]
-                self.outIndex += 1
-                self.indexB += 1
-            return True
-        
-        if self.left == True:
-            iA = self.indexA
-            iB = self.indexB
-            iO = self.outIndex
-            # if the element from A is less than the element from B
-            if self.comp(self.groupA[iA], self.groupB[iB]):
-                self.output[iO] = self.groupA[iA]
-                self.indexA += 1
-            else:
-                self.output[iO] = self.groupB[iB]
-                self.indexB += 1
-            self.outIndex += 1
-        elif self.left == False:
-            iA = self.indexARight
-            iB = self.indexBRight
-            iO = self.indexORight
-
-            if iB < 0: # done with group B
-                while self.indexARight >= self.indexA:
-                    self.output[self.outIndex] = self.groupA[self.indexA]
-                    self.indexA += 1
-                    self.outIndex += 1
-                return True
-
-            # if the element from A is less than the element from B
-            if self.comp(self.groupA[iA], self.groupB[iB]):
-                self.output[iO] = self.groupB[iB]
-                self.indexBRight -= 1
-            else:
-                self.output[iO] = self.groupA[iA]
-                self.indexARight -= 1
-            self.indexORight -= 1
-        else: # this signals no need to compare
-            return True
-
-        # go from other side
-        self.left = self.toggle ^ self.left
-        return (self.indexA > self.indexARight) and (self.indexB > self.indexBRight)
-        #return (self.outIndex == len(self.output)) or (self.outIndex == self.indexORight)
 
 def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, retMid: bool=False) -> list:
     """mergeSort(arr: list, level=3)
@@ -226,8 +83,8 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
                 if retMid:
                     Lscores = list(map(lambda x: comp.getLatentScore(x), L))
                     Rscores = list(map(lambda x: comp.getLatentScore(x), R))
-
                     medians.append(np.abs(np.median(Lscores) - np.median(Rscores)))
+
                     for leftI,left in enumerate(L):
                         if left > split:
                             LL = (leftI)
@@ -256,14 +113,10 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
                     else:
                         RR = 0
 
-                    if LL < 0:
-                        LL = 0
-                    if LR < 0:
-                        LR = 0
-                    if RL < 0:
-                        RL = 0
-                    if RR < 0:
-                        RR = 0
+                    if LL < 0: LL = 0
+                    if LR < 0: LR = 0
+                    if RL < 0: RL = 0
+                    if RR < 0: RR = 0
 
                     if len(L) > 1:
                         if LL + LR == len(L):
@@ -273,9 +126,7 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
 
                     percentages.append((LL/len(L) + RL/len(R) + LR/len(L) + RR/len(R)) / 4)
 
-                    mergers.append(Merger(L, R, comp, start, stop, LL, LR, RL, RR))
-                else:
-                    mergers.append(Merger(L, R, comp, start, stop))
+                mergers.append(Merger(L, R, comp, start, stop))
 
                 #merge(comp, arr, start, start + size, start + size + sizes[i + 1])
                 
@@ -303,6 +154,8 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
                         raise FloatingPointError("it didn't actually do it")
                     comp.learn(merger.output)
                     for i, v in enumerate(merger.output):
+                        if merger.output.count(v) > 1:
+                            raise EnvironmentError(f"duplicated {v}")
                         arr[start + i] = v
                     mergers.remove(merger)
 
@@ -420,20 +273,21 @@ def bitonic_sort(up, x, comp):
 if __name__ == "__main__":
     from DylRand import *
 
-    test = 8
+    test = 1
     if test == 1:
         from random import shuffle, seed
         from tqdm import trange
-
-        for maxi in trange(10000):
+        from DylComp import Comparator
+        #maxi = 79
+        #if True:
+        for maxi in trange(1000):
             seed(maxi)
             arr = list(range(maxi))#79 is prime
             shuffle(arr)
             sArr = sorted(arr)
-            for _ in mergeSort(arr, level=0, retStats=False):
+            comp = Comparator(arr, level=0, rand=True)
+            for _ in mergeSort(arr, comp=comp, retStats=False, retMid=True):
                 pass
-            if arr != sArr:
-                print(arr)
     elif test == 2:
         maxi = 1024
         l: list = randomDisease(maxi)

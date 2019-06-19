@@ -132,7 +132,7 @@ class Comparator:
             # get a random seed for each node and each process on that node, and the time
             np.random.seed(int(str(ord(uname()[1][-1])) + str(getpid()) + str(int(time()))) % 2**31)
             self.neg = list(np.random.normal(size=len(objects)//2,loc=0))
-            self.pos = list(np.random.normal(size=len(objects)//2,loc=1.7))
+            self.pos = list(np.random.normal(size=len(objects)//2 + len(objects) % 2,loc=1.7))
     
     def clearHistory(self):
         """clear the history statistics of comparisons"""
