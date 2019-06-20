@@ -1,80 +1,105 @@
 import pickle
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import LogNorm
 from tqdm import trange, tqdm
 
-iters = 19*2560
+iters = 19*640
+
+length = 256
 
 layers = 8
 
-for withComp in [True, False]:
-    avgAUC = [0 for i in range(layers)]
-    avgVARsm = [0 for i in range(layers)]
-    avgComps = [0 for i in range(layers)]
+avgAUC = [0 for i in range(layers)]
+avgVARsm = [0 for i in range(layers)]
+avgComps = [0 for i in range(layers)]
 
 
-    avgMinSeps = [[0 for level in range(layers) ] for i in range(256)]
+avgMinSeps = [[0 for level in range(layers) ] for i in range(length)]
 
-    VARnp = [[0 for __ in range(layers)] for _ in range(iters)]
-    aucs = [[0 for __ in range(layers)] for _ in range(iters)]
-    #i = ''
-    #if True:
-    for i in trange(1, 20) if withComp else trange(20, 39):
-        with open("results/results"+str(i), "rb") as f:
-            results = pickle.load(f)
-            for iIter, iteration in enumerate(tqdm(results)):
-                for iLevel, (auc,smVAR,npVAR,compLen,minSeps) in enumerate(iteration[:-1]):
-                    aucs[iIter][iLevel] = auc
-                    avgAUC[iLevel] += auc
-                    avgVARsm[iLevel] += smVAR
-                    VARnp[iIter][iLevel] = npVAR
-                    avgComps[iLevel] += compLen
-                    for (key, val) in minSeps:
-                        if val != 257:
-                            if avgMinSeps[key][iLevel] != 257:
-                                avgMinSeps[key][iLevel] += val / iters
-                            else:
-                                avgMinSeps[key][iLevel] = val / iters
+VARnp = [[-1 for __ in range(layers)] for _ in range(iters)]
+aucs = [[0 for __ in range(layers)] for _ in range(iters)]
+#i = ''
+#if True:
+for i in trange(1, 20):
+    with open("results/results"+str(i), "rb") as f:
+        results = pickle.load(f)
+        for iIter, iteration in enumerate(results):
+            for iLevel, (auc,smVAR,npVAR,compLen,minSeps) in enumerate(iteration[:-1]):
+                aucs[iIter + ((i-1)*640)][iLevel] = auc
+                avgAUC[iLevel] += auc
+                avgVARsm[iLevel] += smVAR
+                VARnp[iIter + ((i-1)*640)][iLevel] = npVAR
+                avgComps[iLevel] += compLen
+                for (key, val) in minSeps:
+                    if val != (length + 1):
+                        if avgMinSeps[key][iLevel] != (length + 1):
+                            avgMinSeps[key][iLevel] += val / iters
                         else:
-                            avgMinSeps[key][iLevel] = 257
-            del results #pleeeeeeeeeeeease get out of memory
-    avgAUC = list(map(lambda x: x/iters, avgAUC[:-1]))
-    varAUCnp = np.var(aucs, ddof=1, axis=0)
-    avgVARsm = list(map(lambda x: x/iters, avgVARsm[:-1]))
-    avgComps = list(map(lambda x: x/iters, avgComps[:-1]))
-    # first layer are all NoneType's by definition
-    avgMinSeps = np.array(avgMinSeps[1:])
+                            avgMinSeps[key][iLevel] = val / iters
+                    else:
+                        avgMinSeps[key][iLevel] = (length + 1)
+        del results #pleeeeeeeeeeeease get out of memory
+avgAUC = list(map(lambda x: x/iters, avgAUC))
+varAUCnp = np.var(aucs, ddof=1, axis=0)
+avgVARsm = list(map(lambda x: x/iters, avgVARsm))
+avgComps = list(map(lambda x: x/iters, avgComps))
+VARnp = np.mean(VARnp, axis=0)
 
-    #print(avgAUC, avgVAR, avgComps)
-    xVals = [*range(1, len(avgComps) + 1)]
-    fig = plt.figure()
-    ax1 = fig.add_subplot(2, 4, 1)
-    ax1.plot(xVals, avgAUC, 'g.-', label='AUC')
-    ax1.set_ylabel('AUC', color='g')
-    ax1.ticklabel_format(useOffset=False)
+varEstimate = [VARnp[0]]
+varEstimate.extend([-1 for i in range(layers - 1)])
 
-    ax21 = fig.add_subplot(2, 4, 2)
-    ax21.plot(avgVARsm, 'b.-', label='VAR sm')
-    ax22 = fig.add_subplot(2, 4, 3)
-    ax22.plot(np.mean(VARnp, axis=0), 'r.-', label='VARnp of AUC')
-    ax23 = fig.add_subplot(2, 4, 4)
-    ax23.plot(varAUCnp[:-1], 'm.-', label='VAR np')
-    ax21.set_ylabel('VAR', color='b')
-    ax22.set_ylabel('VAR numpy', color='r')
-    ax23.set_ylabel('VAR numpy of AUCs', color='m')
-    #ax2.set_yscale('log')
+#print(layers, len(varEstimate), len(avgVARsm), len(VARnp))
 
-    ax3 = fig.add_subplot(2, 2, 3)
-    ax3.plot([1, len(avgComps) ], [min(avgComps), max(avgComps)], 'b')
-    ax3.plot(xVals, avgComps, 'r.-', label='comparisons')
-    ax3.set_ylabel('Comparisons', color='r') 
-    
-    ax4 = fig.add_subplot(2, 2, 4)
-    plot = ax4.imshow(np.log10(avgMinSeps), extent=[0, 256, 0, 256], aspect=0.5)
-    ax4.set_xticks([*range(0, 256, 256//8)])
-    ax4.set_xticklabels([0, 1, 2, 3, 4, 5, 6, 7, 8])
-    cbaxes = fig.add_axes([0.91, 0.12, 0.01, 0.33])
-    fig.colorbar(plot, cax=cbaxes)
-    fig.suptitle(f'Withcomp: {withComp}')
-    plt.subplots_adjust(wspace=0.45)
+for layer in range(1, layers - 1):
+    varEstimate[layer] = (avgVARsm[layer] + VARnp[layer]) / 2
+varEstimate[-1] = avgVARsm[-1]
+
+
+# first layer are all NoneType's by definition
+avgMinSeps = np.array(avgMinSeps[1:])
+
+#print(avgAUC, avgVAR, avgComps)
+xVals = [*range(1, len(avgAUC) + 1)]
+fig = plt.figure()
+ax1 = fig.add_subplot(2, 3, 1)
+#ax1.plot(xVals, avgAUC, 'g.-', label='AUC')
+ax1.errorbar(xVals, avgAUC, yerr=np.sqrt(varEstimate))
+ax1.set_ylabel('AUC', color='b')
+ax1.ticklabel_format(useOffset=False)
+ax1.set_title("Average AUC per layer")
+
+xVals = [*range(0, len(avgComps) + 1)]
+
+ax2 = fig.add_subplot(2, 3, 2)
+#ax2.plot(avgVARsm, 'b.', ls=':', label='VAR sm')
+#ax2.plot(VARnp, 'r.', ls='-.', label='VARnp of AUC')
+#ax2.plot(varAUCnp[:-1], 'm.', ls='--', label='VAR np')
+ax2.plot(xVals[1:], varEstimate, 'g.', ls='-', label='variance estimate')
+#ax2.legend()
+ax2.set_title("Variance Estimate per layer")
+
+ax3 = fig.add_subplot(2, 3, 3)
+info = [-1 for i in range(layers)]
+for layer in range(layers):
+    info[layer] = 1/((avgComps[layer] - avgComps[layer - 1]) * varEstimate[layer])
+ax3.plot(xVals[1:], info)
+ax3.set_title("Information Gained per Comparison per Layer")
+
+ax4 = fig.add_subplot(2, 2, 3)
+ax4.plot([0, len(avgComps) ], [0, max(avgComps)], 'b')
+ax4.plot(xVals, [0, *avgComps], 'r.-', label='comparisons')
+ax4.set_ylabel('Comparisons', color='r') 
+ax4.set_title("Average Comparisons per Layer")
+
+ax5 = fig.add_subplot(2, 2, 4)
+plot = ax5.imshow(avgMinSeps,norm=LogNorm(), extent=[0, length, 0, length], aspect=0.5)
+ax5.set_xticks([*range(0, length, length//layers)])
+ax5.set_xticklabels([*range(layers + 1)])
+cbaxes = fig.add_axes([0.91, 0.13, 0.01, 0.31])
+cbar = fig.colorbar(plot, cax=cbaxes)
+
+ax5.set_title("Average Distance Between Compairisons per ID per Layer")
+
+plt.subplots_adjust(wspace=0.45)
 plt.show()

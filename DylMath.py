@@ -91,8 +91,8 @@ def graphROC(predicted: tuple, D0=None, D1=None):
     plt.show()
 
 def graphROCs(arrays: list, withPatches=False, withLine=True):
-    rows = int(math.sqrt(len(arrays)))
-    cols = len(arrays) // rows
+    rows = int(math.ceil(math.sqrt(len(arrays))))
+    cols = int(math.ceil(len(arrays) / rows))
     fig, axes = plt.subplots(rows, cols, sharex=True, sharey=True, num="plots")
     fig.suptitle("ROC curves")
     
@@ -105,6 +105,8 @@ def graphROCs(arrays: list, withPatches=False, withLine=True):
     if withPatches:
         pbar = tqdm(total=len(arrays)*(len(arrays[0])//2)**2)
     for i,ax in enumerate(axes.flat):
+        if i >= len(arrays):
+            continue
         ax.set(xlabel="False Positive Fraction", ylabel="True Positive Fraction")
         ax.label_outer()
         ax.plot((0,1),(0,1),c='red', linestyle=":")
@@ -113,7 +115,7 @@ def graphROCs(arrays: list, withPatches=False, withLine=True):
             ax.set_ylim(top=1.02, bottom=0)
             ax.set_xlim(left=-0.01, right=1)
             if not withPatches:
-                ax.set_title(f"Iteration #{i} AUC: {auc(results[i]):.2f}")
+                ax.set_title(f"Iteration #{i} AUC: {auc(results[i]):.5f}")
         if withPatches:
             sm = successMatrix(arrays[i])
             yes = []
@@ -135,7 +137,7 @@ def graphROCs(arrays: list, withPatches=False, withLine=True):
             ax.set_ylim(top=1, bottom=0)
             ax.set_xlim(left=0, right=1)
             #ax.set_title(f"Iteration #{i} PC: {int(len(yes)/(len(yes)+len(no)) * 100)}% AUC: {area:.2f}")
-            ax.set_title(f"Iteration #{i} PC: {int(pc(arrays[i])*100)}% AUC: {area:.2f}")
+            ax.set_title(f"Iteration #{i} PC: {int(pc(arrays[i])*100)}% AUC: {area:.5f}")
     if withPatches:
         pbar.close()
     figManager = plt.get_current_fig_manager()
@@ -153,6 +155,8 @@ def successMatrix(predicted: list, D0: list=None, D1: list=None):
     for col, x in enumerate(reversed(D0)):
         for row, y in enumerate(D1):
             arr[row, col] = int(predicted.index(y) > predicted.index(x))
+    if -1 in arr:
+        raise EnvironmentError("failed to create success matrix")
     return arr
 
 if __name__ == "__main__":

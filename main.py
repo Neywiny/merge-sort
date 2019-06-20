@@ -26,11 +26,12 @@ if __name__ == "__main__":
     filterwarnings('ignore')
     test = 3
     if test == 1:
-        lMax: int = 2048
+        lMax: int = 2**11
         iters: int = 1
-        levelMax: int = 3
-        data, D0, D1 = continuousScale("sampledata.csv")
-        print(data)
+        levelMax: int = 0
+        #data, D0, D1 = continuousScale("sampledata.csv")
+        data = continuousScale(lMax)
+        #print(data)
         lMax = len(data)
         #exit()
         with open("sample_results.csv", "w") as f:
@@ -44,19 +45,19 @@ if __name__ == "__main__":
                 #for level in trange(levelMax + 1):
                     for i in trange(iters):
                         known:dict = dict()
-                        actual = [*range(lMax)]
                         arrs = [data[:]]
-                        for arr,comp in sorter(data, level, True):#, total=math.cail(math.log(len(lCopy), 2)):
-                            f.write(writer(comp.minSeps.values()) + ', ' + str(unbiasedMeanMatrixVar(successMatrix(data))) + '\n')
+                        comp = Comparator(data, level=0, rand=True)
+                        for arr in tqdm(sorter(data, comp=comp), total=math.ceil(math.log(lMax, 2))):
+                            #f.write(str(list(comp.minSeps.values())) + ', ' + str(unbiasedMeanMatrixVar(successMatrix(data))) + '\n')
                             arrs.append(data[:])
-                    for key, value in comp.counts.items():
+                    """for key, value in comp.counts.items():
                         f.write(str(key))
                         f.write(",")
                         f.write(str(value))
                         f.write(",")
                         f.write(str(comp.minSeps[key]))
-                        f.write("\n")
-
+                        f.write("\n")"""
+        #print(arrs)
         graphROCs(arrs)
     elif test == 2:
         nums = [i for i in range(2048)]

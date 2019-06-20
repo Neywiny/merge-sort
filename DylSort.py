@@ -2,6 +2,7 @@ import numpy as np
 
 from DylMath import *
 from DylMerger import Merger
+from tqdm import tqdm
 
 def swap(arr: list, indexA: int, indexB: int, sizes: list=None):
     """swaps in arr either the indecies indexA and indexB, or the slices of the array as defined by 'sizes'"""
@@ -170,8 +171,8 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
                 vars.append(unbiasedMeanMatrixVar(sm))
                 start += size
             npvar = np.var(aucs, ddof=1) / len(aucs)
-            #stats = [sum(aucs) / len(sizes), sum(vars) / len(vars), float(npvar)]
-            stats = [aucs, vars, float(npvar)]
+            stats = [sum(aucs) / len(sizes), sum(vars) / (len(vars)**2), float(npvar)]
+            #stats = [aucs, vars, float(npvar)]
             yield arr, stats
         elif not retMid:
             yield arr
