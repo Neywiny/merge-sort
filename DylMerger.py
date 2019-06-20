@@ -1,5 +1,5 @@
 
-class Merger(MultiMerger):
+class Merger:
     """A class for merging 2 arrays into 1 array
     Must feed it a comparator object. It can also hold onto start/stop indecies if you ask
     'Toggle' parameter defines if you want to do a cocktail merge, as in switch which end you're merging from each call of inc()
