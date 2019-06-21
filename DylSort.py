@@ -38,12 +38,11 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
         return
     sizes: list = [insSort for i in range(len(arr) // insSort)]
     if insSort > 1:
-        gSize = 4
         start = 0
         sorters = []
         while start < len(arr):
-            sorters.append(insertion_sort(arr[start:start + gSize], comp, start))
-            start += gSize
+            sorters.append(insertion_sort(arr[start:start + insSort], comp, start))
+            start += insSort
 
         while sorters:
             for sorter in sorters:
@@ -69,111 +68,39 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
         # start is the index the partition starts at
         start: int = 0
         # for each of the partitions
+        s = 0
+        groups = []
+        for ds in sizes:
+            groups.append(arr[s:s+ds])
+            s += ds
         for i, size in enumerate(sizes):
             #last group, odd one out
             if i + 1 >= len(sizes):
                 break
-            if shuffle:
+            if shuffle and sizes[i] > 4 and comp(groups[i][-1],groups[i + 1][0]):
                 #if the next group comes before the current group:
-                s = 0
-                groups = []
-                for ds in sizes:
-                    groups.append(arr[s:s+ds])
-                    s += ds
-
-                for n, group in enumerate(groups[:-1]):
-                    if comp(groups[n + 1][-1],group[0]):
-                        swap(arr, n, n+1, sizes)
-            #if comp(arr[start], arr[start + size + sizes[i + 1] - 1]):
-            #    print("switch places", arr, sizes, arr[start], arr[start + size + sizes[i + 1] - 1])
-            
-                             # if the current groups comes before the next group
-            elif (not shuffle) or comp(arr[start + size], arr[start + size - 1]): # if out of order
-                # if there was a merge (will be false on the last of odd # partitions)
-                """if n == 2:
-                    mid = start + size
-                    stop = start + size + sizes[i + 1]
-                    L = arr[start:mid]
-                    if stop > len(arr):
-                        stop = len(arr)
-                    R = arr[mid:stop]
-
-                    if retMid:
-                        Lscores = list(map(lambda x: comp.getLatentScore(x), L))
-                        Rscores = list(map(lambda x: comp.getLatentScore(x), R))
-                        medians.append(np.abs(np.median(Lscores) - np.median(Rscores)))
-
-                        for leftI,left in enumerate(L):
-                            if left > split:
-                                LL = (leftI)
-                                break
-                        else:
-                            LL = 0
-
-                        for leftI,left in enumerate(R):
-                            if left > split:
-                                RL = (leftI)
-                                break
-                        else:
-                            RL = 0
-                        
-                        for rightI,right in enumerate(reversed(L)):
-                            if right <= split:
-                                LR = (rightI)
-                                break
-                        else:
-                            LR = 0
-
-                        for rightI,right in enumerate(reversed(R)):
-                            if right <= split:
-                                RR = (rightI)
-                                break
-                        else:
-                            RR = 0
-
-                        if LL < 0: LL = 0
-                        if LR < 0: LR = 0
-                        if RL < 0: RL = 0
-                        if RR < 0: RR = 0
-
-                        if len(L) > 1:
-                            if LL + LR == len(L):
-                                if RL + RR == len(R):
-                                    pass
-                                    #print("no")
-
-                        percentages.append((LL/len(L) + RL/len(R) + LR/len(L) + RR/len(R)) / 4)
-
-                    mergers.append(MultiMerger([L, R], comp, start, stop))
-
-                    #merge(comp, arr, start, start + size, start + size + sizes[i + 1])
-                    
+                swap(arr, i, i+1, sizes)
+                sizes[i] += sizes[i + 1]
+                sizes.pop(i + 1)
+            elif shuffle and sizes[i] > 4 and i > 0 and comp(groups[i + 1][-1], groups[i][0]):
+                #if the next group comes after this group
+                sizes[i] += sizes[i + 1]
+                sizes.pop(i + 1)
+            else:
+                # get n arrays
+                # feed the MultiMergers with them
+                pos = start
+                segments = min(n, len(sizes) - i)
+                arrays = [0 for _ in range(segments)]
+                for arrNumber in range(segments):
+                    arrays[arrNumber] = arr[start:start + sizes[i + arrNumber]]
+                    start += sizes[i + arrNumber]
+                mergers.append(MultiMerger(arrays, comp, pos, 0))
+                for _ in range(segments - 1):
                     # merge the sizes
                     sizes[i] += sizes[i + 1]
                     sizes.pop(i + 1)
-                else:"""
-                if True:
-                    # get n arrays
-                    # feed the MultiMergers with them
-                    pos = start
-                    segments = min(n, len(sizes) - i)
-                    arrays = [0 for _ in range(segments)]
-                    for arrNumber in range(segments):
-                        arrays[arrNumber] = arr[start:start + sizes[i + arrNumber]]
-                        start += sizes[i + arrNumber]
-                    mergers.append(MultiMerger(arrays, comp, pos, 0))
-                    for _ in range(segments - 1):
-                        # merge the sizes
-                        sizes[i] += sizes[i + 1]
-                        sizes.pop(i + 1)
 
-            else: 
-                sizes[i] += sizes[i + 1]
-                sizes.pop(i + 1)
-                # keeps from going out of bounds, shouldn't be needed
-                if n == 2 and (i + 1 < len(sizes)):
-                    # shimmy the start index
-                    start += size + sizes[i + 1]
         
         #while we have active mergers
         while mergers:
@@ -312,10 +239,11 @@ def insertion_sort(l, comp, start):
         yield False
         l[j+1] = key
     yield (start, l)
+
 if __name__ == "__main__":
     from DylRand import *
 
-    test = 11
+    test = 13
     if test == 1:
         from random import shuffle, seed
         from tqdm import trange
@@ -459,3 +387,64 @@ if __name__ == "__main__":
             print(data)
             arrays.append(tuple(data))
         print(data)
+    elif test == 12:
+        from DylComp import Comparator
+        from DylRand import nearlySorted
+
+        """ for insSort in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
+            data = nearlySorted(256, 10)
+            comp = Comparator(data, rand=True, level=0)
+            for _ in mergeSort(data, comp, insSort=insSort, shuffle=True):
+                print("done a layer")
+            print(insSort, len(comp)) """
+        
+        data = nearlySorted(256, 10)
+        for shuffle in (True, False):
+            comp = Comparator(data, rand=True, level=0)
+            arr = data[:]
+            for _ in mergeSort(arr, comp, shuffle=shuffle):
+                pass
+            print(shuffle, len(comp), arr)
+    elif test == 13:
+        from DylData import continuousScale
+        from DylComp import Comparator
+        from DylRand import nearlySorted
+        from functools import cmp_to_key
+        from tqdm import trange
+
+        class Image:
+            def __init__(self, id, comp):
+                self.id = id
+                self.comp = comp
+            def __lt__(self, other):
+                return self.comp(self.id, other.id)
+            def __gt__(self, other):
+                return self.comp(other.id, self.id)
+
+        for i in range(10):
+            near = nearlySorted(256, 10)
+            cont = continuousScale(256)
+            comp = Comparator(cont, level=1, rand=True)
+            images = [Image(id, comp) for id in cont]
+            images.sort()
+            timCont = len(comp)
+            comp.clearHistory()
+            comp = Comparator(cont, level=1, rand=True)
+            for _ in mergeSort(cont, comp):
+                pass
+            meCont = len(comp)
+
+            comp.clearHistory()
+            comp = Comparator(near, level=1, rand=True)
+
+            images = [Image(id, comp) for id in near]
+            images.sort()
+            timNear = len(comp)
+            comp = Comparator(near, level=1, rand=True)
+            comp.clearHistory()
+            for _ in mergeSort(near, comp):
+                pass
+            meNear = len(comp)
+
+            print(timCont , meCont, timNear , meNear)
+            

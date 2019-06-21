@@ -36,9 +36,9 @@ class Comparator:
             self.counts[val] += 1
 
             #count minimum separations
-            for i, hist in enumerate(reversed(self.compHistory)):
+            """for i, hist in enumerate(reversed(self.compHistory)):
                 if i < self.minSeps[val] and val in hist:
-                    self.minSeps[val] = i
+                    self.minSeps[val] = i"""
 
             if self.last:
                 if val in self.last:
