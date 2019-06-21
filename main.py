@@ -2,23 +2,29 @@
 
 import math
 import pickle
+import os.path
 import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from multiprocessing import Pool
 from warnings import filterwarnings
 
-from DylSort import mergeSort
-from DylMath import *
 from DylComp import Comparator
+from DylMath import *
+from DylSort import mergeSort
 
 def sort(tid, i=0):
     results = list()
     data = continuousScale(256)
     sm = successMatrix(data)
     comp = Comparator(data, level=0, rand=True)
-    for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=retMid)):
+    for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=retMid, n=2, insSort=4)):
         stats.extend([len(comp), list(comp.minSeps.items())])
         results.append(stats)
     results.append(comp.compHistory)
+    if data != sorted(data, key=lambda x: comp.getLatentScore(x)[0]):
+        print(data)
+        print(sorted(data, key=lambda x: comp.getLatentScore(x)[0]))
+        raise EOFError("did not sort")
     return results
 
 
@@ -26,7 +32,7 @@ if __name__ == "__main__":
     filterwarnings('ignore')
     test = 3
     if test == 1:
-        lMax: int = 2**11
+        lMax: int = 2**8
         iters: int = 1
         levelMax: int = 0
         #data, D0, D1 = continuousScale("sampledata.csv")

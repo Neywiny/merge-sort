@@ -82,6 +82,7 @@ class Merger:
 
 class MultiMerger:
     def __init__(self, groups: list, comp, start=0, stop=0, toggle:bool=True):
+        groups = list(filter(lambda x: len(x) > 0, groups))
         self.groups = [group[:] for group in groups]
         self.comp = comp
         self.start = start
@@ -95,6 +96,8 @@ class MultiMerger:
         self.left = True
 
     def inc(self) -> bool:
+        if len(self.groups) == 0:
+            return True
         if self.left == True:
             group = [group[self.indecies[i]] for i, group in enumerate(self.groups)]
             gI, iI = self.comp.min(group)

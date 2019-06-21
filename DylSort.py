@@ -1,7 +1,7 @@
 import numpy as np
 
 from DylMath import *
-from DylMerger import Merger
+from DylMerger import *
 from tqdm import tqdm
 
 def swap(arr: list, indexA: int, indexB: int, sizes: list=None):
@@ -22,7 +22,7 @@ def swap(arr: list, indexA: int, indexB: int, sizes: list=None):
         for index in range(start, sizes[indexA]):
             arr[start + index] = temp[index]
 
-def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, retMid: bool=False) -> list:
+def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, retMid: bool=False, n: int=2, insSort: int=1) -> list:
     """mergeSort(arr: list, level=3)
     Can either be provided a comparator or will make its own
     merge sorts the list arr with 'level' amount of optimization
@@ -36,7 +36,23 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
     if not arr:
         yield arr, None if retStats else arr
         return
-    sizes: list = [1 for i in range(len(arr))]
+    sizes: list = [insSort for i in range(len(arr) // insSort)]
+    if insSort > 1:
+        gSize = 4
+        start = 0
+        sorters = []
+        while start < len(arr):
+            sorters.append(insertion_sort(arr[start:start + gSize], comp, start))
+            start += gSize
+
+        while sorters:
+            for sorter in sorters:
+                res = next(sorter)
+                if isinstance(res, (list, tuple)):
+                    start, l = res
+                    for i, val in enumerate(l):
+                        arr[start + i] = val
+                    sorters.remove(sorter)
     mergers = []
 
     if retMid:
@@ -52,7 +68,7 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
         i: int = 0
         # start is the index the partition starts at
         start: int = 0
-        # for each ot the partitions
+        # for each of the partitions
         for i, size in enumerate(sizes):
             #last group, odd one out
             if i + 1 >= len(sizes):
@@ -74,75 +90,90 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
                              # if the current groups comes before the next group
             elif (not shuffle) or comp(arr[start + size], arr[start + size - 1]): # if out of order
                 # if there was a merge (will be false on the last of odd # partitions)
-                mid = start + size
-                stop = start + size + sizes[i + 1]
-                L = arr[start:mid]
-                if stop > len(arr):
-                    stop = len(arr)
-                R = arr[mid:stop]
+                """if n == 2:
+                    mid = start + size
+                    stop = start + size + sizes[i + 1]
+                    L = arr[start:mid]
+                    if stop > len(arr):
+                        stop = len(arr)
+                    R = arr[mid:stop]
 
-                if retMid:
-                    Lscores = list(map(lambda x: comp.getLatentScore(x), L))
-                    Rscores = list(map(lambda x: comp.getLatentScore(x), R))
-                    medians.append(np.abs(np.median(Lscores) - np.median(Rscores)))
+                    if retMid:
+                        Lscores = list(map(lambda x: comp.getLatentScore(x), L))
+                        Rscores = list(map(lambda x: comp.getLatentScore(x), R))
+                        medians.append(np.abs(np.median(Lscores) - np.median(Rscores)))
 
-                    for leftI,left in enumerate(L):
-                        if left > split:
-                            LL = (leftI)
-                            break
-                    else:
-                        LL = 0
+                        for leftI,left in enumerate(L):
+                            if left > split:
+                                LL = (leftI)
+                                break
+                        else:
+                            LL = 0
 
-                    for leftI,left in enumerate(R):
-                        if left > split:
-                            RL = (leftI)
-                            break
-                    else:
-                        RL = 0
+                        for leftI,left in enumerate(R):
+                            if left > split:
+                                RL = (leftI)
+                                break
+                        else:
+                            RL = 0
+                        
+                        for rightI,right in enumerate(reversed(L)):
+                            if right <= split:
+                                LR = (rightI)
+                                break
+                        else:
+                            LR = 0
+
+                        for rightI,right in enumerate(reversed(R)):
+                            if right <= split:
+                                RR = (rightI)
+                                break
+                        else:
+                            RR = 0
+
+                        if LL < 0: LL = 0
+                        if LR < 0: LR = 0
+                        if RL < 0: RL = 0
+                        if RR < 0: RR = 0
+
+                        if len(L) > 1:
+                            if LL + LR == len(L):
+                                if RL + RR == len(R):
+                                    pass
+                                    #print("no")
+
+                        percentages.append((LL/len(L) + RL/len(R) + LR/len(L) + RR/len(R)) / 4)
+
+                    mergers.append(MultiMerger([L, R], comp, start, stop))
+
+                    #merge(comp, arr, start, start + size, start + size + sizes[i + 1])
                     
-                    for rightI,right in enumerate(reversed(L)):
-                        if right <= split:
-                            LR = (rightI)
-                            break
-                    else:
-                        LR = 0
-
-                    for rightI,right in enumerate(reversed(R)):
-                        if right <= split:
-                            RR = (rightI)
-                            break
-                    else:
-                        RR = 0
-
-                    if LL < 0: LL = 0
-                    if LR < 0: LR = 0
-                    if RL < 0: RL = 0
-                    if RR < 0: RR = 0
-
-                    if len(L) > 1:
-                        if LL + LR == len(L):
-                            if RL + RR == len(R):
-                                pass
-                                #print("no")
-
-                    percentages.append((LL/len(L) + RL/len(R) + LR/len(L) + RR/len(R)) / 4)
-
-                mergers.append(Merger(L, R, comp, start, stop))
-
-                #merge(comp, arr, start, start + size, start + size + sizes[i + 1])
-                
-                # merge the sizes
-                sizes[i] += sizes[i + 1]
-                sizes.pop(i + 1)
-                
+                    # merge the sizes
+                    sizes[i] += sizes[i + 1]
+                    sizes.pop(i + 1)
+                else:"""
+                if True:
+                    # get n arrays
+                    # feed the MultiMergers with them
+                    pos = start
+                    segments = min(n, len(sizes) - i)
+                    arrays = [0 for _ in range(segments)]
+                    for arrNumber in range(segments):
+                        arrays[arrNumber] = arr[start:start + sizes[i + arrNumber]]
+                        start += sizes[i + arrNumber]
+                    mergers.append(MultiMerger(arrays, comp, pos, 0))
+                    for _ in range(segments - 1):
+                        # merge the sizes
+                        sizes[i] += sizes[i + 1]
+                        sizes.pop(i + 1)
 
             else: 
                 sizes[i] += sizes[i + 1]
                 sizes.pop(i + 1)
-            # keeps from going out of bounds, shouldn't be needed
-            if i + 1 < len(sizes):
-                # shimmy the start index
-                start += size + sizes[i + 1]
+                # keeps from going out of bounds, shouldn't be needed
+                if n == 2 and (i + 1 < len(sizes)):
+                    # shimmy the start index
+                    start += size + sizes[i + 1]
         
         #while we have active mergers
         while mergers:
@@ -269,12 +300,22 @@ def bitonic_sort(up, x, comp):
         second = bitonic_sort(False, x[len(x) // 2:], comp)
         return bitonic_merge(up, first + second, comp)
 
-
-
+#https://rosettacode.org/wiki/Sorting_algorithms/Insertion_sort#Python
+def insertion_sort(l, comp, start):
+    for i in range(1, len(l)):
+        j = i-1 
+        key = l[i]
+        while comp(key,l[j]) and (j >= 0):
+           l[j+1] = l[j]
+           j -= 1
+           yield False
+        yield False
+        l[j+1] = key
+    yield (start, l)
 if __name__ == "__main__":
     from DylRand import *
 
-    test = 1
+    test = 11
     if test == 1:
         from random import shuffle, seed
         from tqdm import trange
@@ -384,3 +425,37 @@ if __name__ == "__main__":
         
         for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=False)):
             print(l + 1, list(map(lambda x: int(x >= 8), arr)), stats)
+    elif test == 9:
+        from DylComp import Comparator
+        from DylData import continuousScale
+        from tqdm import trange
+        comp = Comparator(list(range(256)), level=3)
+        for n in trange(2, 257):
+            comp.clearHistory()
+            arr = continuousScale(256)
+            for _ in mergeSort(arr, comp=comp, n=n):
+                pass
+            assert arr == sorted(arr)
+            print(n, len(comp), sep=',')
+    elif test == 10:
+        from DylComp import Comparator
+        from DylData import continuousScale
+
+        data = continuousScale(16)
+        comp = Comparator(data, level=0, rand=False)
+
+        for arr in mergeSort(data, comp=comp, insSort=4):
+            print(arr)
+        print(comp.compHistory)
+    elif test == 11:
+        from DylComp import Comparator
+        from DylData import continuousScale
+
+        data = continuousScale(8)
+        arrays = [tuple(data)]
+        print(data)
+        comp = Comparator(data, level=0, rand=False)
+        for _ in mergeSort(data, comp, n=4):
+            print(data)
+            arrays.append(tuple(data))
+        print(data)

@@ -44,8 +44,8 @@ class Comparator:
                 if val in self.last:
                     self.dupCount += 1
 
-        self.compHistory.append(vals[:])
-        self.last = vals[:]
+        self.compHistory.append(tuple(vals))
+        self.last = tuple(vals)
 
     def compare(self, a, b) -> bool:
         """returns a < b"""
@@ -202,7 +202,7 @@ class Comparator:
         return 0
 
 if __name__ == "__main__":
-    test = 4
+    test = 5
     if test == 1:
         comp = Comparator([i for i in range(10)], 2)
         print(comp.compare(0, 1))
@@ -239,3 +239,21 @@ if __name__ == "__main__":
         print(comp.max(group2))
         print(comp.min(group2))
         print(comp.counts)
+    elif test == 5:
+        comp = Comparator([*range(8)], rand=False)
+        print(list(comp.minSeps.items()))
+        print(comp.min([3, 7]))
+        print(comp.compHistory)
+        print(list(comp.minSeps.items()))
+        print(comp.min([1, 5]))
+        print(comp.compHistory)
+        print(list(comp.minSeps.items()))
+        print(comp.min([2, 6]))
+        print(comp.compHistory)
+        print(list(comp.minSeps.items()))
+        print(comp.min([3, 7]))
+        print(comp.compHistory)
+        print(list(comp.minSeps.items()))
+        print(comp.min([2, 6]))
+        print(comp.compHistory)
+        print(list(comp.minSeps.items()))
