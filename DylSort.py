@@ -79,11 +79,13 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
                 break
             if shuffle and sizes[i] > 4 and comp(groups[i][-1],groups[i + 1][0]):
                 #if the next group comes before the current group:
+                comp.learn([groups[i + 1] + groups[i]])
                 swap(arr, i, i+1, sizes)
                 sizes[i] += sizes[i + 1]
                 sizes.pop(i + 1)
             elif shuffle and sizes[i] > 4 and i > 0 and comp(groups[i + 1][-1], groups[i][0]):
                 #if the next group comes after this group
+                comp.learn([groups[i] + groups[i + 1]])
                 sizes[i] += sizes[i + 1]
                 sizes.pop(i + 1)
             else:
@@ -136,38 +138,6 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
             yield arr
         else:
             yield percentages, medians
-
-def merge(comp, arr: list, start: int, mid: int, stop: int):
-    """merges 2 slices of the array in place, as defined by arr[start] -> arr[mid], arr[mid] -> arr[stop]
-    no return value"""
-    i = j = 0
-    k = start
-    L = arr[start:mid]
-    if stop > len(arr):
-        stop = len(arr)
-    R = arr[mid:stop]
-    # print(start, mid, stop, L, R)
-    # Copy data to temp arrays L[] and R[] 
-    while i < len(L) and j < len(R): 
-        #  if   L[i]< R[j]:
-        if comp(L[i], R[j]):
-            arr[k] = L[i] 
-            i+=1
-        else: 
-            arr[k] = R[j] 
-            j+=1
-        k+=1
-        
-    # Checking if any element was left 
-    while i < len(L): 
-        arr[k] = L[i] 
-        i+=1
-        k+=1
-        
-    while j < len(R): 
-        arr[k] = R[j] 
-        j+=1
-        k+=1
 
 #https://en.wikipedia.org/wiki/Batcher_odd%E2%80%93even_mergesort
 def oddeven_merge_sort(length):
@@ -243,7 +213,7 @@ def insertion_sort(l, comp, start):
 if __name__ == "__main__":
     from DylRand import *
 
-    test = 13
+    test = 11
     if test == 1:
         from random import shuffle, seed
         from tqdm import trange
@@ -286,7 +256,7 @@ if __name__ == "__main__":
         pairs_to_compare = list(oddeven_merge_sort(len(data)))
         for i in range(10):
             shuffle(data)
-            comp = Comparator(data, level=3, rand=False, withComp=True)
+            comp = Comparator(data, level=3, rand=False)
             for i in pairs_to_compare: compare_and_swap(comp, data, *i)
             if data != sorted(data):
                 print("woops", data, sorted(data))
@@ -310,7 +280,7 @@ if __name__ == "__main__":
         avgs = []
         for plot in trange(100):
             data = continuousScale(256)
-            comp = Comparator(data, level=0, rand=True, withComp=True)
+            comp = Comparator(data, level=0, rand=True)
             for _ in mergeSort(data, comp=comp, retMid=True):
                 pass
             avgs.append(len(comp))
@@ -319,7 +289,7 @@ if __name__ == "__main__":
         avgs = []
         for plot in trange(100):
             data = continuousScale(256)
-            comp = Comparator(data, level=0, rand=True, withComp=True)
+            comp = Comparator(data, level=0, rand=True)
             for _ in mergeSort(data, comp=comp, retMid=False):
                 pass
             avgs.append(len(comp))
@@ -327,7 +297,7 @@ if __name__ == "__main__":
         avgs = []
         for plot in trange(5):
             data = continuousScale(256)
-            comp = Comparator(data, level=3, rand=True, withComp=True)
+            comp = Comparator(data, level=3, rand=True)
             for _ in mergeSort(data, comp=comp, retMid=True):
                 pass
             avgs.append(len(comp))
@@ -336,7 +306,7 @@ if __name__ == "__main__":
         avgs = []
         for plot in trange(5):
             data = continuousScale(256)
-            comp = Comparator(data, level=3, rand=True, withComp=True)
+            comp = Comparator(data, level=3, rand=True)
             for _ in mergeSort(data, comp=comp, retMid=False):
                 pass
             avgs.append(len(comp))
@@ -379,7 +349,7 @@ if __name__ == "__main__":
         from DylComp import Comparator
         from DylData import continuousScale
 
-        data = continuousScale(8)
+        data = continuousScale(256)
         arrays = [tuple(data)]
         print(data)
         comp = Comparator(data, level=0, rand=False)
@@ -418,33 +388,55 @@ if __name__ == "__main__":
                 self.comp = comp
             def __lt__(self, other):
                 return self.comp(self.id, other.id)
-            def __gt__(self, other):
-                return self.comp(other.id, self.id)
 
-        for i in range(10):
-            near = nearlySorted(256, 10)
+        shuffle = False
+
+        #if True:
+        for level in range(4):
+            with open("/dev/urandom", 'rb') as file: 
+                rand = [x for x in file.read(10)]
+            seed = 1
+            for val in rand: seed *= val
+            seed %= 2**32
+            near = nearlySorted(256, 40)
             cont = continuousScale(256)
-            comp = Comparator(cont, level=1, rand=True)
+            comp = Comparator(cont, level=level, rand=True, seed=seed)
             images = [Image(id, comp) for id in cont]
             images.sort()
             timCont = len(comp)
+
             comp.clearHistory()
-            comp = Comparator(cont, level=1, rand=True)
-            for _ in mergeSort(cont, comp):
+            comp = Comparator(cont, level=level, rand=True, seed=seed)
+            for _ in mergeSort(cont,comp, shuffle=shuffle):
                 pass
             meCont = len(comp)
 
             comp.clearHistory()
-            comp = Comparator(near, level=1, rand=True)
+            comp = Comparator(near, level=level, rand=True, seed=seed)
 
             images = [Image(id, comp) for id in near]
             images.sort()
             timNear = len(comp)
-            comp = Comparator(near, level=1, rand=True)
+
+            comp = Comparator(near, level=level, rand=True, seed=seed)
             comp.clearHistory()
-            for _ in mergeSort(near, comp):
+            for _ in mergeSort(near,comp, shuffle=shuffle):
                 pass
             meNear = len(comp)
 
-            print(timCont , meCont, timNear , meNear)
+            comp = Comparator(near, level=level, rand=True, seed=seed)
+
+            images = [Image(id, comp) for id in range(256)]
+            images.sort()
+            timFull = len(comp)
+
+            data = list(range(256))
+
+            comp = Comparator(data, level=level, rand=True, seed=seed)
+            comp.clearHistory()
+            for _ in mergeSort(data,comp, shuffle=shuffle):
+                pass
+            meFull = len(comp)
+
+            print(level, timCont, meCont, timNear, meNear, timFull, meFull)
             

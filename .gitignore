@@ -7,3 +7,5 @@ results*/
 jobs
 node
 *.csv
+listobject.c
+.vscode/*

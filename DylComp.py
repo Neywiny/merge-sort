@@ -8,13 +8,12 @@ class Comparator:
         Controlled with the optimizaiton level and if you want random decisions or not
         Either provide objects in init or call .genLookup before you do any comparing
         Optimization levels: will not optimize, store result, do abc association, do recursive association
-        withComp: configures if the comparator will compare pos/pos neg/neg
+        Rand: defaults to False. If True will create data from random distributions with seed parameter
     """
-    def __init__(self, objects: list = None, level: int = 3, rand: bool=False, withComp: bool=True, seed=None):
+    def __init__(self, objects: list = None, level: int = 3, rand: bool=False, seed: int=None):
         self.clearHistory()
-        self.rand = rand
-        self.seed = seed
-        self.withComp = withComp
+        self.rand: bool = rand
+        self.seed: int = seed
         self.level: int = level
         self.compHistory = list()
         self.dupCount = 0
@@ -23,6 +22,10 @@ class Comparator:
         self.minSeps = dict()
         if objects != None:
             self.genLookup(objects)
+            if rand:
+                self.n0 = self.n1 = len(objects) // 2
+                self.n1 += len(objects) % 2
+                self.genRand(self.n0, self.n1)
         self.last: tuple = None
     def __len__(self):
         """returns either the number of comparisons done"""
@@ -30,7 +33,17 @@ class Comparator:
     def __call__(self, a, b):
         """returns a < b"""
         return self.compare(a,b)
+    
+    def genRand(self, n0, n1, sep = 1.7):
+        from os import getpid, uname
+        from time import time
+        # get a random seed for each node and each process on that node, and the time
+        if self.seed == None:
+            self.seed = (int(str(ord(uname()[1][-1])) + str(getpid()) + str(int(time()))) % 2**31)
+        np.random.seed(self.seed)
+        self.vals = (tuple(np.random.normal(size=n0,loc=0)) + tuple(np.random.normal(size=n1,loc=sep)))
         
+
     def record(self, vals):
         for val in vals:
             self.counts[val] += 1
@@ -49,8 +62,8 @@ class Comparator:
 
     def compare(self, a, b) -> bool:
         """returns a < b"""
-        if not self.rand and self.level == 0:
-            return a < b
+        #if not self.rand and self.level == 0:
+            #return a < b
         try:
             if b in self.lookup[a].keys():
                 # print("cache hit")
@@ -66,11 +79,7 @@ class Comparator:
                     aScore, aNeg = self.getLatentScore(a)
                     bScore, bNeg = self.getLatentScore(b)
 
-                    if not self.withComp and (aNeg == bNeg): # no need to actually compare?
-                        needComp = False
-                        res: bool = True
-                    else:
-                        res: bool = aScore < bScore
+                    res: bool = aScore < bScore
                 else:
                     res: bool = a < b
                 if needComp:
@@ -107,12 +116,7 @@ class Comparator:
     def getLatentScore(self, index: int) -> float:
         """gets the latent score of a given index"""
         if self.rand:
-            if index < len(self.objects) // 2: # index is neg dist
-                score = self.neg[index]
-                return score, False
-            else: #index is pos dist
-                score = self.pos[index - len(self.objects) // 2]
-                return score, True
+            return self.vals[index], index <= self.n0
 
     def genLookup(self, objects: list):
         """generate the lookup table and statistics for each object provided"""
@@ -122,16 +126,6 @@ class Comparator:
             self.lookup[object] = dict()
             self.counts[object] = 0
             self.minSeps[object] = 2*len(objects)
-        if self.rand:
-            from os import getpid, uname
-            from time import time
-            # get a random seed for each node and each process on that node, and the time
-            if self.seed == None:
-                np.random.seed(int(str(ord(uname()[1][-1])) + str(getpid()) + str(int(time()))) % 2**31)
-            else:
-                np.random.seed(self.seed)
-            self.neg = list(np.random.normal(size=len(objects)//2,loc=0))
-            self.pos = list(np.random.normal(size=len(objects)//2 + len(objects) % 2,loc=1.7))
     
     def clearHistory(self):
         """clear the history statistics of comparisons"""
@@ -143,15 +137,23 @@ class Comparator:
                 self.counts[object] = 0
                 self.minSeps[object] = 2*len(self.objects)
 
-    def learn(self, arr: list):
-        """learn the order of the array provided, assuming the current optimization level allows it"""
-        if self.level > 1:
+    def learn(self, arr: list, img=None, maxi=False):
+        """learn the order of the array provided, assuming the current optimization level allows it
+        if img is provided, learns the arr w.r.t. the img and if it is max or min"""
+        if img == None and self.level > 1:
             for i, a in enumerate(arr):
                 for b in arr[i + 1:]:
                     self.lookup[a][b] = True
                     self.lookup[b][a] = False
                     if self.level > 2:
                         Comparator.optimize(self.objects, self.lookup, True, a, b)
+        elif img != None and self.level > 1:
+            for b in arr:
+                if b != img:
+                    self.lookup[img][b] = not maxi
+                    self.lookup[b][img] = maxi
+                    if self.level > 2:
+                        Comparator.optimize(self.objects, self.lookup, maxi, b, img)
 
     def max(self, arr) -> (int, int):
         if len(arr) == 0:
@@ -166,7 +168,7 @@ class Comparator:
                 maxInd = i + 1
                 maxVal = imageID
                 maxScore = score
-
+        self.learn(arr, maxVal, True)
         return maxInd, maxVal
 
     def min(self, arr) -> (int, int):
@@ -182,7 +184,7 @@ class Comparator:
                 minInd = i + 1
                 minVal = imageID
                 minScore = score
-
+        self.learn(arr, minVal, False)
         return minInd, minVal
 
     @staticmethod
@@ -215,19 +217,6 @@ if __name__ == "__main__":
         comp = Comparator([i for i in range(10)], level=3, rand=True)
         print(comp.neg)
         print(comp.pos)
-    elif test == 3:
-        from DylData import continuousScale
-        from DylSort import mergeSort
-
-        for withComp in [True, False]:
-            print(f"Comparing pos-pos neg-neg? {withComp}")
-            objects = continuousScale(8)
-            comp = Comparator(objects, rand=True, withComp=withComp)
-            for obj in objects:
-                print(f"Image number {obj} has latent score {comp.getLatentScore(obj)}")
-            print(objects)
-            for arr, stats in mergeSort(objects, comp, retStats=True):
-                print(arr)
     elif test == 4:
         comp = Comparator([*range(8)], rand=True, seed=15)
         group1 = [0, 1, 2, 3]
