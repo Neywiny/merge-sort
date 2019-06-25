@@ -25,7 +25,7 @@ class Comparator:
             if rand:
                 self.n0 = self.n1 = len(objects) // 2
                 self.n1 += len(objects) % 2
-                self.genRand(self.n0, self.n1)
+                self.genRand(self.n0, self.n1, 1.7, 'normal')
         self.last: tuple = None
     def __len__(self):
         """returns either the number of comparisons done"""
@@ -34,24 +34,28 @@ class Comparator:
         """returns a < b"""
         return self.compare(a,b)
     
-    def genRand(self, n0, n1, sep = 1.7):
+    def genRand(self, n0, n1, sep, dist):
         from os import getpid, uname
         from time import time
         # get a random seed for each node and each process on that node, and the time
         if self.seed == None:
             self.seed = (int(str(ord(uname()[1][-1])) + str(getpid()) + str(int(time()))) % 2**31)
         np.random.seed(self.seed)
-        self.vals = (tuple(np.random.normal(size=n0,loc=0)) + tuple(np.random.normal(size=n1,loc=sep)))
-        
+        if dist == 'normal':
+            self.vals = (tuple(np.random.normal(size=n0,loc=0)) + tuple(np.random.normal(size=n1,loc=sep)))
+        elif dist == 'exponential':
+            self.vals = (tuple(np.random.exponential(size=n0,scale=1)) + tuple(np.random.exponential(size=n1,scale=sep)))
+        else:
+            raise NotImplementedError("distibution must be one of ['normal','exponential']")
 
     def record(self, vals):
         for val in vals:
             self.counts[val] += 1
 
             #count minimum separations
-            """for i, hist in enumerate(reversed(self.compHistory)):
+            for i, hist in enumerate(reversed(self.compHistory)):
                 if i < self.minSeps[val] and val in hist:
-                    self.minSeps[val] = i"""
+                    self.minSeps[val] = i
 
             if self.last:
                 if val in self.last:

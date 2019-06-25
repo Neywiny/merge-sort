@@ -7,5 +7,6 @@ results*/
 jobs
 node
 *.csv
+*.ods
 listobject.c
 .vscode/*

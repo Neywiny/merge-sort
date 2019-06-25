@@ -51,6 +51,13 @@ def auc(results: tuple) -> float:
         total += y * (x - results[i + 1][0])
     return total
 
+def hanleyMcNeil(auc, n0, n1):
+    # The very good power-law variance estimate from Hanley/McNeil
+    auc2=auc*auc
+    q1=auc/(2.-auc)
+    q2=2.*auc2/(1.+auc)
+    return( (auc-auc2+(n1-1.)*(q1-auc2)+(n0-1.)*(q2-auc2))/n0/n1 )
+
 def aucSM(sm) -> float:
     return np.mean(sm)
 

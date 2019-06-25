@@ -17,7 +17,8 @@ def sort(tid, i=0):
     data = continuousScale(256)
     sm = successMatrix(data)
     comp = Comparator(data, level=0, rand=True)
-    for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=retMid, n=2, insSort=4)):
+    comp.genRand(len(data)//2, len(data)//2, 5, 'exponential')
+    for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=retMid, n=2)):
         stats.extend([len(comp), list(comp.minSeps.items())])
         results.append(stats)
     results.append(comp.compHistory)

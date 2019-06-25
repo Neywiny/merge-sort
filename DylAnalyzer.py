@@ -10,7 +10,7 @@ iters = cores*passes
 
 length = 256
 
-layers = 6
+layers = 8
 
 avgAUC = [0 for i in range(layers)]
 avgVARsm = [0 for i in range(layers)]
@@ -19,7 +19,8 @@ avgComps = [0 for i in range(layers)]
 
 avgMinSeps = [[0 for level in range(layers) ] for i in range(length)]
 
-VARnp = [[-1 for __ in range(layers)] for _ in range(iters)]
+VARsNP = [[-1 for __ in range(layers)] for _ in range(iters)]
+hanleyMcNeils = [[-1 for __ in range(layers)] for _ in range(iters)]
 aucs = [[0 for __ in range(layers)] for _ in range(iters)]
 #i = ''
 #if True:
@@ -27,12 +28,16 @@ for i in trange(1, cores + 1):
     with open("results/results"+str(i), "rb") as f:
         results = pickle.load(f)
         for iIter, iteration in enumerate(results):
-            for iLevel, (auc,smVAR,npVAR,compLen,minSeps) in enumerate(iteration[:-1]):
+            for iLevel, (auc,smVAR,npVAR,hanleyMcNeil,compLen,minSeps) in enumerate(iteration[:-1]):
+
                 aucs[iIter + ((i-1)*passes)][iLevel] = auc
+                VARsNP[iIter + ((i-1)*passes)][iLevel] = npVAR
+                hanleyMcNeils[iIter + ((i-1)*passes)][iLevel] = hanleyMcNeil
+
                 avgAUC[iLevel] += auc
                 avgVARsm[iLevel] += smVAR
-                VARnp[iIter + ((i-1)*passes)][iLevel] = npVAR
                 avgComps[iLevel] += compLen
+
                 for (key, val) in minSeps:
                     if val != (2 * length):
                         if avgMinSeps[key][iLevel] != (2 * length):
@@ -46,15 +51,17 @@ avgAUC = list(map(lambda x: x/iters, avgAUC))
 varAUCnp = np.var(aucs, ddof=1, axis=0)
 avgVARsm = list(map(lambda x: x/iters, avgVARsm))
 avgComps = list(map(lambda x: x/iters, avgComps))
-VARnp = np.mean(VARnp, axis=0)
+avgHanleyMcNeil = list(np.mean(hanleyMcNeils, axis=0))[1:]
+VARsNP = np.mean(VARsNP, axis=0)
 
-varEstimate = [VARnp[0]]
+varEstimate = [VARsNP[0]]
 varEstimate.extend([-1 for i in range(layers - 1)])
 
 #print(layers, len(varEstimate), len(avgVARsm), len(VARnp))
 
+# estimate variance as a linear combination of variances
 for layer in range(1, layers - 1):
-    varEstimate[layer] = (avgVARsm[layer] + VARnp[layer]) / 2
+    varEstimate[layer] = (layer*avgVARsm[layer] + (layers - layer)*VARsNP[layer]) / layers
 varEstimate[-1] = avgVARsm[-1]
 
 #print(avgAUC, avgVAR, avgComps)
@@ -74,6 +81,7 @@ ax2 = fig.add_subplot(2, 3, 2)
 #ax2.plot(VARnp, 'r.', ls='-.', label='VARnp of AUC')
 #ax2.plot(varAUCnp[:-1], 'm.', ls='--', label='VAR np')
 ax2.plot(xVals[1:], varEstimate, 'g.', ls='-', label='variance estimate')
+ax2.plot(xVals[2:], avgHanleyMcNeil, 'b.', ls='-', label='HmN Variance')
 ax2.legend()
 ax2.set_title("Variance Estimate per layer")
 

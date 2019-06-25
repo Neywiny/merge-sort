@@ -22,7 +22,17 @@ def swap(arr: list, indexA: int, indexB: int, sizes: list=None):
         for index in range(start, sizes[indexA]):
             arr[start + index] = temp[index]
 
-def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, retMid: bool=False, n: int=2, insSort: int=1) -> list:
+def genD0D1(d0d1: list, arr: list) -> tuple:
+    D0, D1 = list(), list()
+    
+    for item in arr:
+        if item in d0d1[0]:
+            D0.append(item)
+        elif item in d0d1[1]:
+            D1.append(item)
+    return D0, D1
+
+def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, retMid: bool=False, n: int=2, insSort: int=1, d0d1 = None) -> list:
     """mergeSort(arr: list, level=3)
     Can either be provided a comparator or will make its own
     merge sorts the list arr with 'level' amount of optimization
@@ -122,16 +132,22 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
 
         # run dem stats
         if retStats:
-            aucs, vars = list(), list()
+            aucs, vars, hanleyMcNeils = list(), list(), list()
             start = 0
             for size in sizes:
                 curr = arr[start:size + start]
-                sm = successMatrix(curr, list(sorted(curr))[:len(curr)//2], list(sorted(curr))[len(curr)//2:])
-                aucs.append(aucSM(sm))
+                if d0d1 != None:
+                    D0, D1 = genD0D1(d0d1, curr)
+                else:
+                    D0, D1 = list(sorted(curr))[:len(curr)//2], list(sorted(curr))[len(curr)//2:]
+                sm = successMatrix(curr, D0, D1)
+                auc = aucSM(sm)
+                aucs.append(auc)
+                hanleyMcNeils.append(hanleyMcNeil(auc, len(D0), len(D1)))
                 vars.append(unbiasedMeanMatrixVar(sm))
                 start += size
             npvar = np.var(aucs, ddof=1) / len(aucs)
-            stats = [sum(aucs) / len(sizes), sum(vars) / (len(vars)**2), float(npvar)]
+            stats = [sum(aucs) / len(sizes), sum(vars) / (len(vars)**2), float(npvar), sum(hanleyMcNeils) / (len(hanleyMcNeils)**2)]
             #stats = [aucs, vars, float(npvar)]
             yield arr, stats
         elif not retMid:
