@@ -1,7 +1,6 @@
 import numpy as np
 from numpy import matlib as mb
 from ROC1 import *
-from random import shuffle
 from scipy.special import erfinv
 from math import sqrt
 from warnings import filterwarnings
@@ -12,6 +11,7 @@ def AUC(x1, x0):
 	return np.mean(sm), unbiasedMeanMatrixVar(sm)
 
 def simulation_ELO_targetAUC(N):
+	results = []
 	##
 	# Function for the simulation of ELO rating given an AUC of 0.8 (most of it, hard-coded), 
 	# the input to the function is N (the number of samples on the rating study).
@@ -55,6 +55,8 @@ def simulation_ELO_targetAUC(N):
 	M = L*N
 	rating = np.append(mb.zeros((N, 1)), mb.zeros((N, 1)), axis=0)
 	
+	cnt = 0
+	ncmp = 0
 
 	for l in range(1, L+1):
 		vals = mb.zeros((2*N, 1))
@@ -62,19 +64,17 @@ def simulation_ELO_targetAUC(N):
 		if l == 1:
 			# option A: only compare + vs -
 			arr = list(range(N))
-			shuffle(arr)
+			np.random.shuffle(arr)
 			vals[0::2] = np.array(arr, ndmin=2).transpose()
 			arr = list(range(N, 2 * N))
-			shuffle(arr)
+			np.random.shuffle(arr)
 			vals[1::2] = np.array(arr, ndmin=2).transpose()
 		else:
 			# option B: everything is valid
 			arr = list(range(2 * N))
-			shuffle(arr)
+			np.random.shuffle(arr)
 			vals = np.array(arr, ndmin=2).transpose()
 	
-		cnt = 0
-		ncmp = 0
 		for i in range(1, 2*N, 2):
 			a = int(vals[i - 1])
 			b = int(vals[i])
@@ -105,17 +105,16 @@ def simulation_ELO_targetAUC(N):
 		x1 = rating[N:(2*N) + 1]
 		auc1 = AUC(x1, x0)
 
-		#print(f'AUC: {auc1:.3f}\n')
-		print(cnt, ncmp, *auc1, sep=',')
+		results.append(f"{N}, {cnt}, {ncmp}, {auc1[0]}, {auc1[1]}\n")
+	return results
 if __name__ == '__main__':
 	from tqdm import tqdm, trange
-	""" from multiprocess import Pool
+	from p_tqdm import p_umap
 
-	with Pool() as p:
-		n = list(range(0, 201, 1))
-		results = p.map(simulation_ELO_targetAUC, n)
-	for i, res in enumerate(results):
-		print(i, *res) """
+	n = list(range(2, 201, 1))
+	resultss = p_umap(simulation_ELO_targetAUC, n)
 
-	for n in trange(201):
-		simulation_ELO_targetAUC(n)
+	with open("res.csv", "w") as f:
+		for results in resultss:
+			for result in results:
+				f.write(result)

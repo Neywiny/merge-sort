@@ -46,7 +46,7 @@ for i in trange(1, cores + 1):
                         else:
                             avgMinSeps[key][iLevel] = val / iters
                     else:
-                        avgMinSeps[key][iLevel] = np.NaN
+                        avgMinSeps[key][iLevel] = (2 * length)
         del results #pleeeeeeeeeeeease get out of memory
 avgAUC = list(map(lambda x: x/iters, avgAUC))
 varAUCnp = np.var(aucs, ddof=1, axis=0)
@@ -56,7 +56,7 @@ avgHanleyMcNeil = list(np.sum(hanleyMcNeils, axis=0) / np.count_nonzero(hanleyMc
 VARsNP = np.mean(VARsNP, axis=0)
 
 labels = ['median:']
-for val in np.median(avgMinSeps, axis=0):
+for val in np.median(avgMinSeps, axis=0)[1:]:
     labels.append(f'{val:3.02f}')
 
 varEstimate = [VARsNP[0]]
@@ -109,8 +109,8 @@ ax4.set_title("Average Comparisons per Layer")
 
 ax5 = fig.add_subplot(2, 2, 4)
 plot = ax5.imshow(avgMinSeps,norm=LogNorm(), extent=[0, length, 0, length], aspect=0.5)
-ax5.set_xticks([*range(0, length + length//layers, length//layers)])
-ax5.set_xticklabels([*map(lambda i: str(i) + '\n' +  labels[i], range(layers + 1))])
+ax5.set_xticks([*range(length//(2*layers), length, length//layers)])
+ax5.set_xticklabels([*map(lambda i: str(i + 1) + '\n' +  labels[i], range(layers))])
 cbaxes = fig.add_axes([0.91, 0.13, 0.01, 0.31])
 cbar = fig.colorbar(plot, cax=cbaxes)
 

@@ -1,7 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import numpy
-numpy.seterr(all="ignore")
 def unbiasedMeanMatrixVar(sm,df=1):
 	# Estimate the unbiased variance of the mean of a 2D matrix with 
 	# two way random effects + residuals
