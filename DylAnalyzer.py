@@ -1,11 +1,12 @@
 import pickle
 import numpy as np
+np.seterr(divide='ignore', invalid='ignore')
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from tqdm import trange, tqdm
 
 cores = 19
-passes = 2560
+passes = 640
 iters = cores*passes
 
 length = 256
@@ -20,7 +21,7 @@ avgComps = [0 for i in range(layers)]
 avgMinSeps = [[0 for level in range(layers) ] for i in range(length)]
 
 VARsNP = [[-1 for __ in range(layers)] for _ in range(iters)]
-hanleyMcNeils = [[-1 for __ in range(layers)] for _ in range(iters)]
+hanleyMcNeils = [[0 for __ in range(layers)] for _ in range(iters)]
 aucs = [[0 for __ in range(layers)] for _ in range(iters)]
 #i = ''
 #if True:
@@ -45,14 +46,18 @@ for i in trange(1, cores + 1):
                         else:
                             avgMinSeps[key][iLevel] = val / iters
                     else:
-                        avgMinSeps[key][iLevel] = (2 * length)
+                        avgMinSeps[key][iLevel] = np.NaN
         del results #pleeeeeeeeeeeease get out of memory
 avgAUC = list(map(lambda x: x/iters, avgAUC))
 varAUCnp = np.var(aucs, ddof=1, axis=0)
 avgVARsm = list(map(lambda x: x/iters, avgVARsm))
 avgComps = list(map(lambda x: x/iters, avgComps))
-avgHanleyMcNeil = list(np.mean(hanleyMcNeils, axis=0))[1:]
+avgHanleyMcNeil = list(np.sum(hanleyMcNeils, axis=0) / np.count_nonzero(hanleyMcNeils, axis=0))[1:]
 VARsNP = np.mean(VARsNP, axis=0)
+
+labels = ['median:']
+for val in np.median(avgMinSeps, axis=0):
+    labels.append(f'{val:3.02f}')
 
 varEstimate = [VARsNP[0]]
 varEstimate.extend([-1 for i in range(layers - 1)])
@@ -94,6 +99,7 @@ for layer in range(layers - 1):
         print(varEstimate, avgComps)
 ax3.plot(xVals[2:], info)
 ax3.set_title("Information Gained per Comparison per Layer")
+ax3.set_yscale('log')
 
 ax4 = fig.add_subplot(2, 2, 3)
 ax4.plot([0, len(avgComps)], [0, max(avgComps)], 'b:')
@@ -104,7 +110,7 @@ ax4.set_title("Average Comparisons per Layer")
 ax5 = fig.add_subplot(2, 2, 4)
 plot = ax5.imshow(avgMinSeps,norm=LogNorm(), extent=[0, length, 0, length], aspect=0.5)
 ax5.set_xticks([*range(0, length + length//layers, length//layers)])
-ax5.set_xticklabels([*range(layers + 1)])
+ax5.set_xticklabels([*map(lambda i: str(i) + '\n' +  labels[i], range(layers + 1))])
 cbaxes = fig.add_axes([0.91, 0.13, 0.01, 0.31])
 cbar = fig.colorbar(plot, cax=cbaxes)
 
