@@ -59,8 +59,8 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
                 res = next(sorter)
                 if isinstance(res, (list, tuple)):
                     start, l = res
-                    for i, val in enumerate(l):
-                        arr[start + i] = val
+                    for i, val in enumerate(l, start=start):
+                        arr[i] = val
                     sorters.remove(sorter)
     mergers = []
 
@@ -337,8 +337,8 @@ if __name__ == "__main__":
         for val in sorted(data):
             print(val, comp.getLatentScore(val))
         
-        for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=False)):
-            print(l + 1, list(map(lambda x: int(x >= 8), arr)), stats)
+        for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=False), start=1):
+            print(l, list(map(lambda x: int(x >= 8), arr)), stats)
     elif test == 9:
         from DylComp import Comparator
         from DylData import continuousScale

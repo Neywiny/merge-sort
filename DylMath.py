@@ -47,8 +47,8 @@ def auc(results: tuple) -> float:
     if not isinstance(results[0], (list, tuple)):
         results = genROC(results)
     total: float = 0.0
-    for i,(x,y) in enumerate(results[:-1]):
-        total += y * (x - results[i + 1][0])
+    for i,(x,y) in enumerate(results[:-1], start=1):
+        total += y * (x - results[i][0])
     return total
 
 def hanleyMcNeil(auc, n0, n1):

@@ -166,10 +166,10 @@ class Comparator:
         maxVal = arr[0]
         maxScore = self.getLatentScore(arr[0]) if self.rand else arr[0]
         maxInd = 0
-        for i, imageID in enumerate(arr[1:]):
-            score = self.getLatentScore(imageID) if self.rand else arr[i + 1]
+        for i, imageID in enumerate(arr[1:], start=1):
+            score = self.getLatentScore(imageID) if self.rand else arr[i]
             if score > maxScore:
-                maxInd = i + 1
+                maxInd = i
                 maxVal = imageID
                 maxScore = score
         self.learn(arr, maxVal, True)
@@ -182,10 +182,10 @@ class Comparator:
         minVal = arr[0]
         minScore = self.getLatentScore(arr[0]) if self.rand else arr[0]
         minInd = 0
-        for i, imageID in enumerate(arr[1:]):
-            score = self.getLatentScore(imageID) if self.rand else arr[i + 1]
+        for i, imageID in enumerate(arr[1:], start=1):
+            score = self.getLatentScore(imageID) if self.rand else arr[i]
             if score < minScore:
-                minInd = i + 1
+                minInd = i
                 minVal = imageID
                 minScore = score
         self.learn(arr, minVal, False)
