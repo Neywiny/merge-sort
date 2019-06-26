@@ -20,6 +20,13 @@ from DylRand import nearlySorted
 from DylData import *
 
 unbiasedMeanMatrixVar = ROC1.unbiasedMeanMatrixVar
+
+def paramToParams(predicted, D0=None, D1=None):
+    if isinstance(predicted[0], (list, tuple)):
+        return predicted[0], predicted[1], predicted[2]
+    else:
+        return predicted, D0, D1
+
 def stdev(inp: list) -> float:
     """std(inp) -> standard deviation of the input
     inp can be a list or the variance of that list"""
@@ -31,11 +38,19 @@ def se(inp: list, n=None) -> float:
     n needs to be provided"""
     return stdev(inp) / math.sqrt(len(n) if n != None else len(inp))
 
-def pc(arr: list) -> float:
+def pc(arr: list, D0: list, D1: list) -> float:
     # calc % correct
     # add up all the times a number is on the correct side
     # divide by total to get the average
-    return sum((arr[i] < len(arr)/2) == (i < len(arr)/2) for i in range(len(arr))) / (len(arr) - 1)
+    pc: float = 0.0
+    for i,val in enumerate(arr):
+        if val in D0:
+            if i < len(D0):
+                pc += 1
+        elif val in D1:
+            if i > len(D0):
+                pc += 1
+    return pc / len(arr)
 
 def var(arr: list, npc=None) -> float:
     """var(arr) -> binomial variance of the array"""
@@ -62,6 +77,7 @@ def aucSM(sm) -> float:
     return np.mean(sm)
 
 def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple: 
+    predicted, D0, D1 = paramToParams(predicted, D0, D1)
     def genFPFTPF(threshold: int, predicted: tuple, D0: tuple, D1: tuple):
         FPcount: int = 0
         TPcount: int = 0
@@ -80,7 +96,7 @@ def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple:
     if D0 == None:
         D0 = tuple((i for i in range(length//2)))
     if D1 ==  None:
-        D1 =  tuple((i for i in range(length//2, length)))
+        D1 = tuple((i for i in range(length//2, length)))
     points: list = [(1,1)]
     for i in range(length):
         points.append(genFPFTPF(i, predicted, D0, D1))
@@ -89,6 +105,7 @@ def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple:
 
 
 def graphROC(predicted: tuple, D0=None, D1=None):
+    predicted, D0, D1 = paramToParams(predicted, D0, D1)
     plt.plot(*zip(*genROC(predicted, D0, D1)))
     plt.plot((0,1),(0,1),c="r", linestyle="--")
     plt.ylim(top=1.1,bottom=-0.1)
@@ -97,7 +114,7 @@ def graphROC(predicted: tuple, D0=None, D1=None):
     plt.gca().set(xlabel="False Positive Fraction", ylabel="True Positive Fraction") 
     plt.show()
 
-def graphROCs(arrays: list, withPatches=False, withLine=True):
+def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
     rows = int(math.ceil(math.sqrt(len(arrays))))
     cols = int(math.ceil(len(arrays) / rows))
     fig, axes = plt.subplots(rows, cols, sharex=True, sharey=True, num="plots")
@@ -105,7 +122,8 @@ def graphROCs(arrays: list, withPatches=False, withLine=True):
     
     if withLine:
         if len(arrays[0]) < 1024:
-            results = list(map(genROC, arrays))
+            params = [(array, D0, D1) for array in arrays]
+            results = list(map(genROC, params))
         else:
             with Pool(processes=8) as p:
                 results = list(tqdm(p.imap(genROC,arrays), total=len(arrays)))
@@ -124,27 +142,26 @@ def graphROCs(arrays: list, withPatches=False, withLine=True):
             if not withPatches:
                 ax.set_title(f"Iteration #{i} AUC: {auc(results[i]):.5f}")
         if withPatches:
-            sm = successMatrix(arrays[i])
+            sm = successMatrix(arrays[i], D0, D1)
             yes = []
             no = []
             length = len(arrays[0])//2
+            yLen = len(D1)
+            xLen = len(D0)
             for (y,x), value in np.ndenumerate(sm):
                 if value:
-                    yes.append(Rectangle((x/length,y/length),1/length,1/length))
+                    yes.append(Rectangle((x/xLen,y/yLen),1/xLen,1/yLen))
                 else:
-                    no.append(Rectangle((x/length,y/length),1/length,1/length))
+                    no.append(Rectangle((x/xLen,y/yLen),1/xLen,1/yLen))
                 pbar.update(1)
             patches = PatchCollection(no, facecolor = 'r', alpha=0.75, edgecolor='None')
             ax.add_collection(patches)
             patches = PatchCollection(yes, facecolor = 'g', alpha=0.75, edgecolor='None')
             ax.add_collection(patches)
-            area: float = 0.0
-            for box in yes:
-                area += box.get_height()*box.get_width()
+            area = len(yes) / (len(yes) + len(no))
             ax.set_ylim(top=1, bottom=0)
             ax.set_xlim(left=0, right=1)
-            #ax.set_title(f"Iteration #{i} PC: {int(len(yes)/(len(yes)+len(no)) * 100)}% AUC: {area:.2f}")
-            ax.set_title(f"Iteration #{i} PC: {int(pc(arrays[i])*100)}% AUC: {area:.5f}")
+            ax.set_title(f"Iteration #{i} PC: {int(pc(arrays[i], D0, D1)*100)}% AUC: {area:.5f}")
     if withPatches:
         pbar.close()
     figManager = plt.get_current_fig_manager()
@@ -157,18 +174,18 @@ def successMatrix(predicted: list, D0: list=None, D1: list=None):
         D0 = [i for i in range(len(predicted) // 2)]
     if D1 == None:
         D1 = [i for i in range(len(predicted) // 2, len(predicted))]
-
     arr = np.full((len(D1), len(D0)), -1)
     for col, x in enumerate(reversed(D0)):
-        for row, y in enumerate(D1):
-            arr[row, col] = int(predicted.index(y) > predicted.index(x))
+        for row, y in enumerate(reversed(D1)):
+            yInd, xInd = predicted.index(y), predicted.index(x)
+            arr[row, col] = int(xInd < yInd)
     if -1 in arr:
         raise EnvironmentError("failed to create success matrix")
     return arr
 
 if __name__ == "__main__":
     from DylSort import mergeSort
-    test = 3
+    test = 4
     if test == 1:
         #print(D0, D1) 
         newData, D0, D1 = continuousScale("sampledata.csv")
@@ -186,3 +203,9 @@ if __name__ == "__main__":
     elif test == 3:
         predicted = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19]
         print(aucSM(successMatrix(predicted, [*range(10)], [*range(10,20)])))
+    elif test == 4:
+        arrays = [[0, 1, 4, 2, 5, 3, 6], 
+                  [0, 1, 2, 4, 3, 5, 6],
+                  [0, 1, 2, 4, 3, 5, 6],
+                  [0, 1, 2, 3, 4, 5, 6]]
+        graphROCs(arrays, D0=[0, 1, 2, 3], D1=[4, 5, 6])
