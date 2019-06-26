@@ -29,7 +29,7 @@ def sort(tid, i=0):
 
 if __name__ == "__main__":
     filterwarnings('ignore')
-    test = 3
+    test = 2
     if test == 1:
         lMax: int = 2**8
         iters: int = 1
@@ -65,17 +65,18 @@ if __name__ == "__main__":
         #print(arrs)
         graphROCs(arrs)
     elif test == 2:
-        nums = [i for i in range(2048)]
-        data = [nums.pop((len(nums)) // 2) if i % 2 else nums.pop(0) for i in range(len(nums))]
-        power = 8
-        data = randomDisease(2**power)
+        from DylData import continuousScale
+        power = 15
+        data = continuousScale(2**power)
         arrays = [data[:]]
         #graphROC(data)
         #print(successMatrix(data))
-        for arr,_ in tqdm(mergeSort(data, level=0, rand=False), total=power):
+        comp = Comparator(data, level=0, rand=True)
+        comp.bRecord = False
+        for _ in tqdm(mergeSort(data, comp=comp), total=power):
             arrays.append(data[:])
             #print(successMatrix(data))
-        graphROCs(arrays, withLine=True,withPatches=True)
+        graphROCs(arrays, withLine=True,withPatches=False)
     elif test == 3:
         results = list()
         if len(sys.argv) > 1:

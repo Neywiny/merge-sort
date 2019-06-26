@@ -20,6 +20,7 @@ class Comparator:
         self.optCount = 0
         self.counts = dict()
         self.minSeps = dict()
+        self.bRecord = True
         if objects != None:
             self.genLookup(objects)
             if rand:
@@ -49,6 +50,8 @@ class Comparator:
             raise NotImplementedError("distibution must be one of ['normal','exponential']")
 
     def record(self, vals):
+        if not self.bRecord:
+            return
         for val in vals:
             self.counts[val] += 1
 
