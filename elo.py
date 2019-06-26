@@ -51,33 +51,33 @@ def simulation_ELO_targetAUC(N):
 	## 
 	# PRE-STABLISHED COMPARISONS
 	#
-	L = 100; 
-	M = L*N
+	runs = 100; 
+	M = runs*N
 	rating = np.append(mb.zeros((N, 1)), mb.zeros((N, 1)), axis=0)
 	
 	cnt = 0
 	ncmp = 0
 
-	for l in range(1, L+1):
-		vals = mb.zeros((2*N, 1))
+	for run in range(1, runs+1):
+		toCompare = mb.zeros((2*N, 1))
 	
-		if l == 1:
+		if run == 1:
 			# option A: only compare + vs -
 			arr = list(range(N))
 			np.random.shuffle(arr)
-			vals[0::2] = np.array(arr, ndmin=2).transpose()
+			toCompare[0::2] = np.array(arr, ndmin=2).transpose()
 			arr = list(range(N, 2 * N))
 			np.random.shuffle(arr)
-			vals[1::2] = np.array(arr, ndmin=2).transpose()
+			toCompare[1::2] = np.array(arr, ndmin=2).transpose()
 		else:
 			# option B: everything is valid
 			arr = list(range(2 * N))
 			np.random.shuffle(arr)
-			vals = np.array(arr, ndmin=2).transpose()
+			toCompare = np.array(arr, ndmin=2).transpose()
 	
 		for i in range(1, 2*N, 2):
-			a = int(vals[i - 1])
-			b = int(vals[i])
+			a = int(toCompare[i - 1])
+			b = int(toCompare[i])
 	
 			QA = 10**(int(rating[a]) / K1)
 			QB = 10**(int(rating[b]) / K1)
