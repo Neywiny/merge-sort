@@ -56,9 +56,8 @@ class Comparator:
             self.counts[val] += 1
 
             #count minimum separations
-            for i, hist in enumerate(reversed(self.compHistory)):
-                if i < self.minSeps[val] and val in hist:
-                    self.minSeps[val] = i
+            new = len(self) - self.minSeps[val][1]
+            self.minSeps[val] = [min(new, self.minSeps[val][0]), len(self)]
 
             if self.last:
                 if val in self.last:
@@ -131,8 +130,7 @@ class Comparator:
         self.objects: list = objects
         for object in objects:
             self.lookup[object] = dict()
-            self.counts[object] = 0
-            self.minSeps[object] = 2*len(objects)
+        self.clearHistory()
     
     def clearHistory(self):
         """clear the history statistics of comparisons"""
@@ -142,7 +140,7 @@ class Comparator:
             self.dupCount = 0
             for object in self.objects:
                 self.counts[object] = 0
-                self.minSeps[object] = 2*len(self.objects)
+                self.minSeps[object] = [2*len(self.objects),0]
 
     def learn(self, arr: list, img=None, maxi=False):
         """learn the order of the array provided, assuming the current optimization level allows it

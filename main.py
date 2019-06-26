@@ -18,7 +18,7 @@ def sort(tid, i=0):
     comp = Comparator(data, level=0, rand=True)
     comp.genRand(len(data)//2, len(data)//2, 7.72, 'exponential')
     for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=retMid, n=2)):
-        stats.extend([len(comp), [comp.minSeps[key] for key in sorted(comp.minSeps.keys())]])
+        stats.extend([len(comp), [comp.minSeps[key][0] for key in sorted(comp.minSeps.keys())]])
         results.append(stats)
     if data != sorted(data, key=lambda x: comp.getLatentScore(x)[0]):
         print(data)
@@ -29,7 +29,7 @@ def sort(tid, i=0):
 
 if __name__ == "__main__":
     filterwarnings('ignore')
-    test = 2
+    test = 3
     if test == 1:
         lMax: int = 2**8
         iters: int = 1
@@ -66,17 +66,17 @@ if __name__ == "__main__":
         graphROCs(arrs)
     elif test == 2:
         from DylData import continuousScale
-        power = 15
+        power = 8
         data = continuousScale(2**power)
         arrays = [data[:]]
         #graphROC(data)
         #print(successMatrix(data))
         comp = Comparator(data, level=0, rand=True)
-        comp.bRecord = False
+        #comp.bRecord = False
         for _ in tqdm(mergeSort(data, comp=comp), total=power):
             arrays.append(data[:])
             #print(successMatrix(data))
-        graphROCs(arrays, withLine=True,withPatches=False)
+        graphROCs(arrays, withLine=True,withPatches=False, D0=list(range(2**(power - 1))), D1=range(2**(power - 1), 2**(power)))
     elif test == 3:
         results = list()
         if len(sys.argv) > 1:
