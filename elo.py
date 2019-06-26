@@ -7,7 +7,7 @@ from warnings import filterwarnings
 filterwarnings('ignore')
 
 def AUC(x1, x0):
-	sm = successmatrix(x1, x0)
+	sm = successmatrix(x1, np.transpose(x0))
 	return np.mean(sm), unbiasedMeanMatrixVar(sm)
 
 def simulation_ELO_targetAUC(N):
@@ -108,7 +108,8 @@ def simulation_ELO_targetAUC(N):
 		results.append(f"{N}, {cnt}, {ncmp}, {auc1[0]}, {auc1[1]}\n")
 	return results
 if __name__ == '__main__':
-	from tqdm import tqdm, trange
+	simulation_ELO_targetAUC(200)
+	"""from tqdm import tqdm, trange
 	from p_tqdm import p_umap
 
 	n = list(range(2, 201, 1))
@@ -117,4 +118,4 @@ if __name__ == '__main__':
 	with open("res.csv", "w") as f:
 		for results in resultss:
 			for result in results:
-				f.write(result)
+				f.write(result)"""
