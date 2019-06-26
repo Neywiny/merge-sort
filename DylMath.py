@@ -78,28 +78,20 @@ def aucSM(sm) -> float:
 
 def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple: 
     predicted, D0, D1 = paramToParams(predicted, D0, D1)
-    def genFPFTPF(threshold: int, predicted: tuple, D0: tuple, D1: tuple):
-        FPcount: int = 0
-        TPcount: int = 0
-        for i in range(len(predicted)):
-            if i >= threshold: # positive and should be negative
-                if predicted[i] in D0: # false positive
-                    FPcount += 1
-                if predicted[i] in D1: # true positive
-                    TPcount += 1
-        TPF: float = TPcount / len(D1)
-        FPF: float = FPcount / len(D0)
-        #print(threshold, FPcount, TPcount, sep='\t')
-        return FPF, TPF
+
     length: int = len(predicted)
     actual: tuple = tuple(int(i > length/2 - 1) for i in range(length))
-    if D0 == None:
-        D0 = tuple((i for i in range(length//2)))
-    if D1 ==  None:
-        D1 = tuple((i for i in range(length//2, length)))
     points: list = [(1,1)]
-    for i in range(length):
-        points.append(genFPFTPF(i, predicted, D0, D1))
+    FPcount: int = len(D0)
+    TPcount: int = len(D1)
+    for threshold in reversed(range(length)):
+        if predicted[threshold] in D0: # false positive
+            FPcount -= 1
+        if predicted[threshold] in D1: # true positive
+            TPcount -= 1
+        TPF: float = TPcount / len(D1)
+        FPF: float = FPcount / len(D0)
+        points.append((TPF, FPF))
     points.append((0,0))
     return points
 
@@ -121,12 +113,12 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
     fig.suptitle("ROC curves")
     
     if withLine:
+        params = [(array, D0, D1) for array in arrays]
         if len(arrays[0]) < 1024:
-            params = [(array, D0, D1) for array in arrays]
             results = list(map(genROC, params))
         else:
-            with Pool(processes=8) as p:
-                results = list(tqdm(p.imap(genROC,arrays), total=len(arrays)))
+            with Pool() as p:
+                results = list(p.imap(genROC,params))
     if withPatches:
         pbar = tqdm(total=len(arrays)*(len(arrays[0])//2)**2)
     for i,ax in enumerate(axes.flat):
