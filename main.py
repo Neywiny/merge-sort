@@ -19,9 +19,8 @@ def sort(tid, i=0):
     comp = Comparator(data, level=0, rand=True)
     comp.genRand(len(data)//2, len(data)//2, 7.72, 'exponential')
     for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=retMid, n=2)):
-        stats.extend([len(comp), list(comp.minSeps.items())])
+        stats.extend([len(comp), [comp.minSeps[key] for key in sorted(comp.minSeps.keys())]])
         results.append(stats)
-    results.append(comp.compHistory)
     if data != sorted(data, key=lambda x: comp.getLatentScore(x)[0]):
         print(data)
         print(sorted(data, key=lambda x: comp.getLatentScore(x)[0]))

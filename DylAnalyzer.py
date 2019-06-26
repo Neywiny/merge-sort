@@ -29,7 +29,7 @@ for i in trange(1, cores + 1):
     with open("results/results"+str(i), "rb") as f:
         results = pickle.load(f)
         for iIter, iteration in enumerate(results):
-            for iLevel, (auc,smVAR,npVAR,hanleyMcNeil,compLen,minSeps) in enumerate(iteration[:-1]):
+            for iLevel, (auc,smVAR,npVAR,hanleyMcNeil,compLen,minSeps) in enumerate(iteration):
 
                 aucs[iIter + ((i-1)*passes)][iLevel] = auc
                 VARsNP[iIter + ((i-1)*passes)][iLevel] = npVAR
@@ -39,7 +39,7 @@ for i in trange(1, cores + 1):
                 avgVARsm[iLevel] += smVAR
                 avgComps[iLevel] += compLen
 
-                for (key, val) in minSeps:
+                for key, val in enumerate(minSeps):
                     if val != (2 * length):
                         if avgMinSeps[key][iLevel] != (2 * length):
                             avgMinSeps[key][iLevel] += val / iters
@@ -74,6 +74,9 @@ xVals = [*range(1, len(avgAUC) + 1)]
 fig = plt.figure()
 ax1 = fig.add_subplot(2, 3, 1)
 #ax1.plot(xVals, avgAUC, 'g.-', label='AUC')
+"""for iter in trange(1000):
+    for level in range(len(aucs[0])):
+        ax1.scatter(level, aucs[iter][level])"""
 ax1.errorbar(xVals, avgAUC, yerr=np.sqrt(varEstimate))
 ax1.set_ylabel('AUC', color='b')
 ax1.ticklabel_format(useOffset=False)
