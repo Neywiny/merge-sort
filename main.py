@@ -29,7 +29,7 @@ def sort(tid, i=0):
 
 if __name__ == "__main__":
     filterwarnings('ignore')
-    test = 3
+    test = 2
     if test == 1:
         lMax: int = 2**8
         iters: int = 1
@@ -66,12 +66,13 @@ if __name__ == "__main__":
         graphROCs(arrs)
     elif test == 2:
         from DylData import continuousScale
-        power = 8
+        power = 15
         data = continuousScale(2**power)
         arrays = [data[:]]
         #graphROC(data)
         #print(successMatrix(data))
         comp = Comparator(data, level=0, rand=True)
+        comp.genRand(2**(power - 1), 2**(power - 1), 7.72, 'exponential')
         #comp.bRecord = False
         for _ in tqdm(mergeSort(data, comp=comp), total=power):
             arrays.append(data[:])

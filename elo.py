@@ -12,6 +12,7 @@ def AUC(x1, x0):
 
 def simulation_ELO_targetAUC(N):
 	results = []
+	N = 256
 	##
 	# Function for the simulation of ELO rating given an AUC of 0.8 (most of it, hard-coded), 
 	# the input to the function is N (the number of samples on the rating study).
@@ -24,7 +25,7 @@ def simulation_ELO_targetAUC(N):
 	# DATA GENERATION 
 	#
 	
-	auc = 0.80
+	auc = 0.8
 	K = ( 2 * erfinv(2*auc-1) ) ** 2
 	K1 = 400
 	K2 = 32
@@ -51,17 +52,17 @@ def simulation_ELO_targetAUC(N):
 	## 
 	# PRE-STABLISHED COMPARISONS
 	#
-	runs = 100; 
-	M = runs*N
+	rounds = 100; 
+	M = rounds*N
 	rating = np.append(mb.zeros((N, 1)), mb.zeros((N, 1)), axis=0)
 	
 	cnt = 0
 	ncmp = 0
 
-	for run in range(1, runs+1):
+	for round in range(1, rounds+1):
 		toCompare = mb.zeros((2*N, 1))
 	
-		if run == 1:
+		if round == 1:
 			# option A: only compare + vs -
 			arr = list(range(N))
 			np.random.shuffle(arr)
@@ -108,14 +109,60 @@ def simulation_ELO_targetAUC(N):
 		results.append(f"{N}, {cnt}, {ncmp}, {auc1[0]}, {auc1[1]}\n")
 	return results
 if __name__ == '__main__':
-	simulation_ELO_targetAUC(200)
-	"""from tqdm import tqdm, trange
-	from p_tqdm import p_umap
+	test = 1
+	if test == 1:
+		#simulation_ELO_targetAUC(200)
+		from tqdm import tqdm, trange
+		from p_tqdm import p_umap
 
-	n = list(range(2, 201, 1))
-	resultss = p_umap(simulation_ELO_targetAUC, n)
+		n = list(range(1000))
+		resultss = p_umap(simulation_ELO_targetAUC, n)
 
-	with open("res.csv", "w") as f:
-		for results in resultss:
-			for result in results:
-				f.write(result)"""
+		with open("res.csv", "w") as f:
+			for results in resultss:
+				for result in results:
+					f.write(result)
+	elif test == 2:
+		import matplotlib.pyplot as plt
+
+		mavgVAR = [0.00079233, 0.00062563, 0.00053144, 0.00048861, 0.00046847, 0.00045563, 0.00045076, 0.00044814]
+		mVar = [0.0007922935327750722, 0.0006219975781022436, 0.0005373716225063664, 0.000494514994197877, 0.00047087097180417714, 0.00046050219813277343, 0.0004541607057533005, 0.00045509292906403695]
+		mAUC = [0.8854691354851973, 0.8855060778166118, 0.8856959292763158, 0.885616663882607, 0.8856648093775699, 0.8856661344829359, 0.885683250427246, 0.8856790893956235]
+		mComp = [128.0, 291.8201480263158, 494.91825657894736, 722.3478618421053, 963.271052631579, 1211.5181743421053, 1463.5886513157895, 1717.5917763157895]
+
+		aucs = dict()
+		vars = dict()
+
+		for i in range(256, 25860, 256):
+			aucs[i] = list()
+			vars[i] = list()
+
+		with open("res.csv") as f:
+			for line in f:
+				line = line.split(", ")
+				line[2] = int(line[2])
+				aucs[line[2]].append(float(line[3]))
+				vars[line[2]].append(float(line[4]))
+
+		avgAUC = [np.mean(aucs[layer]) for layer in aucs.keys()]
+		varAUC = [np.var(aucs[layer], ddof=1) for layer in aucs.keys()]
+		avgVAR = [np.mean(vars[layer]) for layer in aucs.keys()]
+
+
+		fig = plt.figure()
+		ax1 = fig.add_subplot(1, 2, 1)
+		ax1.errorbar(list(range(256, 2048, 256)), avgAUC[:7],c='r', ls='-', yerr=np.sqrt(avgVAR[:7]), capsize=10, label='elo')
+		ax1.plot(mComp, mAUC, 'b.-', label='merge')
+		ax1.legend()
+		ax1.set_title("AUC")
+
+		ax2 = fig.add_subplot(1, 2, 2)
+		ax2.plot(list(range(256, 2048, 256)), varAUC[:7], 'r.-', label='elo var of auc')
+		ax2.plot(list(range(256, 2048, 256)), avgVAR[:7], 'r.--', label='elo mean of var')
+		ax2.plot(mComp, mVar, 'b.-', label='merge var of auc')
+		ax2.plot(mComp, mavgVAR, 'b.--', label='merge mean of var')
+		ax2.legend()
+		ax2.set_title("VAR")
+		plt.show()
+
+

@@ -55,8 +55,8 @@ avgComps = list(map(lambda x: x/iters, avgComps))
 avgHanleyMcNeil = list(np.sum(hanleyMcNeils, axis=0) / np.count_nonzero(hanleyMcNeils, axis=0))[1:]
 VARsNP = np.mean(VARsNP, axis=0)
 
-labels = ['median:']
-for val in np.median(avgMinSeps, axis=0)[1:]:
+labels = []
+for val in np.median(avgMinSeps, axis=0):
     labels.append(f'{val:3.02f}')
 
 varEstimate = [VARsNP[0]]
@@ -68,6 +68,12 @@ varEstimate.extend([-1 for i in range(layers - 1)])
 for layer in range(1, layers - 1):
     varEstimate[layer] = (layer*avgVARsm[layer] + (layers - layer)*VARsNP[layer]) / layers
 varEstimate[-1] = avgVARsm[-1]
+
+#print(varEstimate)
+#print(varAUCnp)
+#print(avgAUC)
+#print(avgComps)
+#exit()
 
 #print(avgAUC, avgVAR, avgComps)
 xVals = [*range(1, len(avgAUC) + 1)]
@@ -102,7 +108,7 @@ for layer in range(layers - 1):
         print(varEstimate, avgComps)
 ax3.plot(xVals[2:], info)
 ax3.set_title("Information Gained per Comparison per Layer")
-ax3.set_yscale('log')
+#ax3.set_yscale('log')
 
 ax4 = fig.add_subplot(2, 2, 3)
 ax4.plot([0, len(avgComps)], [0, max(avgComps)], 'b:')
