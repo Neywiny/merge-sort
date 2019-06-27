@@ -31,14 +31,16 @@ def simulation_ELO_targetAUC(N):
 	K2 = 32
 
 	
-	mu1 = 1
-	mu0 = 0
-	si0 = 0.84
-	si1 = sqrt( 2*((mu1-mu0)**2/K - si0**2 /2 ) )
+	#mu1 = 1
+	#mu0 = 0
+	#si0 = 0.84
+	#si1 = sqrt( 2*((mu1-mu0)**2/K - si0**2 /2 ) )
 	
 	
-	neg = np.random.normal(mu0, si0, (N, 1))
-	plus = np.random.normal(mu1, si1, (N, 1))
+	#neg = np.random.normal(mu0, si0, (N, 1))
+	#plus = np.random.normal(mu1, si1, (N, 1))
+	neg = np.random.normal(0, 1, (N, 1))
+	plus = np.random.normal(1.7, 1, (N, 1))
 	
 	scores = np.append(neg, plus)
 	truth = np.append(mb.zeros((N, 1)), mb.ones((N, 1)), axis=0)
@@ -109,26 +111,33 @@ def simulation_ELO_targetAUC(N):
 		results.append(f"{N}, {cnt}, {ncmp}, {auc1[0]}, {auc1[1]}\n")
 	return results
 if __name__ == '__main__':
-	test = 1
+	test = 2
 	if test == 1:
 		#simulation_ELO_targetAUC(200)
 		from tqdm import tqdm, trange
-		from p_tqdm import p_umap
+		from multiprocessing import Pool
+		#from p_tqdm import p_umap
 
-		n = list(range(1000))
-		resultss = p_umap(simulation_ELO_targetAUC, n)
+		iters = 12160
+		n = list(range(iters))
+		resultss = list()
+		with tqdm(total=iters, smoothing=0) as pbar:
+			with Pool() as p:
+				for result in p.imap_unordered(simulation_ELO_targetAUC, n):
+					pbar.update(1)
+					resultss.append(result)
 
-		with open("res.csv", "w") as f:
+		with open("res2.csv", "w") as f:
 			for results in resultss:
 				for result in results:
 					f.write(result)
 	elif test == 2:
 		import matplotlib.pyplot as plt
 
-		mavgVAR = [0.00079233, 0.00062563, 0.00053144, 0.00048861, 0.00046847, 0.00045563, 0.00045076, 0.00044814]
-		mVar = [0.0007922935327750722, 0.0006219975781022436, 0.0005373716225063664, 0.000494514994197877, 0.00047087097180417714, 0.00046050219813277343, 0.0004541607057533005, 0.00045509292906403695]
-		mAUC = [0.8854691354851973, 0.8855060778166118, 0.8856959292763158, 0.885616663882607, 0.8856648093775699, 0.8856661344829359, 0.885683250427246, 0.8856790893956235]
-		mComp = [128.0, 291.8201480263158, 494.91825657894736, 722.3478618421053, 963.271052631579, 1211.5181743421053, 1463.5886513157895, 1717.5917763157895]
+		mavgVAR = [0.0007928570819701683, 0.000624243348662616, 0.0005402276755908466, 0.0004963394115731297, 0.0004755500709900993, 0.00046520331114676235, 0.00045806630192552476, 0.0004566737278141967]
+		mVar = [0.00078663, 0.00061926, 0.00054135, 0.00049812, 0.00047672, 0.00046507, 0.0004615, 0.00045958]
+		mAUC = [0.8853836862664474, 0.8853178325452302, 0.885256636770148, 0.8853289955540707, 0.8853519640470806, 0.8853439130281148, 0.885368537902832, 0.8853677799827174]
+		mComp = [128.0, 291.64925986842104, 494.84457236842104, 722.2412006578948, 963.2411184210526, 1211.5435855263158, 1463.6465460526315, 1717.6822368421053]
 
 		aucs = dict()
 		vars = dict()
@@ -137,7 +146,7 @@ if __name__ == '__main__':
 			aucs[i] = list()
 			vars[i] = list()
 
-		with open("res.csv") as f:
+		with open("res2.csv") as f:
 			for line in f:
 				line = line.split(", ")
 				line[2] = int(line[2])
@@ -151,16 +160,18 @@ if __name__ == '__main__':
 
 		fig = plt.figure()
 		ax1 = fig.add_subplot(1, 2, 1)
-		ax1.errorbar(list(range(256, 2048, 256)), avgAUC[:7],c='r', ls='-', yerr=np.sqrt(avgVAR[:7]), capsize=10, label='elo')
+		ax1.errorbar(list(range(256, 2048, 256)), avgAUC[:7],c='r', ls='-', marker='.', yerr=np.sqrt(varAUC[:7]), capsize=10, label='elo')
 		ax1.plot(mComp, mAUC, 'b.-', label='merge')
 		ax1.legend()
 		ax1.set_title("AUC")
 
 		ax2 = fig.add_subplot(1, 2, 2)
-		ax2.plot(list(range(256, 2048, 256)), varAUC[:7], 'r.-', label='elo var of auc')
-		ax2.plot(list(range(256, 2048, 256)), avgVAR[:7], 'r.--', label='elo mean of var')
 		ax2.plot(mComp, mVar, 'b.-', label='merge var of auc')
 		ax2.plot(mComp, mavgVAR, 'b.--', label='merge mean of var')
+		#ax2.legend(loc=2)
+		#ax2 = ax2.twinx()
+		ax2.plot(list(range(256, 2048, 256)), varAUC[:7], 'r.-', label='elo var of auc')
+		ax2.plot(list(range(256, 2048, 256)), avgVAR[:7], 'r.--', label='elo mean of var')
 		ax2.legend()
 		ax2.set_title("VAR")
 		plt.show()
