@@ -18,7 +18,7 @@ def sort(tid, i=0):
     comp = Comparator(data, level=0, rand=True)
     comp.genRand(len(data)//2, len(data)//2, 7.72, 'exponential')
     for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=retMid, n=2)):
-        stats.extend([len(comp), [comp.minSeps[key][0] for key in sorted(comp.minSeps.keys())]])
+        stats.extend([len(comp), comp.genSeps()])
         results.append(stats)
     if data != sorted(data, key=lambda x: comp.getLatentScore(x)[0]):
         print(data)
@@ -29,7 +29,7 @@ def sort(tid, i=0):
 
 if __name__ == "__main__":
     filterwarnings('ignore')
-    test = 2
+    test = 3
     if test == 1:
         lMax: int = 2**8
         iters: int = 1
@@ -66,31 +66,35 @@ if __name__ == "__main__":
         graphROCs(arrs)
     elif test == 2:
         from DylData import continuousScale
-        power = 15
+        power = 8
         data = continuousScale(2**power)
         arrays = [data[:]]
         #graphROC(data)
         #print(successMatrix(data))
         comp = Comparator(data, level=0, rand=True)
-        comp.genRand(2**(power - 1), 2**(power - 1), 7.72, 'exponential')
+        comp.genRand(2**(power - 1), 2**(power - 1), 1.7, 'normal')
         #comp.bRecord = False
         for _ in tqdm(mergeSort(data, comp=comp), total=power):
             arrays.append(data[:])
             #print(successMatrix(data))
         graphROCs(arrays, withLine=True,withPatches=False, D0=list(range(2**(power - 1))), D1=range(2**(power - 1), 2**(power)))
     elif test == 3:
+        from tqdm import tqdm
         results = list()
         if len(sys.argv) > 1:
             args = list(map(lambda x: eval(x), sys.argv[2:]))
             iters = args[0]
             ids = [*range(iters)]
             retMid = args[1]
+            topBar = tqdm(total=iters, smoothing=0, bar_format="{percentage:3.0f}% {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]")
+            botBar = tqdm(total=iters, smoothing=0, bar_format="{bar}")
             with Pool() as p:
-                i = 1
                 for result in p.imap_unordered(sort, ids):
-                    print(f'{i} / {iters}', end='\r', flush=True)
-                    i += 1
+                    topBar.update()
+                    botBar.update()
                     results.append(result)
+            botBar.close()
+            topBar.close()
             print('\n')
         else:
             retMid = False
@@ -99,3 +103,23 @@ if __name__ == "__main__":
         #change output file if requested to do so
         with open('results/results'+str(sys.argv[1] if len(sys.argv) > 1 else ''), 'wb') as f:
             pickle.dump(results, f)
+    elif test == 4:
+        from random import shuffle
+        import numpy as np
+        import matplotlib.pyplot as plt
+
+        power = 10
+
+        img = np.zeros((power + 1, 2**power))
+
+        data = list(range(2**power))
+        comp = Comparator(data, level=0)
+
+        shuffle(data)
+        img[0] = data[:]
+        for i,_ in enumerate(mergeSort(data, comp=comp), start=1):
+            img[i] = data[:]
+
+        plt.imshow(img, cmap='Greys', extent=[0, 2**power, 0, 2**power], aspect=1)
+
+        plt.show()

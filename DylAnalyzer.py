@@ -18,7 +18,7 @@ avgVARsm = [0 for i in range(layers)]
 avgComps = [0 for i in range(layers)]
 
 
-avgMinSeps = [[0 for level in range(layers) ] for i in range(length)]
+avgMinSeps = [[0 for level in range(layers - 1) ] for i in range(length)]
 
 VARsNP = [[-1 for __ in range(layers)] for _ in range(iters)]
 hanleyMcNeils = [[0 for __ in range(layers)] for _ in range(iters)]
@@ -41,12 +41,7 @@ for i in trange(1, cores + 1):
 
                 for key, val in enumerate(minSeps):
                     if val != (2 * length):
-                        if avgMinSeps[key][iLevel] != (2 * length):
-                            avgMinSeps[key][iLevel] += val / iters
-                        else:
-                            avgMinSeps[key][iLevel] = val / iters
-                    else:
-                        avgMinSeps[key][iLevel] = (2 * length)
+                        avgMinSeps[key][iLevel - 1] += val / iters
         del results #pleeeeeeeeeeeease get out of memory
 avgAUC = list(map(lambda x: x/iters, avgAUC))
 varAUCnp = np.var(aucs, ddof=1, axis=0)
@@ -91,11 +86,11 @@ ax1.set_title("Average AUC per layer")
 xVals = [*range(0, len(avgComps) + 1)]
 
 ax2 = fig.add_subplot(2, 3, 2)
-#ax2.plot(avgVARsm, 'b.', ls=':', label='VAR sm')
-#ax2.plot(VARnp, 'r.', ls='-.', label='VARnp of AUC')
-#ax2.plot(varAUCnp[:-1], 'm.', ls='--', label='VAR np')
-ax2.plot(xVals[1:], varEstimate, 'g.', ls='-', label='variance estimate')
-ax2.plot(xVals[2:], avgHanleyMcNeil, 'b.', ls='-', label='HmN Variance')
+ax2.plot(avgVARsm, 'b.', ls=':', label='VAR sm')
+ax2.plot(varAUCnp, 'r.', ls='-.', label='VARnp of AUC')
+ax2.plot(VARsNP[:-1], 'm.', ls='--', label='VAR np')
+#ax2.plot(xVals[1:], varEstimate, 'g.', ls='-', label='variance estimate')
+#ax2.plot(xVals[2:], avgHanleyMcNeil, 'b.', ls='-', label='HmN Variance')
 ax2.legend()
 ax2.set_title("Variance Estimate per layer")
 
@@ -118,8 +113,8 @@ ax4.set_title("Average Comparisons per Layer")
 
 ax5 = fig.add_subplot(2, 2, 4)
 plot = ax5.imshow(avgMinSeps,norm=LogNorm(), extent=[0, length, 0, length], aspect=0.5)
-ax5.set_xticks([*range(length//(2*layers), length, length//layers)])
-ax5.set_xticklabels([*map(lambda i: str(i + 1) + '\n' +  labels[i], range(layers))])
+ax5.set_xticks([*range(length//(2*layers), length, int((layers / (layers - 1))*(length//layers)))])
+ax5.set_xticklabels([*map(lambda i: str(i + 2) + '\n' +  labels[i], range(layers - 1))])
 cbaxes = fig.add_axes([0.91, 0.13, 0.01, 0.31])
 cbar = fig.colorbar(plot, cax=cbaxes)
 

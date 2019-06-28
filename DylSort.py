@@ -250,7 +250,7 @@ if __name__ == "__main__":
         for level in range(5):
             for arr, comp in mergeSort(l[:], level = level, retComp=True):
                 pass
-            print(level, len(comp), comp.dupHistory, min(comp.minSeps.values()), comp.optHistory)
+            print(level, len(comp), comp.dupHistory, min(comp.seps.values()), comp.optHistory)
     elif test == 3:
         m = Merger([0, 1, 2, 4, 5, 6, 7, 8, 9], [3], Comparator([0,1, 2, 3, 4, 5, 6, 7, 8, 9], level=3))
         while not m.inc():

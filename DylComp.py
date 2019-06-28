@@ -19,7 +19,7 @@ class Comparator:
         self.dupCount = 0
         self.optCount = 0
         self.counts = dict()
-        self.minSeps = dict()
+        self.seps = dict()
         self.bRecord = True
         if objects != None:
             self.genLookup(objects)
@@ -56,8 +56,7 @@ class Comparator:
             self.counts[val] += 1
 
             #count minimum separations
-            new = len(self) - self.minSeps[val][1]
-            self.minSeps[val] = [min(new, self.minSeps[val][0]), len(self)]
+            self.seps[val].append(len(self))
 
             if self.last:
                 if val in self.last:
@@ -124,6 +123,14 @@ class Comparator:
         if self.rand:
             return self.vals[index], index <= self.n0
 
+    def genSeps(self):
+        minseps = [2*len(self.objects) for i in range(len(self.objects))]
+        for img, times in self.seps.items():
+            if len(times) > 1:
+                minseps[img] = min(map(lambda x: times[x + 1] - times[x], range(len(times) - 1)))
+        return minseps
+
+
     def genLookup(self, objects: list):
         """generate the lookup table and statistics for each object provided"""
         self.lookup:dict = dict()
@@ -140,7 +147,7 @@ class Comparator:
             self.dupCount = 0
             for object in self.objects:
                 self.counts[object] = 0
-                self.minSeps[object] = [2*len(self.objects),0]
+                self.seps[object] = list()
 
     def learn(self, arr: list, img=None, maxi=False):
         """learn the order of the array provided, assuming the current optimization level allows it
@@ -235,19 +242,19 @@ if __name__ == "__main__":
         print(comp.counts)
     elif test == 5:
         comp = Comparator([*range(8)], rand=False)
-        print(list(comp.minSeps.items()))
+        print(list(comp.seps.items()))
         print(comp.min([3, 7]))
         print(comp.compHistory)
-        print(list(comp.minSeps.items()))
+        print(list(comp.seps.items()))
         print(comp.min([1, 5]))
         print(comp.compHistory)
-        print(list(comp.minSeps.items()))
+        print(list(comp.seps.items()))
         print(comp.min([2, 6]))
         print(comp.compHistory)
-        print(list(comp.minSeps.items()))
+        print(list(comp.seps.items()))
         print(comp.min([3, 7]))
         print(comp.compHistory)
-        print(list(comp.minSeps.items()))
+        print(list(comp.seps.items()))
         print(comp.min([2, 6]))
         print(comp.compHistory)
-        print(list(comp.minSeps.items()))
+        print(list(comp.seps.items()))

@@ -11,6 +11,8 @@ try:
     import matplotlib
     matplotlib.use('QT4Agg')
     import matplotlib.pyplot as plt
+    font = {'size' : 56}
+    matplotlib.rc('font', **font)
     from matplotlib.collections import PatchCollection
     from matplotlib.patches import Rectangle
 except BaseException as e:
@@ -58,9 +60,9 @@ def var(arr: list, npc=None) -> float:
         npc = pc(arr)
     return npc*(1-npc)/len(arr)
 
-def auc(results: tuple) -> float:
+def auc(results: tuple, D0=None, D1=None) -> float:
     if not isinstance(results[0], (list, tuple)):
-        results = genROC(results)
+        results = genROC(results, D0, D1)
     total: float = 0.0
     for i,(x,y) in enumerate(results[:-1], start=1):
         total += y * (x - results[i][0])
@@ -78,8 +80,11 @@ def aucSM(sm) -> float:
 
 def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple: 
     predicted, D0, D1 = paramToParams(predicted, D0, D1)
-
     length: int = len(predicted)
+    if D0 == None:
+        D0 = tuple((i for i in range(length//2)))
+    if D1 == None:
+        D1 =  tuple((i for i in range(length//2, length + (length % 2))))
     actual: tuple = tuple(int(i > length/2 - 1) for i in range(length))
     points: list = [(1,1)]
     FPcount: int = len(D0)
@@ -98,12 +103,15 @@ def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple:
 
 def graphROC(predicted: tuple, D0=None, D1=None):
     predicted, D0, D1 = paramToParams(predicted, D0, D1)
-    plt.plot(*zip(*genROC(predicted, D0, D1)))
-    plt.plot((0,1),(0,1),c="r", linestyle="--")
-    plt.ylim(top=1.1,bottom=-0.1)
-    plt.xlim(left=-0.1,right=1.1)
-    plt.title(f"PC: {int(pc(predicted) * 100)}% AUC: {auc(predicted):.2f}")
-    plt.gca().set(xlabel="False Positive Fraction", ylabel="True Positive Fraction") 
+    fig = plt.figure(figsize=(4,4))
+    ax = fig.add_subplot(111)
+    ax.plot(*zip(*genROC(predicted, D0, D1)))
+    ax.plot((0,1),(0,1),c="r", linestyle="--")
+    ax.set_ylim(top=1.1,bottom=-0.1)
+    ax.set_xlim(left=-0.1,right=1.1)
+    ax.set_title(f"AUC: {auc(predicted, D0, D1):.2f}")
+    ax.set_xlabel("FPF")
+    ax.set_ylabel("TPF") 
     plt.show()
 
 def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
@@ -177,7 +185,7 @@ def successMatrix(predicted: list, D0: list=None, D1: list=None):
 
 if __name__ == "__main__":
     from DylSort import mergeSort
-    test = 4
+    test = 5
     if test == 1:
         #print(D0, D1) 
         newData, D0, D1 = continuousScale("sampledata.csv")
@@ -201,3 +209,5 @@ if __name__ == "__main__":
                   [0, 1, 2, 4, 3, 5, 6],
                   [0, 1, 2, 3, 4, 5, 6]]
         graphROCs(arrays, D0=[0, 1, 2, 3], D1=[4, 5, 6])
+    elif test == 5:
+        graphROC([4, 1, 2, 3], [1, 2], [3, 4])
