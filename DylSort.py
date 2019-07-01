@@ -135,19 +135,22 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
             aucs, vars, hanleyMcNeils = list(), list(), list()
             start = 0
             for size in sizes:
-                curr = arr[start:size + start]
+                group = arr[start:size + start]
                 if d0d1 != None:
-                    D0, D1 = genD0D1(d0d1, curr)
+                    D0, D1 = genD0D1(d0d1, group)
                 else:
-                    D0, D1 = list(sorted(curr))[:len(curr)//2], list(sorted(curr))[len(curr)//2:]
-                sm = successMatrix(curr, D0, D1)
+                    D0, D1 = list(sorted(group))[:len(group)//2], list(sorted(group))[len(group)//2:]
+                sm = successMatrix(group, D0, D1)
                 auc = aucSM(sm)
                 aucs.append(auc)
-                hanleyMcNeils.append(hanleyMcNeil(auc, len(D0), len(D1)))
+                hanleyMcNeils.append((len(D0), len(D1)))
                 vars.append(unbiasedMeanMatrixVar(sm))
                 start += size
             npvar = np.var(aucs, ddof=1) / len(aucs)
-            stats = [sum(aucs) / len(sizes), sum(vars) / (len(vars)**2), float(npvar), sum(hanleyMcNeils) / (len(hanleyMcNeils)**2)]
+            avgAUC = np.mean(aucs)
+            for i, (N0, N1) in enumerate(hanleyMcNeils):
+                hanleyMcNeils[i] = hanleyMcNeil(avgAUC, N0, N1)
+            stats = [avgAUC, sum(vars) / (len(vars)**2), float(npvar), sum(hanleyMcNeils) / len(hanleyMcNeils)**2]
             #stats = [aucs, vars, float(npvar)]
             yield arr, stats
         elif not retMid:
