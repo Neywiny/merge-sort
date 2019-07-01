@@ -47,7 +47,7 @@ avgAUC = list(map(lambda x: x/iters, avgAUC))
 varAUCnp = np.var(aucs, ddof=1, axis=0)
 avgVARsm = list(map(lambda x: x/iters, avgVARsm))
 avgComps = list(map(lambda x: x/iters, avgComps))
-avgHanleyMcNeil = list(np.sum(hanleyMcNeils, axis=0) / np.count_nonzero(hanleyMcNeils, axis=0))[1:]
+avgHanleyMcNeil = np.mean(hanleyMcNeils, axis=0)
 VARsNP = np.mean(VARsNP, axis=0)
 
 labels = []
@@ -86,11 +86,11 @@ ax1.set_title("Average AUC per layer")
 xVals = [*range(0, len(avgComps) + 1)]
 
 ax2 = fig.add_subplot(2, 3, 2)
-ax2.plot(avgVARsm, 'b.', ls=':', label='VAR sm')
-ax2.plot(varAUCnp, 'r.', ls='-.', label='VARnp of AUC')
-ax2.plot(VARsNP[:-1], 'm.', ls='--', label='VAR np')
-#ax2.plot(xVals[1:], varEstimate, 'g.', ls='-', label='variance estimate')
-#ax2.plot(xVals[2:], avgHanleyMcNeil, 'b.', ls='-', label='HmN Variance')
+#ax2.plot(avgVARsm, 'b.', ls=':', label='VAR sm')
+#ax2.plot(varAUCnp, 'r.', ls='-.', label='VARnp of AUC')
+#ax2.plot(VARsNP[:-1], 'm.', ls='--', label='VAR np')
+ax2.plot(xVals[1:], varEstimate, 'g.', ls='-', label='variance estimate')
+ax2.plot(xVals[2:], avgHanleyMcNeil[1:], 'b.', ls='-', label='HmN Variance')
 ax2.legend()
 ax2.set_title("Variance Estimate per layer")
 
