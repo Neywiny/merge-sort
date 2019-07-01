@@ -4,23 +4,12 @@ from DylMath import *
 from DylMerger import *
 from tqdm import tqdm
 
-def swap(arr: list, indexA: int, indexB: int, sizes: list=None):
-    """swaps in arr either the indecies indexA and indexB, or the slices of the array as defined by 'sizes'"""
+def swap(arr: list, indexA: int, indexB):
+    """swaps in arr either the indecies indexA and indexB"""
     if sizes == None: # swap elements
         temp = arr[indexA]
         arr[indexA] = arr[indexB]
         arr[indexB] = temp
-    else: # swap groups
-        start = sum(sizes[:indexB])
-        toSwap = arr[start:start + sizes[indexB]]
-        start = sum(sizes[:indexA])
-        temp = arr[start:start + sizes[indexA]]
-        start = sum(sizes[:indexA])
-        for index in range(start, sizes[indexB]):
-            arr[start + index] = toSwap[index]
-        start = sum(sizes[:indexB])
-        for index in range(start, sizes[indexA]):
-            arr[start + index] = temp[index]
 
 def genD0D1(d0d1: list, arr: list) -> tuple:
     D0, D1 = list(), list()
@@ -32,7 +21,7 @@ def genD0D1(d0d1: list, arr: list) -> tuple:
             D1.append(item)
     return D0, D1
 
-def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, retMid: bool=False, n: int=2, insSort: int=1, d0d1 = None) -> list:
+def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n: int=2, d0d1 = None) -> list:
     """mergeSort(arr: list, level=3)
     Can either be provided a comparator or will make its own
     merge sorts the list arr with 'level' amount of optimization
@@ -46,22 +35,9 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
     if not arr:
         yield arr, None if retStats else arr
         return
-    sizes: list = [insSort for i in range(len(arr) // insSort)]
-    if insSort > 1:
-        start = 0
-        sorters = []
-        while start < len(arr):
-            sorters.append(insertion_sort(arr[start:start + insSort], comp, start))
-            start += insSort
 
-        while sorters:
-            for sorter in sorters:
-                res = next(sorter)
-                if isinstance(res, (list, tuple)):
-                    start, l = res
-                    for i, val in enumerate(l, start=start):
-                        arr[i] = val
-                    sorters.remove(sorter)
+    groups: list = list([arr[i]] for i in range(len(arr)))
+
     mergers = []
 
     if retMid:
@@ -72,70 +48,42 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
         percentages = []
 
     # while there are partitions
-    while sizes[0] < len(arr):
-        # i is the partition number
-        i: int = 0
-        # start is the index the partition starts at
-        start: int = 0
-        # for each of the partitions
-        s = 0
-        groups = []
-        for ds in sizes:
-            groups.append(arr[s:s+ds])
-            s += ds
-        for i, size in enumerate(sizes):
+    while len(groups) != 1:
+        i = 0
+        while groups:
             #last group, odd one out
-            if i + 1 >= len(sizes):
+            if i + 1 >= len(groups):
                 break
-            if shuffle and sizes[i] > 4 and comp(groups[i][-1],groups[i + 1][0]):
-                #if the next group comes before the current group:
-                comp.learn([groups[i + 1] + groups[i]])
-                swap(arr, i, i+1, sizes)
-                sizes[i] += sizes[i + 1]
-                sizes.pop(i + 1)
-            elif shuffle and sizes[i] > 4 and i > 0 and comp(groups[i + 1][-1], groups[i][0]):
-                #if the next group comes after this group
-                comp.learn([groups[i] + groups[i + 1]])
-                sizes[i] += sizes[i + 1]
-                sizes.pop(i + 1)
-            else:
-                # get n arrays
-                # feed the MultiMergers with them
-                pos = start
-                segments = min(n, len(sizes) - i)
-                arrays = [0 for _ in range(segments)]
-                for arrNumber in range(segments):
-                    arrays[arrNumber] = arr[start:start + sizes[i + arrNumber]]
-                    start += sizes[i + arrNumber]
-                mergers.append(MultiMerger(arrays, comp, pos, 0))
-                for _ in range(segments - 1):
-                    # merge the sizes
-                    sizes[i] += sizes[i + 1]
-                    sizes.pop(i + 1)
-
-        
+            # get n arrays
+            # feed the MultiMergers with them
+            segments = min(n, len(groups) - i)
+            arrays = list()
+            for iSegment in range(segments):
+                arrays.append(groups.pop(0))
+            mergers.append(MultiMerger(arrays, comp, i, 0))
+        i += n
         #while we have active mergers
         while mergers:
             for merger in mergers:
                 res = merger.inc()
                 if res: #if that merger is done
                     #print(merger.output)
-                    start = merger.start
                     if -1 in merger.output:
                         raise FloatingPointError("it didn't actually do it")
-                    comp.learn(merger.output)
                     for i, v in enumerate(merger.output):
                         if merger.output.count(v) > 1:
                             raise EnvironmentError(f"duplicated {v}")
-                        arr[start + i] = v
+                    comp.learn(merger.output)
+                    groups.append(merger.output)
                     mergers.remove(merger)
-
+        arr = []
+        for group in groups:
+            arr.extend(group)
         # run dem stats
         if retStats:
             aucs, vars, hanleyMcNeils = list(), list(), list()
             start = 0
-            for size in sizes:
-                group = arr[start:size + start]
+            for group in groups:
                 if d0d1 != None:
                     D0, D1 = genD0D1(d0d1, group)
                 else:
@@ -145,7 +93,6 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
                 aucs.append(auc)
                 hanleyMcNeils.append((len(D0), len(D1)))
                 vars.append(unbiasedMeanMatrixVar(sm))
-                start += size
             npvar = np.var(aucs, ddof=1) / len(aucs)
             avgAUC = np.mean(aucs)
             for i, (N0, N1) in enumerate(hanleyMcNeils):
@@ -154,6 +101,7 @@ def mergeSort(arr: list, comp=None, shuffle: bool=False, retStats: bool=False, r
             #stats = [aucs, vars, float(npvar)]
             yield arr, stats
         elif not retMid:
+            print(groups)
             yield arr
         else:
             yield percentages, medians
@@ -216,23 +164,10 @@ def bitonic_sort(up, x, comp):
         second = bitonic_sort(False, x[len(x) // 2:], comp)
         return bitonic_merge(up, first + second, comp)
 
-#https://rosettacode.org/wiki/Sorting_algorithms/Insertion_sort#Python
-def insertion_sort(l, comp, start):
-    for i in range(1, len(l)):
-        j = i-1 
-        key = l[i]
-        while comp(key,l[j]) and (j >= 0):
-           l[j+1] = l[j]
-           j -= 1
-           yield False
-        yield False
-        l[j+1] = key
-    yield (start, l)
-
 if __name__ == "__main__":
     from DylRand import *
 
-    test = 11
+    test = 10
     if test == 1:
         from random import shuffle, seed
         from tqdm import trange
@@ -361,7 +296,7 @@ if __name__ == "__main__":
         data = continuousScale(16)
         comp = Comparator(data, level=0, rand=False)
 
-        for arr in mergeSort(data, comp=comp, insSort=4):
+        for arr in mergeSort(data, comp=comp):
             print(arr)
         print(comp.compHistory)
     elif test == 11:
@@ -383,7 +318,7 @@ if __name__ == "__main__":
         """ for insSort in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
             data = nearlySorted(256, 10)
             comp = Comparator(data, rand=True, level=0)
-            for _ in mergeSort(data, comp, insSort=insSort, shuffle=True):
+            for _ in mergeSort(data, comp):
                 print("done a layer")
             print(insSort, len(comp)) """
         
@@ -391,7 +326,7 @@ if __name__ == "__main__":
         for shuffle in (True, False):
             comp = Comparator(data, rand=True, level=0)
             arr = data[:]
-            for _ in mergeSort(arr, comp, shuffle=shuffle):
+            for _ in mergeSort(arr, comp):
                 pass
             print(shuffle, len(comp), arr)
     elif test == 13:
@@ -426,7 +361,7 @@ if __name__ == "__main__":
 
             comp.clearHistory()
             comp = Comparator(cont, level=level, rand=True, seed=seed)
-            for _ in mergeSort(cont,comp, shuffle=shuffle):
+            for _ in mergeSort(cont,comp):
                 pass
             meCont = len(comp)
 
@@ -439,7 +374,7 @@ if __name__ == "__main__":
 
             comp = Comparator(near, level=level, rand=True, seed=seed)
             comp.clearHistory()
-            for _ in mergeSort(near,comp, shuffle=shuffle):
+            for _ in mergeSort(near,comp):
                 pass
             meNear = len(comp)
 
@@ -453,7 +388,7 @@ if __name__ == "__main__":
 
             comp = Comparator(data, level=level, rand=True, seed=seed)
             comp.clearHistory()
-            for _ in mergeSort(data,comp, shuffle=shuffle):
+            for _ in mergeSort(data,comp):
                 pass
             meFull = len(comp)
 

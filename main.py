@@ -20,9 +20,9 @@ def sort(tid, i=0):
     for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=retMid, n=2)):
         stats.extend([len(comp), comp.genSeps()])
         results.append(stats)
-    if data != sorted(data, key=lambda x: comp.getLatentScore(x)[0]):
-        print(data)
-        print(sorted(data, key=lambda x: comp.getLatentScore(x)[0]))
+    if arr != sorted(arr, key=lambda x: comp.getLatentScore(x)[0]):
+        print(arr)
+        print(sorted(arr, key=lambda x: comp.getLatentScore(x)[0]))
         raise EOFError("did not sort")
     return results
 

@@ -90,7 +90,7 @@ ax2 = fig.add_subplot(2, 3, 2)
 #ax2.plot(varAUCnp, 'r.', ls='-.', label='VARnp of AUC')
 #ax2.plot(VARsNP[:-1], 'm.', ls='--', label='VAR np')
 ax2.plot(xVals[1:], varEstimate, 'r.', ls='-', lw=5, label='variance estimate')
-ax2.plot(xVals[2:], avgHanleyMcNeil[1:], 'c.', ls=':', lw=2, label='HmN Variance')
+ax2.plot(xVals[1:], avgHanleyMcNeil, 'c.', ls=':', lw=2, label='HmN Variance')
 ax2.legend()
 ax2.set_title("Variance Estimate per layer")
 
