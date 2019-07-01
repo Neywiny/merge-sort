@@ -1,18 +1,20 @@
 import ROC1
+import sys
 import numpy as np
+import math
 np.set_printoptions(threshold=np.inf)
 np.seterr(all="ignore")
 from random import random
-import math
 from tqdm import trange, tqdm
 from multiprocessing import Pool
+from scipy.interpolate import interp1d
 #from p_tqdm import p_map
 try:
     import matplotlib
     matplotlib.use('QT4Agg')
     import matplotlib.pyplot as plt
     font = {'size' : 56}
-    matplotlib.rc('font', **font)
+    #matplotlib.rc('font', **font)
     from matplotlib.collections import PatchCollection
     from matplotlib.patches import Rectangle
 except BaseException as e:
@@ -65,7 +67,7 @@ def auc(results: tuple, D0=None, D1=None) -> float:
         results = genROC(results, D0, D1)
     total: float = 0.0
     for i,(x,y) in enumerate(results[:-1], start=1):
-        total += y * (x - results[i][0])
+        total += 0.5*(y + results[i][1]) * (x - results[i][0])
     return total
 
 def hanleyMcNeil(auc, n0, n1):
@@ -109,7 +111,7 @@ def graphROC(predicted: tuple, D0=None, D1=None):
     ax.plot((0,1),(0,1),c="r", linestyle="--")
     ax.set_ylim(top=1.1,bottom=-0.1)
     ax.set_xlim(left=-0.1,right=1.1)
-    ax.set_title(f"AUC: {auc(predicted, D0, D1):.2f}")
+    ax.set_title(f"AUC: {auc(predicted, D0, D1):.5f}")
     ax.set_xlabel("FPF")
     ax.set_ylabel("TPF") 
     plt.show()
@@ -169,6 +171,35 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
     
     plt.show()
 
+def avROC(rocs):
+    #hard coded SeSp
+    #e = 9*sys.float_info.epsilon
+
+    # convert [(x1, y1), (x2, y2) ...] into np array for better arithmatic
+    rocs = [np.array(roc) for roc in rocs]
+
+
+    rotrocs = [{'u': tuple((roc[:,0] + roc[:,1])/2), 'v': tuple((roc[:,1]-roc[:,0])/2)} for roc in rocs]
+    
+    stdA = np.array(sorted(set((roc['u'] for roc in rotrocs))))
+
+    aprotrocs = list()
+    for roc in rotrocs:
+        inter = interp1d(roc['u'], roc['v'])
+        for x in stdA:
+            aprotrocs.append(inter(x))
+
+    ymean = np.zeros((1, len(stdA[0])))
+    for apro in aprotrocs:
+        ymean += apro
+    ymean /= len(aprotrocs)
+
+    fpout = stdA - ymean
+    tpout = stdA + ymean
+
+    ret = tuple(zip(fpout[0].tolist(), tpout[0].tolist()))
+    return ret
+
 def successMatrix(predicted: list, D0: list=None, D1: list=None):
     if D0 == None:
         D0 = [i for i in range(len(predicted) // 2)]
@@ -185,7 +216,7 @@ def successMatrix(predicted: list, D0: list=None, D1: list=None):
 
 if __name__ == "__main__":
     from DylSort import mergeSort
-    test = 5
+    test = 6
     if test == 1:
         #print(D0, D1) 
         newData, D0, D1 = continuousScale("sampledata.csv")
@@ -211,3 +242,45 @@ if __name__ == "__main__":
         graphROCs(arrays, D0=[0, 1, 2, 3], D1=[4, 5, 6])
     elif test == 5:
         graphROC([4, 1, 2, 3], [1, 2], [3, 4])
+    elif test == 6:
+        from DylSort import mergeSort
+        from DylComp import Comparator
+        from DylData import continuousScale
+        
+        data, D0, D1 = continuousScale(128, 128)
+        comp = Comparator(data, rand=True, level=0, seed=15)
+
+        arrays = [data[:]]
+
+        for _ in mergeSort(data, comp=comp):
+            arrays.append(data[:])
+
+        graphROC(arrays[-1], D0=D0, D1=D1)
+
+        data = arrays[-2]
+
+        chunk1 = data[:len(data) // 2]
+        chunk2 = data[len(data) // 2:]
+        D01 = list(filter(lambda img: img in chunk1, D0))
+        D11 = list(filter(lambda img: img in chunk1, D1))
+        D02 = list(filter(lambda img: img in chunk2, D0))
+        D12 = list(filter(lambda img: img in chunk2, D1))
+        rocs = [genROC(chunk1, D0=D01, D1=D11), genROC(chunk2, D0=D02, D1=D12)]
+        roc1 = genROC(chunk1, D01, D11)
+        roc2 = genROC(chunk2, D02, D12)
+        roc = avROC(rocs)
+        print(auc(roc1, D01, D11))
+        print(auc(roc2, D02, D12))
+        print(auc(roc, D0, D1))
+        fig = plt.figure(figsize=(4,4))
+        ax = fig.add_subplot(111)
+        ax.plot(*zip(*roc), 'b', label='avg')
+        ax.plot(*zip(*roc1), 'm', label='chunk1')
+        ax.plot(*zip(*roc2), 'g', label='chunk2')
+        ax.plot((0,1),(0,1),c="r", linestyle="--")
+        ax.set_ylim(top=1.1,bottom=-0.1)
+        ax.set_xlim(left=-0.1,right=1.1)
+        ax.set_xlabel("FPF")
+        ax.set_ylabel("TPF") 
+        ax.legend()
+        plt.show()
