@@ -80,6 +80,9 @@ def hanleyMcNeil(auc, n0, n1):
 def aucSM(sm) -> float:
     return np.mean(sm)
 
+def calcNLayers(arr) -> int:
+    return math.ceil(math.log2(len(arr)))
+
 def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple: 
     predicted, D0, D1 = paramToParams(predicted, D0, D1)
     length: int = len(predicted)

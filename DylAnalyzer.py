@@ -5,38 +5,39 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from tqdm import trange, tqdm
 
-cores = 19
+cores = 18
 passes = 640
 iters = cores*passes
 
-length = 256
+length = 130
 
 layers = 8
 
 avgAUC = [0 for i in range(layers)]
-avgVARsm = [0 for i in range(layers)]
 avgComps = [0 for i in range(layers)]
-
+avgEstimate = [[0 for y in range(i + 1)] for i in range(layers - 1)]
 
 avgMinSeps = [[0 for level in range(layers - 1) ] for i in range(length)]
 
-VARsNP = [[-1 for __ in range(layers)] for _ in range(iters)]
 hanleyMcNeils = [[0 for __ in range(layers)] for _ in range(iters)]
+varEstimates = [[0 for __ in range(layers)] for _ in range(iters)]
 aucs = [[0 for __ in range(layers)] for _ in range(iters)]
-#i = ''
+#i = 1
 #if True:
 for i in trange(1, cores + 1):
     with open("results/results"+str(i), "rb") as f:
         results = pickle.load(f)
         for iIter, iteration in enumerate(results):
-            for iLevel, (auc,smVAR,npVAR,hanleyMcNeil,compLen,minSeps) in enumerate(iteration):
+            for iLevel, (auc,varEstimate,hanleyMcNeil,*estimates,compLen,minSeps) in enumerate(iteration):
 
                 aucs[iIter + ((i-1)*passes)][iLevel] = auc
-                VARsNP[iIter + ((i-1)*passes)][iLevel] = npVAR
                 hanleyMcNeils[iIter + ((i-1)*passes)][iLevel] = hanleyMcNeil
+                varEstimates[iIter + ((i-1)*passes)][iLevel] = varEstimate
+
+                for layer, estimate in enumerate(estimates, start=layers-len(estimates) - 1):
+                    avgEstimate[layer][iLevel] += estimate / iters
 
                 avgAUC[iLevel] += auc
-                avgVARsm[iLevel] += smVAR
                 avgComps[iLevel] += compLen
 
                 for key, val in enumerate(minSeps):
@@ -45,24 +46,19 @@ for i in trange(1, cores + 1):
         del results #pleeeeeeeeeeeease get out of memory
 avgAUC = list(map(lambda x: x/iters, avgAUC))
 varAUCnp = np.var(aucs, ddof=1, axis=0)
-avgVARsm = list(map(lambda x: x/iters, avgVARsm))
 avgComps = list(map(lambda x: x/iters, avgComps))
 avgHanleyMcNeil = np.mean(hanleyMcNeils, axis=0)
-VARsNP = np.mean(VARsNP, axis=0)
+varEstimate = np.mean(varEstimates, axis=0)
+stdVarEstimate = np.sqrt(np.var(varEstimates, axis=0))
 
 labels = []
 for val in np.median(avgMinSeps, axis=0):
     labels.append(f'{val:3.02f}')
 
-varEstimate = [VARsNP[0]]
-varEstimate.extend([-1 for i in range(layers - 1)])
+slopeFirst = (varEstimate[1]/avgHanleyMcNeil[1]) - (varEstimate[0]/avgHanleyMcNeil[0])
+slopeTotal = slopeFirst / 3
 
-#print(layers, len(varEstimate), len(avgVARsm), len(VARnp))
-
-# estimate variance as a linear combination of variances
-for layer in range(1, layers - 1):
-    varEstimate[layer] = (layer*avgVARsm[layer] + (layers - layer)*VARsNP[layer]) / layers
-varEstimate[-1] = avgVARsm[-1]
+hanleyMcNeilToVarEstimate = [avgHanleyMcNeil[i] * (1 + i * slopeTotal) for i in range(layers)]
 
 #print(varEstimate)
 #print(varAUCnp)
@@ -89,8 +85,13 @@ ax2 = fig.add_subplot(2, 3, 2)
 #ax2.plot(avgVARsm, 'b.', ls=':', label='VAR sm')
 #ax2.plot(varAUCnp, 'r.', ls='-.', label='VARnp of AUC')
 #ax2.plot(VARsNP[:-1], 'm.', ls='--', label='VAR np')
-ax2.plot(xVals[1:], varEstimate, 'r.', ls='-', lw=5, label='variance estimate')
+ax2.errorbar(xVals[1:], varEstimate, yerr=stdVarEstimate, c='r', marker='.', ls='-', lw=2, label='variance estimate')
 ax2.plot(xVals[1:], avgHanleyMcNeil, 'c.', ls=':', lw=2, label='HmN Variance')
+ax2.plot(xVals[1:], hanleyMcNeilToVarEstimate, 'm.', ls=':', lw=2, label='HmN estimate')
+for layer in range(1, layers):
+    estimate = avgEstimate[layer - 1]
+    for i, point in enumerate(estimate):
+        ax2.text(layer + 1, point, str(i), fontsize=12)
 ax2.legend()
 ax2.set_title("Variance Estimate per layer")
 

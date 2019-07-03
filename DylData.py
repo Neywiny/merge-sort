@@ -51,7 +51,6 @@ def continuousScale(*args):
                 posI += 1
         return arr, D0, D1
 
-
 if __name__ == "__main__":
     data = continuousScale(5, 4)
     print(*data)

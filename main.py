@@ -13,9 +13,10 @@ from DylSort import mergeSort
 
 def sort(tid, i=0):
     results = list()
-    data = continuousScale(256)
+    data = continuousScale(198)
     sm = successMatrix(data)
     comp = Comparator(data, level=0, rand=True)
+    #comp.genRand(len(data)//2, len(data)//2, 1, 'normal')
     comp.genRand(len(data)//2, len(data)//2, 7.72, 'exponential')
     for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=retMid, n=2)):
         stats.extend([len(comp), comp.genSeps()])
@@ -86,7 +87,7 @@ if __name__ == "__main__":
             iters = args[0]
             ids = [*range(iters)]
             retMid = args[1]
-            topBar = tqdm(total=iters, smoothing=0, bar_format="{percentage:3.0f}% {n_fmt}/{total_fmt} [{elapsed}<{remaining}, {rate_fmt}]")
+            topBar = tqdm(total=iters, smoothing=0, bar_format="{percentage:3.0f}% {n_fmt}/{total_fmt} {remaining}, {rate_fmt}")
             botBar = tqdm(total=iters, smoothing=0, bar_format="{bar}")
             with Pool() as p:
                 for result in p.imap_unordered(sort, ids):

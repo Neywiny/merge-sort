@@ -46,10 +46,29 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
         split = (maxi - mini) // 2
         medians = []
         percentages = []
-
+    currLayer = -1
+    nLayers = calcNLayers(arr) - 1
     # while there are partitions
     while len(groups) != 1:
+        currLayer += 1
         i = 0
+        # interleave big and small groups for merging
+        groups.sort(key=lambda x: len(x))
+        print(*(len(group) for group in groups))
+        #smalls = groups[:len(groups) // 2]
+        #bigs = list(reversed(groups[len(smalls):]))
+        #groups = list()
+        #smallsI = 0
+        #bigsI = 0
+        #ratio = len(bigs) / len(smalls)
+        #while smallsI < len(smalls):
+        #    groups.append(smalls[smallsI])
+        #    smallsI += 1
+        #    percent = smallsI * ratio
+        #    while bigsI < percent:
+        #        groups.append(bigs[bigsI])
+        #        bigsI += 1
+
         while groups:
             #last group, odd one out
             if i + 1 >= len(groups):
@@ -81,7 +100,7 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
             arr.extend(group)
         # run dem stats
         if retStats:
-            aucs, vars, hanleyMcNeils = list(), list(), list()
+            aucs, varOfSM, hanleyMcNeils, estimates = list(), list(), list(), list()
             start = 0
             for group in groups:
                 if d0d1 != None:
@@ -92,16 +111,45 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
                 auc = aucSM(sm)
                 aucs.append(auc)
                 hanleyMcNeils.append((len(D0), len(D1)))
-                vars.append(unbiasedMeanMatrixVar(sm))
-            npvar = np.var(aucs, ddof=1) / len(aucs)
+                smVAR = unbiasedMeanMatrixVar(sm)
+                if smVAR == smVAR: # if not NaN
+                    varOfSM.append(smVAR)
+            varOfAverageAUC = np.var(aucs, ddof=1) / len(aucs)
             avgAUC = np.mean(aucs)
+
+            estimateNs = [list()]
+            for i, ns in enumerate(hanleyMcNeils):
+                estimateNs[0].append(ns)
+
+            # while there are groups to 'merge'
+            while len(estimateNs[-1]) != 1:
+                # get the previous layer and sort by N0 + N1
+                oldNs = sorted(estimateNs[-1], key=lambda x: sum(x))
+                # roughly the same code as mergers creation
+                estimateNs.append(list())
+                while oldNs:
+                    i = 0
+                    toMerge = list()
+                    segments = min(n, len(oldNs) - i)
+                    for iSegment in range(segments):
+                        toMerge.append(oldNs.pop(0))
+                    estimateNs[-1].append([sum((x[0] for x in toMerge)), sum((x[1] for x in toMerge))])
+                estimateNs[-1].sort(key=lambda x:sum(x))
+                estimates.append(hanleyMcNeil(avgAUC, estimateNs[-1][-1][0], estimateNs[-1][-1][1]) / len(estimateNs[-1]))
+                            
+
             for i, (N0, N1) in enumerate(hanleyMcNeils):
                 hanleyMcNeils[i] = hanleyMcNeil(avgAUC, N0, N1)
-            stats = [avgAUC, sum(vars) / (len(vars)**2), float(npvar), sum(hanleyMcNeils) / len(hanleyMcNeils)**2]
+            if currLayer == 0:
+                varEstimate = float(varOfAverageAUC)
+            elif currLayer == nLayers:
+                varEstimate = (sum(varOfSM) / (len(varOfSM)**2))
+            else:
+                varEstimate = (currLayer*(sum(varOfSM) / (len(varOfSM)**2)) + (nLayers - currLayer) * float(varOfAverageAUC)) / nLayers
+            stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, *estimates]
             #stats = [aucs, vars, float(npvar)]
             yield arr, stats
         elif not retMid:
-            print(groups)
             yield arr
         else:
             yield percentages, medians
@@ -293,12 +341,11 @@ if __name__ == "__main__":
         from DylComp import Comparator
         from DylData import continuousScale
 
-        data = continuousScale(16)
-        comp = Comparator(data, level=0, rand=False)
-
-        for arr in mergeSort(data, comp=comp):
-            print(arr)
-        print(comp.compHistory)
+        data = continuousScale(256)
+        comp = Comparator(data, level=0, rand=True)
+        print("AUC\tSMV\tNPV\tHmN")
+        for arr in mergeSort(data, comp=comp, retStats=True):
+            print(*[f"{x:0.5f}" for x in arr[1]], sep='\t')
     elif test == 11:
         from DylComp import Comparator
         from DylData import continuousScale

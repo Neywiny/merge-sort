@@ -12,7 +12,7 @@ def AUC(x1, x0):
 
 def simulation_ELO_targetAUC(N):
 	results = []
-	N = 256
+	N = 128
 	##
 	# Function for the simulation of ELO rating given an AUC of 0.8 (most of it, hard-coded), 
 	# the input to the function is N (the number of samples on the rating study).
@@ -118,7 +118,7 @@ if __name__ == '__main__':
 		from multiprocessing import Pool
 		#from p_tqdm import p_umap
 
-		iters = 12160
+		iters = 256
 		n = list(range(iters))
 		resultss = list()
 		with tqdm(total=iters, smoothing=0) as pbar:
@@ -133,34 +133,43 @@ if __name__ == '__main__':
 					f.write(result)
 	elif test == 2:
 		import matplotlib.pyplot as plt
+		import numpy as np
+		from tqdm import tqdm
 
 		mavgVAR = [0.0007928570819701683, 0.000624243348662616, 0.0005402276755908466, 0.0004963394115731297, 0.0004755500709900993, 0.00046520331114676235, 0.00045806630192552476, 0.0004566737278141967]
 		mVar = [0.00078663, 0.00061926, 0.00054135, 0.00049812, 0.00047672, 0.00046507, 0.0004615, 0.00045958]
 		mAUC = [0.8853836862664474, 0.8853178325452302, 0.885256636770148, 0.8853289955540707, 0.8853519640470806, 0.8853439130281148, 0.885368537902832, 0.8853677799827174]
 		mComp = [128.0, 291.64925986842104, 494.84457236842104, 722.2412006578948, 963.2411184210526, 1211.5435855263158, 1463.6465460526315, 1717.6822368421053]
 
-		aucs = dict()
-		vars = dict()
+		iters = 1000000
+		passes = 100
+		sampleSize = 128
 
-		for i in range(256, 25860, 256):
-			aucs[i] = list()
-			vars[i] = list()
+		aucs = np.zeros((iters, passes), dtype=np.float32)
+		vars = np.zeros((iters, passes), dtype=np.float32)
 
-		with open("res2.csv") as f:
-			for line in f:
+		#aucs = dict()
+		#vars = dict()
+
+		#for i in range(128, 12980, 128):
+			#aucs[i] = 0
+			#vars[i] = list()
+		with open("res1000000.csv") as f:
+			for iter, line in enumerate(tqdm(f, unit="line", total=iters*100, unit_scale=True)):
 				line = line.split(", ")
-				line[2] = int(line[2])
-				aucs[line[2]].append(float(line[3]))
-				vars[line[2]].append(float(line[4]))
+				line[2] = int(line[2])//sampleSize - 1
+				idx = iter // passes
+				aucs[idx][line[2]] = np.float32(line[3])
+				vars[idx][line[2]] = np.float32(line[4])
 
-		avgAUC = [np.mean(aucs[layer]) for layer in aucs.keys()]
-		varAUC = [np.var(aucs[layer], ddof=1) for layer in aucs.keys()]
-		avgVAR = [np.mean(vars[layer]) for layer in aucs.keys()]
+		avgAUC = np.mean(aucs, axis=0)
+		varAUC = np.var(aucs, ddof=1, axis=0)
+		avgVAR = np.mean(vars, axis=0)
 
 
 		fig = plt.figure()
 		ax1 = fig.add_subplot(1, 2, 1)
-		ax1.errorbar(list(range(256, 2048, 256)), avgAUC[:7],c='r', ls='-', marker='.', yerr=np.sqrt(varAUC[:7]), capsize=10, label='elo')
+		ax1.errorbar(list(range(128, 1920, 128)), avgAUC[:14],c='r', ls='-', marker='.', yerr=np.sqrt(varAUC[:14]), capsize=10, label='elo')
 		ax1.plot(mComp, mAUC, 'b.-', label='merge')
 		ax1.legend()
 		ax1.set_title("AUC")
@@ -170,8 +179,8 @@ if __name__ == '__main__':
 		ax2.plot(mComp, mavgVAR, 'b.--', label='merge mean of var')
 		#ax2.legend(loc=2)
 		#ax2 = ax2.twinx()
-		ax2.plot(list(range(256, 2048, 256)), varAUC[:7], 'r.-', label='elo var of auc')
-		ax2.plot(list(range(256, 2048, 256)), avgVAR[:7], 'r.--', label='elo mean of var')
+		ax2.plot(list(range(128, 1920, 128)), varAUC[:14], 'r.-', label='elo var of auc')
+		ax2.plot(list(range(128, 1920, 128)), avgVAR[:14], 'r.--', label='elo mean of var')
 		ax2.legend()
 		ax2.set_title("VAR")
 		plt.show()
