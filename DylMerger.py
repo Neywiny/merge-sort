@@ -83,7 +83,7 @@ class Merger:
 class MultiMerger:
     def __init__(self, groups: list, comp, start=0, stop=0, toggle:bool=True):
         groups = list(filter(lambda x: len(x) > 0, groups))
-        self.groups = [group[:] for group in groups]
+        self.groups = [group for group in groups]
         self.comp = comp
         self.start = start
         self.stop = stop
@@ -125,7 +125,7 @@ class MultiMerger:
                 self.OIndex += 1
             return True
 
-        self.left ^= self.toggle
+        self.left ^= self.toggle # toggle self.left if self.toggle == True
         return self.OIndex == len(self.output) or len(self.groups) == 0
 
 if __name__ == '__main__':

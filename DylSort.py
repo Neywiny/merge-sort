@@ -1,15 +1,6 @@
-import numpy as np
-
 from DylMath import *
 from DylMerger import *
 from tqdm import tqdm
-
-def swap(arr: list, indexA: int, indexB):
-    """swaps in arr either the indecies indexA and indexB"""
-    if sizes == None: # swap elements
-        temp = arr[indexA]
-        arr[indexA] = arr[indexB]
-        arr[indexB] = temp
 
 def genD0D1(d0d1: list, arr: list) -> tuple:
     D0, D1 = list(), list()
@@ -20,6 +11,57 @@ def genD0D1(d0d1: list, arr: list) -> tuple:
         elif item in d0d1[1]:
             D1.append(item)
     return D0, D1
+
+def runStats(groups, d0d1, n, currLayer, nLayers):
+    aucs, varOfSM, hanleyMcNeils, estimates = list(), list(), list(), list()
+    start = 0
+    for group in groups:
+        if d0d1 != None:
+            D0, D1 = genD0D1(d0d1, group)
+        else:
+            D0, D1 = list(sorted(group))[:len(group)//2], list(sorted(group))[len(group)//2:]
+        sm = successMatrix(group, D0, D1)
+        auc = aucSM(sm)
+        aucs.append(auc)
+        hanleyMcNeils.append((len(D0), len(D1)))
+        smVAR = unbiasedMeanMatrixVar(sm)
+        if smVAR == smVAR: # if not NaN
+            varOfSM.append(smVAR)
+    varOfAverageAUC = np.var(aucs, ddof=1) / len(aucs)
+    avgAUC = np.mean(aucs)
+
+    estimateNs = [list()]
+    for i, ns in enumerate(hanleyMcNeils):
+        estimateNs[0].append(ns)
+
+    # while there are groups to 'merge'
+    while len(estimateNs[-1]) != 1:
+        # get the previous layer and sort by N0 + N1
+        oldNs = sorted(estimateNs[-1], key=lambda x: sum(x))
+        # roughly the same code as mergers creation
+        estimateNs.append(list())
+        while oldNs:
+            i = 0
+            toMerge = list()
+            segments = min(n, len(oldNs) - i)
+            for iSegment in range(segments):
+                toMerge.append(oldNs.pop(0))
+            estimateNs[-1].append([sum((x[0] for x in toMerge)), sum((x[1] for x in toMerge))])
+        estimateNs[-1].sort(key=lambda x:sum(x))
+        estimates.append(hanleyMcNeil(avgAUC, estimateNs[-1][-1][0], estimateNs[-1][-1][1]) / len(estimateNs[-1]))
+
+
+    for i, (N0, N1) in enumerate(hanleyMcNeils):
+        hanleyMcNeils[i] = hanleyMcNeil(avgAUC, N0, N1)
+    if len(varOfSM) == 0:
+        varEstimate = float(varOfAverageAUC)
+    elif currLayer == nLayers:
+        varEstimate = (sum(varOfSM) / (len(varOfSM)**2))
+    else:
+        varEstimate = (currLayer*(sum(varOfSM) / (len(varOfSM)**2)) + (nLayers - currLayer) * float(varOfAverageAUC)) / nLayers
+    stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, *estimates]
+    #stats = [aucs, vars, float(npvar)]
+    return stats
 
 def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n: int=2, d0d1 = None) -> list:
     """mergeSort(arr: list, level=3)
@@ -54,7 +96,6 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
         i = 0
         # interleave big and small groups for merging
         groups.sort(key=lambda x: len(x))
-        print(*(len(group) for group in groups))
         #smalls = groups[:len(groups) // 2]
         #bigs = list(reversed(groups[len(smalls):]))
         #groups = list()
@@ -100,53 +141,7 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
             arr.extend(group)
         # run dem stats
         if retStats:
-            aucs, varOfSM, hanleyMcNeils, estimates = list(), list(), list(), list()
-            start = 0
-            for group in groups:
-                if d0d1 != None:
-                    D0, D1 = genD0D1(d0d1, group)
-                else:
-                    D0, D1 = list(sorted(group))[:len(group)//2], list(sorted(group))[len(group)//2:]
-                sm = successMatrix(group, D0, D1)
-                auc = aucSM(sm)
-                aucs.append(auc)
-                hanleyMcNeils.append((len(D0), len(D1)))
-                smVAR = unbiasedMeanMatrixVar(sm)
-                if smVAR == smVAR: # if not NaN
-                    varOfSM.append(smVAR)
-            varOfAverageAUC = np.var(aucs, ddof=1) / len(aucs)
-            avgAUC = np.mean(aucs)
-
-            estimateNs = [list()]
-            for i, ns in enumerate(hanleyMcNeils):
-                estimateNs[0].append(ns)
-
-            # while there are groups to 'merge'
-            while len(estimateNs[-1]) != 1:
-                # get the previous layer and sort by N0 + N1
-                oldNs = sorted(estimateNs[-1], key=lambda x: sum(x))
-                # roughly the same code as mergers creation
-                estimateNs.append(list())
-                while oldNs:
-                    i = 0
-                    toMerge = list()
-                    segments = min(n, len(oldNs) - i)
-                    for iSegment in range(segments):
-                        toMerge.append(oldNs.pop(0))
-                    estimateNs[-1].append([sum((x[0] for x in toMerge)), sum((x[1] for x in toMerge))])
-                estimateNs[-1].sort(key=lambda x:sum(x))
-                estimates.append(hanleyMcNeil(avgAUC, estimateNs[-1][-1][0], estimateNs[-1][-1][1]) / len(estimateNs[-1]))
-                            
-
-            for i, (N0, N1) in enumerate(hanleyMcNeils):
-                hanleyMcNeils[i] = hanleyMcNeil(avgAUC, N0, N1)
-            if currLayer == 0:
-                varEstimate = float(varOfAverageAUC)
-            elif currLayer == nLayers:
-                varEstimate = (sum(varOfSM) / (len(varOfSM)**2))
-            else:
-                varEstimate = (currLayer*(sum(varOfSM) / (len(varOfSM)**2)) + (nLayers - currLayer) * float(varOfAverageAUC)) / nLayers
-            stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, *estimates]
+            stats = runStats(groups, d0d1, n, currLayer, nLayers)
             #stats = [aucs, vars, float(npvar)]
             yield arr, stats
         elif not retMid:
@@ -154,68 +149,68 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
         else:
             yield percentages, medians
 
-#https://en.wikipedia.org/wiki/Batcher_odd%E2%80%93even_mergesort
-def oddeven_merge_sort(length):
-    """ "length" is the length of the list to be sorted.
-    Returns a list of pairs of indices starting with 0 """
-    def oddeven_merge_sort_range(lo, hi):
-        """ sort the part of x with indices between lo and hi.
-
-        Note: endpoints (lo and hi) are included.
-        """
-        def oddeven_merge(lo, hi, r):
-            step = r * 2
-            if step < hi - lo:
-                yield from oddeven_merge(lo, hi, step)
-                yield from oddeven_merge(lo + r, hi, step)
-                yield from [(i, i + r) for i in range(lo + r, hi - r, step)]
+def treeMergeSort(arr: list, comp, n: int=2, retStats: bool=False, d0d1 = None):
+    if n < 2:
+        raise IOError("can't split a tree with n < 2")
+    sizess = [[0, len(arr)]]
+    while max(sizess[-1]) > n: #needs to be broken down further
+        sizess.append([0])
+        for i, size in enumerate(sizess[-2]):
+            quotient, remainder = divmod(size, n)
+            while size > 0:
+                if remainder > 0:
+                    sizess[-1].append(quotient + 1)
+                    remainder -= 1
+                    size -= quotient + 1
+                else:
+                    sizess[-1].append(quotient)
+                    size -= quotient
+    for sizes in sizess:
+        for i, size in enumerate(sizes[1:], start=1):
+            sizes[i] += sizes[i - 1]
+    # do the first layer, which pulls from the array
+    mergerss = [[], []]
+    i = 0
+    while i < len(sizess[-1]) - 1:
+        segments = min(n, len(sizess[-1]) - i)
+        groups = list()
+        for iSeg in range(segments):
+            group = arr[sizess[-1][i + iSeg]:sizess[-1][i + iSeg + 1]]
+            if len(group) != 1: # such that we need to add another layer to it
+                mergerss[0].append(MultiMerger([[img] for img in group], comp))
+                groups.append(mergerss[0][-1].output)
             else:
-                yield (lo, lo + r)
-
-        if (hi - lo) >= 1:
-            # if there is more than one element, split the input
-            # down the middle and first sort the first and second
-            # half, followed by merging them.
-            mid = lo + ((hi - lo) // 2)
-            yield from oddeven_merge_sort_range(lo, mid)
-            yield from oddeven_merge_sort_range(mid + 1, hi)
-            yield from oddeven_merge(lo, hi, 1)
-    yield from oddeven_merge_sort_range(0, length - 1)
-
-def compare_and_swap(comp, x, a, b):
-    if comp(x[b], x[a]):
-        x[a], x[b] = x[b], x[a]
-
-def bitonic_sort(up, x, comp):
-    def bitonic_merge(up, x, comp): 
-        def bitonic_compare(up, x, comp):
-            dist = len(x) // 2
-            for i in range(dist):  
-                if comp(x[i + dist], x[i]) == up:
-                    x[i], x[i + dist] = x[i + dist], x[i] #swap
-        # assume input x is bitonic, and sorted list is returned 
-        if len(x) == 1:
-            return x
-        else:
-            bitonic_compare(up, x, comp)
-            first = bitonic_merge(up, x[:len(x) // 2], comp)
-            second = bitonic_merge(up, x[len(x) // 2:], comp)
-            if up:
-                comp.learn(first + second)
-            else:
-                comp.learn(list(reversed(first + second)))
-            return first + second
-    if len(x) <= 1:
-        return x
-    else: 
-        first = bitonic_sort(True, x[:len(x) // 2], comp)
-        second = bitonic_sort(False, x[len(x) // 2:], comp)
-        return bitonic_merge(up, first + second, comp)
-
+                groups.append(group)
+        mergerss[1].append(MultiMerger(groups, comp))
+        i += segments
+    # now build up layers of mergerss where the groups are the outputs of the last layer
+    while len(mergerss[-1]) > 1: # while not on top level
+        mergerss.append(list())
+        i = 0
+        while (segments == min(n, len(mergerss[-2]) - i)) != 0:
+            groups = list()
+            for iSeg in range(segments):
+                groups.append(mergerss[-2][i + iSeg].output)
+            mergerss[-1].append(MultiMerger(groups, comp))
+            i += segments
+    #print(mergerss)
+    #for mergers in mergerss:
+    #    print([[len(group) for group in merger.groups] for merger in mergers])
+    left = True
+    for layer, mergers in enumerate(mergerss, start=1):
+        for merger in mergers if left else reversed(mergers):
+            while not merger.inc():
+                pass
+        groups = list((merger.output for merger in mergers))
+        left != left
+        arr = []
+        for group in groups: arr.extend(group)
+        yield (arr, runStats(groups, d0d1, n, layer, len(mergerss))) if retStats else arr
+    #print(f"n? {n} Did it sort right? {mergerss[-1][-1].output == sorted(mergerss[-1][-1].output)}. How many layers? {layer} How many comparisons? {len(comp)}")
 if __name__ == "__main__":
     from DylRand import *
 
-    test = 10
+    test = 5
     if test == 1:
         from random import shuffle, seed
         from tqdm import trange
@@ -253,16 +248,21 @@ if __name__ == "__main__":
             print(data)
         graphROCs(arrays, True)
     elif test == 5:
-        from random import shuffle
-        data = [i for i in range(256)]
-        pairs_to_compare = list(oddeven_merge_sort(len(data)))
-        for i in range(10):
-            shuffle(data)
-            comp = Comparator(data, level=3, rand=False)
-            for i in pairs_to_compare: compare_and_swap(comp, data, *i)
-            if data != sorted(data):
-                print("woops", data, sorted(data))
-            print(len(comp))
+        from DylComp import Comparator
+        print("treeMergeSort")
+        for n in range(2, 18):
+            data = [*reversed(range(197))]
+            comp = Comparator(data, level=0, rand=False)
+            for _ in treeMergeSort(data, comp, n=n):
+                pass
+            print(n, len(comp))
+        print("regular mergeSort")
+        for n in range(2, 18):
+            data = [*reversed(range(197))]
+            comp = Comparator(data, level=0, rand=False)
+            for _ in mergeSort(data, comp, n=n):
+                pass
+            print(n, len(comp))
     elif test == 6:
         from DylComp import Comparator
         from random import shuffle
