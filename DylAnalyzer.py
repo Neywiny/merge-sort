@@ -28,7 +28,7 @@ for i in trange(1, cores + 1):
     with open("results/results"+str(i), "rb") as f:
         results = pickle.load(f)
         for iIter, iteration in enumerate(results):
-            for iLevel, (auc,varEstimate,hanleyMcNeil,*estimates,compLen,minSeps) in enumerate(iteration):
+            for iLevel, (auc, varEstimate, hanleyMcNeil, lowBoot, highBoot, lowSine, highSine, *estimates, compLen, minSeps) in enumerate(iteration):
 
                 aucs[iIter + ((i-1)*passes)][iLevel] = auc
                 hanleyMcNeils[iIter + ((i-1)*passes)][iLevel] = hanleyMcNeil

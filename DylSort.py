@@ -1,3 +1,5 @@
+import numpy as np
+
 from DylMath import *
 from DylMerger import *
 from tqdm import tqdm
@@ -28,6 +30,7 @@ def runStats(groups, d0d1, n, currLayer, nLayers):
         if smVAR == smVAR: # if not NaN
             varOfSM.append(smVAR)
     varOfAverageAUC = np.var(aucs, ddof=1) / len(aucs)
+    aucs = np.array(aucs)
     avgAUC = np.mean(aucs)
 
     estimateNs = [list()]
@@ -59,7 +62,18 @@ def runStats(groups, d0d1, n, currLayer, nLayers):
         varEstimate = (sum(varOfSM) / (len(varOfSM)**2))
     else:
         varEstimate = (currLayer*(sum(varOfSM) / (len(varOfSM)**2)) + (nLayers - currLayer) * float(varOfAverageAUC)) / nLayers
-    stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, *estimates]
+
+    # bootstimate
+    iters = max(n**n, 1000)
+    z = np.array([np.mean(aucs[np.random.randint(len(aucs), size=len(aucs))]) for i in range(iters)])
+    z.sort()
+    lowBoot = z[len(z) // 20]
+    highBoot = z[len(z) - (len(z) // 20)]
+    # arcsin transform
+    lowSine = np.sin(np.sin(np.arcsin(np.sqrt(avgAUC)) - 1))
+    highSine = np.sin(np.sin(np.arcsin(np.sqrt(avgAUC)) + 1))
+
+    stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, lowBoot, highBoot, lowSine, highSine, *estimates]
     #stats = [aucs, vars, float(npvar)]
     return stats
 
