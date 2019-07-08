@@ -184,15 +184,18 @@ def avROC(rocs):
 
     rotrocs = [{'u': tuple((roc[:,0] + roc[:,1])/2), 'v': tuple((roc[:,1]-roc[:,0])/2)} for roc in rocs]
     
-    stdA = np.array(sorted(set((roc['u'] for roc in rotrocs))))
-
-    aprotrocs = list()
+    stdA = list()
     for roc in rotrocs:
-        inter = interp1d(roc['u'], roc['v'])
-        for x in stdA:
-            aprotrocs.append(inter(x))
+        stdA.extend(roc['u'])
+    stdA = np.array(sorted(set(stdA)))
 
-    ymean = np.zeros((1, len(stdA[0])))
+    aprotrocs = np.zeros((len(rotrocs), len(stdA)))
+    for iRoc, roc in enumerate(rotrocs):
+        inter = interp1d(roc['u'], roc['v'])
+        for iU, u in enumerate(stdA):
+            aprotrocs[iRoc][iU] = inter(u)
+
+    ymean = np.zeros((1, len(stdA)))
     for apro in aprotrocs:
         ymean += apro
     ymean /= len(aprotrocs)
@@ -200,8 +203,8 @@ def avROC(rocs):
     fpout = stdA - ymean
     tpout = stdA + ymean
 
-    ret = tuple(zip(fpout[0].tolist(), tpout[0].tolist()))
-    return ret
+    ret = fpout.tolist(), tpout.tolist()
+    return ret[0][0], ret[1][0]
 
 def successMatrix(predicted: list, D0: list=None, D1: list=None):
     if D0 == None:
@@ -219,7 +222,7 @@ def successMatrix(predicted: list, D0: list=None, D1: list=None):
 
 if __name__ == "__main__":
     from DylSort import mergeSort
-    test = 6
+    test = 8
     if test == 1:
         #print(D0, D1) 
         newData, D0, D1 = continuousScale("sampledata.csv")
@@ -285,5 +288,39 @@ if __name__ == "__main__":
         ax.set_xlim(left=-0.1,right=1.1)
         ax.set_xlabel("FPF")
         ax.set_ylabel("TPF") 
+        ax.legend()
+        plt.show()
+    elif test == 7:
+        roc1 = [[0, 0], [0, 1], [1, 1]]
+        roc3 = roc2 = roc1
+        roc4 = [[0, 0], [0.5, 0], [0.5, 0.5], [1, 1]]
+        avgROC = avROC([roc1, roc2, roc3, roc4])
+        fig = plt.figure(figsize=(4,4))
+        ax = fig.add_subplot(111)
+        ax.plot(*zip(*roc1), 'm', label='chunk1', ls='-')
+        ax.plot(*zip(*roc2), 'b', label='chunk2', ls='--')
+        ax.plot(*zip(*roc3), 'g', label='chunk3', ls=':')
+        ax.plot(*zip(*roc4), 'c', label='chunk4')
+        ax.plot(*avgROC, 'orange', label='avg')
+        ax.plot((0,1),(0,1),c="r", linestyle="--")
+        ax.set_ylim(top=1.1,bottom=-0.1)
+        ax.set_xlim(left=-0.1,right=1.1)
+        ax.set_xlabel("FPF")
+        ax.set_ylabel("TPF") 
+        ax.legend()
+        plt.show()
+    elif test == 8:
+        
+        roc1 = [[0,0],[0,0.05],[0,0.1],[0,0.15],[0,0.2],[0,0.25],[0,0.3],[0,0.35],[0,0.4],[0,0.45],[0.1,0.45],[0.1,0.5],[0.1,0.55],[0.1,0.6],[0.1,0.65],[0.2,0.65],[0.3,0.65],[0.3,0.7],[0.4,0.7],[0.5,0.7],[0.5,0.75],[0.5,0.8],[0.5,0.85],[0.5,0.9],[0.5,0.95],[0.5,1],[0.6,1],[0.7,1],[0.8,1],[0.9,1],[1,1]]
+        roc2 = [[0,0],[0,0.1],[0,0.2],[0,0.3],[0,0.4],[0,0.5],[0.06666667,0.5],[0.13333333,0.5],[0.2,0.5],[0.26666667,0.5],[0.26666667,0.6],[0.26666667,0.7],[0.33333333,0.7],[0.4,0.7],[0.4,0.8],[0.4,0.9],[0.4,1],[0.46666667,1],[0.53333333,1],[0.6,1],[0.66666667,1],[0.73333333,1],[0.8,1],[0.86666667,1],[0.93333333,1],[1,1]]
+
+        avgROC = avROC([roc1, roc2])
+
+        fig = plt.figure(figsize=(4,4))
+        ax = fig.add_subplot(111)
+        ax.plot(*zip(*roc1), 'm', label='chunk1', ls=':', marker='o')
+        ax.plot(*zip(*roc2), 'b', label='chunk2', ls='--', marker='o')
+        ax.plot(*avgROC, 'orange', label='avg', marker='o')
+
         ax.legend()
         plt.show()
