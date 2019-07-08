@@ -164,7 +164,7 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
         else:
             yield percentages, medians
 
-def treeMergeSort(arr: list, comp, n: int=2, retStats: bool=False, d0d1 = None):
+def treeMergeSort(arr: list, comp, n: int=2, retStats: bool=False, d0d1 = None, combGroups: bool=True):
     if n < 2:
         raise IOError("can't split a tree with n < 2")
     sizess = [[0, len(arr)]]
@@ -223,14 +223,17 @@ def treeMergeSort(arr: list, comp, n: int=2, retStats: bool=False, d0d1 = None):
                     mergers.remove(merger)
                     done += 1
         left != left
-        arr = []
-        for group in groups: arr.extend(group)
+        if combGroups:
+            arr = []
+            for group in groups: arr.extend(group)
+        else:
+            arr = groups
         yield (arr, runStats(groups, d0d1, n, layer, len(mergerss))) if retStats else arr
     #print(f"n? {n} Did it sort right? {mergerss[-1][-1].output == sorted(mergerss[-1][-1].output)}. How many layers? {layer} How many comparisons? {len(comp)}")
 if __name__ == "__main__":
     from DylRand import *
 
-    test = 5
+    test = 15
     if test == 1:
         from random import shuffle, seed
         from tqdm import trange
@@ -460,4 +463,86 @@ if __name__ == "__main__":
             meFull = len(comp)
 
             print(level, timCont, meCont, timNear, meNear, timFull, meFull)
-            
+    elif test == 14:
+        from DylData import continuousScale
+        from DylComp import Comparator
+        import matplotlib
+        matplotlib.use('QT4Agg')
+        import matplotlib.pyplot as plt
+        font = {'size' : 24}
+        #matplotlib.rc('font', **font)
+
+        data, D0, D1 = continuousScale(135, 87)
+        comp = Comparator(data, rand=True)
+        comps = list()
+        rocs = list()
+        for groups in treeMergeSort(data, comp, combGroups=False):
+            rocs.append(list())
+            comps.append(len(comp))
+            for group in groups:
+                gD0, gD1 = genD0D1((D0, D1), group)
+                if gD0 and gD1:
+                    rocs[-1].append(genROC(group, gD0, gD1))
+            rocs[-1] = list(zip(*avROC(rocs[-1])))
+            rocs[-1].reverse()
+        
+        if False:
+            rows = int(math.ceil(math.sqrt(len(rocs))))
+            cols = int(math.ceil(len(rocs) / rows))
+            fig, axes = plt.subplots(rows, cols, sharex=True, sharey=True, num="plots")
+            fig.suptitle("ROC Curves")
+            for i,ax in enumerate(axes.flat):
+                if i >= len(rocs):
+                    continue
+                ax.set(xlabel="False Positive Fraction", ylabel="True Positive Fraction")
+                ax.label_outer()
+                ax.plot((0,1),(0,1),c='red', linestyle=":")
+                ax.plot(*zip(*rocs[i]), c='blue')
+                ax.set_ylim(top=1.02, bottom=0)
+                ax.set_xlim(left=-0.01, right=1)
+                ax.set_title(f"Iteration #{i + 1} AUC: {auc(rocs[i]):.5f}")
+        else:
+            fig = plt.figure(figsize=(8, 8))
+            plt.title("ROC Curves")
+            ax = fig.add_subplot(1, 1, 1)
+            linestyle_tuple = [
+                ('loosely dashdotted',    (0, (3, 10, 1, 10))),
+                ('dashdotted',            (0, (3, 5, 1, 5))),
+                ('densely dashdotted',    (0, (3, 1, 1, 1))),
+
+                ('loosely dashed',        (0, (5, 10))),
+                ('dashed',                (0, (5, 5))),
+                ('densely dashed',        (0, (5, 1))),
+
+                ('loosely dotted',        (0, (1, 5))),
+                ('dotted',                (0, (1, 2))),
+                ('densely dotted',        (0, (1, 1))),
+
+                ('dashdotdotted',         (0, (3, 5, 1, 5, 1, 5))),
+                ('loosely dashdotdotted', (0, (3, 10, 1, 10, 1, 10))),
+                ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))]
+            for i, roc in enumerate(rocs):
+                ax.plot(*zip(*roc), linestyle=linestyle_tuple[i][1], label=f"Comparisons: {comps[i]:03d} AUC={auc(list(roc)):0.4f}", lw=0.4*(i + 3))
+            ax.legend()
+            ax.set_ylim(top=1, bottom=0)
+            ax.set_xlim(left=0, right=1)
+            ax.set(xlabel="False Positive Fraction", ylabel="True Positive Fraction")
+        plt.tight_layout()
+        plt.show()
+    elif test == 15:
+        from DylComp import Comparator
+        from DylData import continuousScale
+        from tqdm import trange
+
+        for i in trange(10, 1024, 2):
+            print(i, end=',')
+            data = continuousScale(i)
+            comp = Comparator(data, level=0)
+            for _ in mergeSort(data, comp):
+                pass
+            print(len(comp), end=',')
+            data = continuousScale(i)
+            comp = Comparator(data, level=0)
+            for _ in treeMergeSort(data, comp):
+                pass
+            print(len(comp), end='\n')
