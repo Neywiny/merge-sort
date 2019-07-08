@@ -64,14 +64,15 @@ def runStats(groups, d0d1, n, currLayer, nLayers):
         varEstimate = (currLayer*(sum(varOfSM) / (len(varOfSM)**2)) + (nLayers - currLayer) * float(varOfAverageAUC)) / nLayers
 
     # bootstimate
-    iters = max(n**n, 1000)
+    iters = min(len(aucs)**len(aucs), 1000)
     z = np.array([np.mean(aucs[np.random.randint(len(aucs), size=len(aucs))]) for i in range(iters)])
     z.sort()
-    lowBoot = z[len(z) // 20]
-    highBoot = z[len(z) - (len(z) // 20)]
+    lowBoot = z[int(len(z) * 0.16)]
+    highBoot = z[len(z) - int(len(z) * 0.16) - 1]
     # arcsin transform
-    lowSine = np.sin(np.sin(np.arcsin(np.sqrt(avgAUC)) - 1))
-    highSine = np.sin(np.sin(np.arcsin(np.sqrt(avgAUC)) + 1))
+    thingy = 1 / (2*np.sqrt(len(aucs)))
+    lowSine = np.sin(np.arcsin(np.sqrt(avgAUC)) - thingy)**2
+    highSine = np.sin(np.arcsin(np.sqrt(avgAUC)) + thingy)**2
 
     stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, lowBoot, highBoot, lowSine, highSine, *estimates]
     #stats = [aucs, vars, float(npvar)]
@@ -209,13 +210,18 @@ def treeMergeSort(arr: list, comp, n: int=2, retStats: bool=False, d0d1 = None):
             i += segments
     #print(mergerss)
     #for mergers in mergerss:
-    #    print([[len(group) for group in merger.groups] for merger in mergers])
+        #print([[len(group) for group in merger.groups] for merger in mergers])
+    #print(len(mergerss[0]))
     left = True
     for layer, mergers in enumerate(mergerss, start=1):
-        for merger in mergers if left else reversed(mergers):
-            while not merger.inc():
-                pass
-        groups = list((merger.output for merger in mergers))
+        done = 0
+        groups = list()
+        while mergers:
+            for merger in mergers if left else reversed(mergers):
+                if merger.inc():
+                    groups.append(merger.output)
+                    mergers.remove(merger)
+                    done += 1
         left != left
         arr = []
         for group in groups: arr.extend(group)

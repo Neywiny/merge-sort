@@ -9,16 +9,16 @@ from warnings import filterwarnings
 
 from DylComp import Comparator
 from DylMath import *
-from DylSort import mergeSort
+from DylSort import mergeSort, treeMergeSort
 
 def sort(tid, i=0):
     results = list()
-    data = continuousScale(198)
+    data = continuousScale(130)
     sm = successMatrix(data)
     comp = Comparator(data, level=0, rand=True)
     #comp.genRand(len(data)//2, len(data)//2, 1, 'normal')
     comp.genRand(len(data)//2, len(data)//2, 7.72, 'exponential')
-    for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=retMid, n=2)):
+    for l, (arr, stats) in enumerate(treeMergeSort(data, comp, retStats=True, n=2)):
         stats.extend([len(comp), comp.genSeps()])
         results.append(stats)
     if arr != sorted(arr, key=lambda x: comp.getLatentScore(x)[0]):
