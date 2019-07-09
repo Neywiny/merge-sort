@@ -81,6 +81,7 @@ if __name__ == "__main__":
         graphROCs(arrays, withLine=True,withPatches=False, D0=list(range(2**(power - 1))), D1=range(2**(power - 1), 2**(power)))
     elif test == 3:
         from tqdm import tqdm
+        from time import sleep
         results = list()
         if len(sys.argv) > 1:
             iters = int(sys.argv[1])
@@ -97,20 +98,20 @@ if __name__ == "__main__":
             print('\n')
         else:
             retMid = False
-            iters = 16
+            iters = 1
             results = [sort(0, i) for i in range(iters)]
         #change output file if requested to do so
         print("waiting for lock")
         locked = False
         while not locked:
             try:
-                f = open(".lock", "x")
+                lock = open(".lock", "x")
                 print("made lock")
                 locked = True
-            except BaseException as e:
-                pass
+            except FileExistsError as e:
+                sleep(0.1)
         try:
-            with open('results', 'ab') as f:
+            with open('results12160', 'ab') as f:
                 print("have lock")
                 pickler = pickle.Pickler(f)
                 for result in tqdm(results, total=iters, smoothing=0, bar_format="{percentage:3.0f}% {n_fmt}/{total_fmt} {remaining}, {rate_fmt}"):
@@ -118,14 +119,14 @@ if __name__ == "__main__":
         except BaseException as e:
             print(e)
         finally:
-            f.close()
+            lock.close()
             os.remove(".lock")
     elif test == 4:
         from random import shuffle
         import numpy as np
         import matplotlib.pyplot as plt
 
-        power = 10
+        power = 12
 
         img = np.zeros((power + 1, 2**power))
 
@@ -134,8 +135,8 @@ if __name__ == "__main__":
 
         shuffle(data)
         img[0] = data[:]
-        for i,_ in enumerate(mergeSort(data, comp=comp), start=1):
-            img[i] = data[:]
+        for i,_ in enumerate(treeMergeSort(data, comp=comp), start=1):
+            img[i] = _
 
         plt.imshow(img, cmap='Greys', extent=[0, 2**power, 0, 2**power], aspect=1)
 
