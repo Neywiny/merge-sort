@@ -2,44 +2,45 @@ import pickle
 import numpy as np
 np.seterr(divide='ignore', invalid='ignore')
 import matplotlib.pyplot as plt
-from matplotlib.colors import LogNorm
 import matplotlib.lines as lines
+from matplotlib.colors import LogNorm
 from tqdm import trange, tqdm
-
-cores = 19
-passes = 640
-iters = cores*passes
+from os import stat
 
 length = 130
 remainder = int(bin(length)[3:], 2)
 
 layers = 8
 
-avgAUC = [0 for i in range(layers)]
-avgComps = [0 for i in range(layers)]
-avgEstimate = [[0 for y in range(i + 1)] for i in range(layers - 1)]
+avgAUC = np.zeros((layers, 1))
+avgComps = np.zeros((layers, 1))
+avgEstimate = np.array([np.zeros((i + 1)) for i in range(layers - 1)])
 
 avgMinSeps = np.zeros((length, layers - 1))
 
-hanleyMcNeils = [[0 for __ in range(layers)] for _ in range(iters)]
-varEstimates = [[0 for __ in range(layers)] for _ in range(iters)]
-aucs = [[0 for __ in range(layers)] for _ in range(iters)]
-errorBars = [[[0, 0, 0, 0] for __ in range(layers)] for _ in range(iters)]
-#i = 1
-#if True:
-for i in trange(1, cores + 1):
-    with open("results/results"+str(i), "rb") as f:
-        results = pickle.load(f)
-        for iIter, iteration in enumerate(results):
+hanleyMcNeils = [list() for __ in range(layers)]
+varEstimates = [list() for __ in range(layers)]
+aucs = [list() for __ in range(layers)]
+errorBars = [list() for __ in range(layers)]
+
+iters = 0
+fileLength = stat("results").st_size
+
+with open("results", "rb") as f:
+    with tqdm() as pBar:
+        unpickler = pickle.Unpickler(f)
+        while f.tell() < fileLength:
+            iteration = unpickler.load()
+            iters += 1
             for iLevel, (auc, varEstimate, hanleyMcNeil, lowBoot, highBoot, lowSine, highSine, *estimates, compLen, minSeps) in enumerate(iteration):
 
-                aucs[iIter + ((i-1)*passes)][iLevel] = auc
-                hanleyMcNeils[iIter + ((i-1)*passes)][iLevel] = hanleyMcNeil
-                varEstimates[iIter + ((i-1)*passes)][iLevel] = varEstimate
-                errorBars[iIter + ((i-1)*passes)][iLevel] = [lowBoot, highBoot, lowSine, highSine]
+                aucs[iLevel].append(auc)
+                hanleyMcNeils[iLevel].append(hanleyMcNeil)
+                varEstimates[iLevel].append(varEstimate)
+                errorBars[iLevel].append([lowBoot, highBoot, lowSine, highSine, 0, 0])
 
                 for layer, estimate in enumerate(estimates, start=layers-len(estimates) - 1):
-                    avgEstimate[layer][iLevel] += estimate / iters
+                    avgEstimate[layer][iLevel] += estimate
 
                 avgAUC[iLevel] += auc
                 avgComps[iLevel] += compLen
@@ -47,17 +48,28 @@ for i in trange(1, cores + 1):
                 for key, val in enumerate(minSeps):
                     if val != (2 * length):
                         avgMinSeps[key][iLevel - 1] += val
-        del results #pleeeeeeeeeeeease get out of memory
+            pBar.update(1)
 
-# axis=0 is across the simulations
-avgAUC = list(map(lambda x: x/iters, avgAUC))
-varAUCnp = np.var(aucs, ddof=1, axis=0)
-avgComps = list(map(lambda x: x/iters, avgComps))
-avgHanleyMcNeil = np.mean(hanleyMcNeils, axis=0)
-varEstimate = np.mean(varEstimates, axis=0)
-stdVarEstimate = np.sqrt(np.var(varEstimates, axis=0))
-avgErrorBars = np.mean(errorBars, axis=0)
+# axis=1 is across the simulations
+avgAUC = (avgAUC / iters).transpose()[0]
+avgComps = avgComps / iters
 avgMinSeps /= iters
+avgEstimate /= iters
+
+avgErrorBars = np.mean(errorBars, axis=1).transpose()
+avgHanleyMcNeil = np.mean(hanleyMcNeils, axis=1)
+varEstimate = np.mean(varEstimates, axis=1)
+
+varAUCnp = np.var(aucs, ddof=1, axis=1)
+stdVarEstimate = np.sqrt(np.var(varEstimates, axis=1))
+
+
+thingies = [remainder, length]
+for i in range(2, layers):
+    thingies.append(thingies[-1] // 2)
+thingies = [1/(2*np.sqrt(thingy)) for thingy in thingies]
+avgErrorBars[4] = [np.sin(np.arcsin(np.sqrt(auc)) - thingies[i])**2 for i, auc in enumerate(avgAUC)]
+avgErrorBars[5] = [np.sin(np.arcsin(np.sqrt(auc)) + thingies[i])**2 for i, auc in enumerate(avgAUC)]
 
 labels = [f'{np.median(list(filter(lambda x: x != 0, avgMinSeps[0]))):3.02f}']
 for val in np.median(avgMinSeps, axis=0)[1:]:
@@ -83,8 +95,10 @@ ax1.plot(xVals, avgAUC, 'b.-', label='AUC')
 """for iter in trange(1000):
     for level in range(len(aucs[0])):
         ax1.scatter(level, aucs[iter][level])"""
-ax1.errorbar(xVals, avgAUC, yerr=[avgAUC - avgErrorBars[:,2], avgErrorBars[:,3] - avgAUC], capsize=10, c='r')
-ax1.errorbar(xVals, avgAUC, yerr=[avgAUC - avgErrorBars[:,0], avgErrorBars[:,1] - avgAUC], capsize=10, c='b')
+ax1.errorbar(xVals, avgAUC, yerr=[avgAUC - avgErrorBars[4], avgErrorBars[5] - avgAUC], capsize=10, c='g')
+ax1.errorbar(xVals, avgAUC, yerr=[avgAUC - avgErrorBars[2], avgErrorBars[3] - avgAUC], capsize=10, c='r')
+ax1.errorbar(xVals, avgAUC, yerr=[avgAUC - avgErrorBars[0], avgErrorBars[1] - avgAUC], capsize=10, c='b')
+
 ax1.set_ylabel('AUC', color='b')
 ax1.ticklabel_format(useOffset=False)
 ax1.set_title("Average AUC per layer")

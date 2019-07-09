@@ -2,7 +2,7 @@
 
 import math
 import pickle
-import os.path
+import os
 import sys
 from multiprocessing import Pool
 from warnings import filterwarnings
@@ -83,10 +83,8 @@ if __name__ == "__main__":
         from tqdm import tqdm
         results = list()
         if len(sys.argv) > 1:
-            args = list(map(lambda x: eval(x), sys.argv[2:]))
-            iters = args[0]
+            iters = int(sys.argv[1])
             ids = [*range(iters)]
-            retMid = args[1]
             topBar = tqdm(total=iters, smoothing=0, bar_format="{percentage:3.0f}% {n_fmt}/{total_fmt} {remaining}, {rate_fmt}")
             botBar = tqdm(total=iters, smoothing=0, bar_format="{bar}")
             with Pool() as p:
@@ -99,11 +97,29 @@ if __name__ == "__main__":
             print('\n')
         else:
             retMid = False
-            iters = 1
+            iters = 16
             results = [sort(0, i) for i in range(iters)]
         #change output file if requested to do so
-        with open('results/results'+str(sys.argv[1] if len(sys.argv) > 1 else ''), 'wb') as f:
-            pickle.dump(results, f)
+        print("waiting for lock")
+        locked = False
+        while not locked:
+            try:
+                f = open(".lock", "x")
+                print("made lock")
+                locked = True
+            except BaseException as e:
+                pass
+        try:
+            with open('results', 'ab') as f:
+                print("have lock")
+                pickler = pickle.Pickler(f)
+                for result in tqdm(results, total=iters, smoothing=0, bar_format="{percentage:3.0f}% {n_fmt}/{total_fmt} {remaining}, {rate_fmt}"):
+                    pickler.dump(result)
+        except BaseException as e:
+            print(e)
+        finally:
+            f.close()
+            os.remove(".lock")
     elif test == 4:
         from random import shuffle
         import numpy as np
