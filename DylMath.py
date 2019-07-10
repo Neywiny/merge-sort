@@ -83,6 +83,21 @@ def aucSM(sm) -> float:
 def calcNLayers(arr) -> int:
     return math.ceil(math.log2(len(arr)))
 
+def fRange(stop, step):
+    i = 0
+    while i < stop:
+        yield i
+        i += step
+
+def MSE(lamb, ROC):
+    approx = interp1d(*zip(*ROC), 'linear')
+    step = 10**-4
+
+    mse = np.sum([(approx(fpf) - (fpf**(1/lamb)))**2 for fpf in fRange(1, step)]) / (1/step)
+    calcAUC = np.sum([0.5*(approx(fpf) + approx(fpf + step))*step for fpf in fRange(1 - step, step)])
+    return mse, calcAUC
+
+
 def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple: 
     predicted, D0, D1 = paramToParams(predicted, D0, D1)
     length: int = len(predicted)
@@ -203,7 +218,7 @@ def avROC(rocs):
     fpout = stdA - ymean
     tpout = stdA + ymean
 
-    ret = fpout.tolist(), tpout.tolist()
+    ret = (1-tpout).tolist(), (1-fpout).tolist()
     return ret[0][0], ret[1][0]
 
 def successMatrix(predicted: list, D0: list=None, D1: list=None):
@@ -222,7 +237,7 @@ def successMatrix(predicted: list, D0: list=None, D1: list=None):
 
 if __name__ == "__main__":
     from DylSort import mergeSort
-    test = 8
+    test = 9
     if test == 1:
         #print(D0, D1) 
         newData, D0, D1 = continuousScale("sampledata.csv")
@@ -323,4 +338,31 @@ if __name__ == "__main__":
         ax.plot(*avgROC, 'orange', label='avg', marker='o')
 
         ax.legend()
+        plt.show()
+    elif test == 9:
+        from DylSort import treeMergeSort, genD0D1
+        from DylComp import Comparator
+        import matplotlib.pyplot as plt
+
+        data, D0, D1 = continuousScale(1000, 1000)
+        comp = Comparator(data, rand=True)
+        comp.genRand(len(D0), len(D1), 7.72, 'exponential')
+        fig = plt.figure()
+        for level, groups in enumerate(treeMergeSort(data, comp, combGroups=False)):
+            rocs = list()
+            for group in groups:
+                gD0, gD1 = genD0D1((D0, D1), group)
+                if gD0 and gD1:
+                    rocs.append(genROC(group, gD0, gD1))
+            rocs = list(zip(*avROC(rocs)))
+            rocs.reverse()
+            mse = MSE(7.72, rocs)
+            #print(*mse, auc(rocs))
+            print(f"{mse[0]:03.3e}, {-auc(rocs):0.3f}, {len(comp)}")
+            ax = fig.add_subplot(3, 4, level + 1)
+            approx = interp1d(*zip(*rocs), 'linear')
+            ax.plot(list(fRange(1 - 10**-4, 10**-4)), [approx(fp) for fp in fRange(1 - 10**-4, 10**-4)])
+            ax.plot(list(fRange(1 - 10**-4, 10**-4)), [fp**(1/7.72) for fp in fRange(1 - 10**-4, 10**-4)])
+            ax.set(title=f"{mse[0]:03.6e}:{len(comp)}")
+        plt.subplots_adjust(hspace=0.25)
         plt.show()
