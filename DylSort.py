@@ -22,13 +22,15 @@ def runStats(groups, d0d1, n, currLayer, nLayers):
             D0, D1 = genD0D1(d0d1, group)
         else:
             D0, D1 = list(sorted(group))[:len(group)//2], list(sorted(group))[len(group)//2:]
-        sm = successMatrix(group, D0, D1)
-        auc = aucSM(sm)
-        aucs.append(auc)
-        hanleyMcNeils.append((len(D0), len(D1)))
-        smVAR = unbiasedMeanMatrixVar(sm)
-        if smVAR == smVAR: # if not NaN
-            varOfSM.append(smVAR)
+        if D0 and D1:
+            sm = successMatrix(group, D0, D1)
+            auc = aucSM(sm)
+            if auc == auc:
+                aucs.append(auc)
+            hanleyMcNeils.append((len(D0), len(D1)))
+            smVAR = unbiasedMeanMatrixVar(sm)
+            if smVAR == smVAR and len(D0) > 2 and len(D1) > 2: # if not NaN
+                varOfSM.append(smVAR)
     varOfAverageAUC = np.var(aucs, ddof=1) / len(aucs)
     aucs = np.array(aucs)
     avgAUC = np.mean(aucs)
@@ -74,11 +76,14 @@ def runStats(groups, d0d1, n, currLayer, nLayers):
     lowSine = np.sin(np.arcsin(np.sqrt(avgAUC)) - thingy)**2
     highSine = np.sin(np.arcsin(np.sqrt(avgAUC)) + thingy)**2
 
-    stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, lowBoot, highBoot, lowSine, highSine, *estimates]
+    try:
+        stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, lowBoot, highBoot, lowSine, highSine, (sum(varOfSM) / (len(varOfSM)**2)), float(varOfAverageAUC), *estimates]
+    except ZeroDivisionError:
+        stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, lowBoot, highBoot, lowSine, highSine, 0, float(varOfAverageAUC), *estimates]
     #stats = [aucs, vars, float(npvar)]
     return stats
 
-def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n: int=2, d0d1 = None) -> list:
+def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n: int=2, d0d1 = None, combGroups: bool=True) -> list:
     """mergeSort(arr: list, level=3)
     Can either be provided a comparator or will make its own
     merge sorts the list arr with 'level' amount of optimization
@@ -110,7 +115,7 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
         currLayer += 1
         i = 0
         # interleave big and small groups for merging
-        groups.sort(key=lambda x: len(x))
+        #groups.sort(key=lambda x: len(x))
         #smalls = groups[:len(groups) // 2]
         #bigs = list(reversed(groups[len(smalls):]))
         #groups = list()
@@ -151,9 +156,14 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
                     comp.learn(merger.output)
                     groups.append(merger.output)
                     mergers.remove(merger)
-        arr = []
-        for group in groups:
-            arr.extend(group)
+        if combGroups:
+            arr = []
+            for group in groups:
+                if currLayer > 8:
+                    print(currLayer, len(group))
+                arr.extend(group)
+        else:
+            arr = groups
         # run dem stats
         if retStats:
             stats = runStats(groups, d0d1, n, currLayer, nLayers)
@@ -534,15 +544,26 @@ if __name__ == "__main__":
         from DylData import continuousScale
         from tqdm import trange
 
-        for i in trange(10, 1024, 2):
-            print(i, end=',')
-            data = continuousScale(i)
-            comp = Comparator(data, level=0)
-            for _ in mergeSort(data, comp):
-                pass
-            print(len(comp), end=',')
-            data = continuousScale(i)
-            comp = Comparator(data, level=0)
-            for _ in treeMergeSort(data, comp):
-                pass
-            print(len(comp), end='\n')
+        data, D0, D1 = continuousScale(135, 87)
+        comp = Comparator(data, rand=True)
+        comp.genRand(len(D0), len(D1), 7.72, 'exponential')
+        for groups in treeMergeSort(data, comp, combGroups=False):
+            print('[', end='')
+            for group in groups:
+                print('[', end='')
+                gD0, gD1 = genD0D1((D0, D1), group)
+                for img in group[:-1]:
+                    if img in gD0:
+                        print(0, end=',')
+                    elif img in gD1:
+                        print(1, end=',')
+                    else:
+                        print('w', end=',')
+                if group[-1] in gD0:
+                    print(0, end=']')
+                elif group[-1] in gD1:
+                    print(1, end=']')
+                else:
+                    print('w', end=']')
+            print(']', end='\n\n')
+        

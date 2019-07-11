@@ -13,12 +13,12 @@ from DylSort import mergeSort, treeMergeSort
 
 def sort(tid, i=0):
     results = list()
-    data = continuousScale(130)
+    data, D0, D1 = continuousScale(135, 87)
     sm = successMatrix(data)
     comp = Comparator(data, level=0, rand=True)
-    #comp.genRand(len(data)//2, len(data)//2, 1, 'normal')
-    comp.genRand(len(data)//2, len(data)//2, 7.72, 'exponential')
-    for l, (arr, stats) in enumerate(treeMergeSort(data, comp, retStats=True, n=2)):
+    #comp.genRand(len(D0), len(D1), 1, 'normal')
+    comp.genRand(len(D0), len(D1), 7.72, 'exponential')
+    for l, (arr, stats) in enumerate(treeMergeSort(data, comp, retStats=True, n=2, d0d1=(D0, D1))):
         stats.extend([len(comp), comp.genSeps()])
         results.append(stats)
     if arr != sorted(arr, key=lambda x: comp.getLatentScore(x)[0]):
@@ -30,7 +30,7 @@ def sort(tid, i=0):
 
 if __name__ == "__main__":
     filterwarnings('ignore')
-    test = 3
+    test = 4
     if test == 1:
         lMax: int = 2**8
         iters: int = 1
@@ -92,14 +92,14 @@ if __name__ == "__main__":
                 for result in p.imap_unordered(sort, ids):
                     topBar.update()
                     botBar.update()
-                    results.append(result)
+                    results.append(pickle.dumps(result))
             botBar.close()
             topBar.close()
             print('\n')
         else:
             retMid = False
             iters = 1
-            results = [sort(0, i) for i in range(iters)]
+            results = [pickle.dumps(sort(0, i)) for i in range(iters)]
         #change output file if requested to do so
         print("waiting for lock")
         locked = False
@@ -111,11 +111,12 @@ if __name__ == "__main__":
             except FileExistsError as e:
                 sleep(0.1)
         try:
-            with open('results12160', 'ab') as f:
+            with open('results12160','ab') as f:
                 print("have lock")
-                pickler = pickle.Pickler(f)
-                for result in tqdm(results, total=iters, smoothing=0, bar_format="{percentage:3.0f}% {n_fmt}/{total_fmt} {remaining}, {rate_fmt}"):
-                    pickler.dump(result)
+                f.writelines(results)
+                #pickler = pickle.Pickler(f)
+                #for result in tqdm(results, total=iters, smoothing=0, bar_format="{percentage:3.0f}% {n_fmt}/{total_fmt} {remaining}, {rate_fmt}"):
+                #    pickler.dump(result)
         except BaseException as e:
             print(e)
         finally:
@@ -127,17 +128,20 @@ if __name__ == "__main__":
         import matplotlib.pyplot as plt
 
         power = 12
+        length = int(2**power*(2/3))
 
-        img = np.zeros((power + 1, 2**power))
+        img = np.zeros((power + 1, length))
 
-        data = list(range(2**power))
+        data = list(range(length))
         comp = Comparator(data, level=0)
 
         shuffle(data)
         img[0] = data[:]
-        for i,_ in enumerate(treeMergeSort(data, comp=comp), start=1):
+        for i,_ in enumerate(mergeSort(data, comp=comp), start=1):
+            if len(_) < len(img[0]):
+                _.extend([0 for i in range(len(img[0]) - len(_))])
             img[i] = _
 
-        plt.imshow(img, cmap='Greys', extent=[0, 2**power, 0, 2**power], aspect=1)
+        plt.imshow(img, cmap='Greys', extent=[0, length, 0, length], aspect=1)
 
         plt.show()

@@ -39,6 +39,8 @@ class Comparator:
         from os import getpid, uname
         from time import time
         # get a random seed for each node and each process on that node, and the time
+        self.n0 = n0
+        self.n1 = n1
         if self.seed == None:
             self.seed = (int(str(ord(uname()[1][-1])) + str(getpid()) + str(int(time()))) % 2**31)
         np.random.seed(self.seed)
@@ -216,7 +218,7 @@ class Comparator:
         return 0
 
 if __name__ == "__main__":
-    test = 5
+    test = 6
     if test == 1:
         comp = Comparator([i for i in range(10)], 2)
         print(comp.compare(0, 1))
@@ -258,3 +260,8 @@ if __name__ == "__main__":
         print(comp.min([2, 6]))
         print(comp.compHistory)
         print(list(comp.seps.items()))
+    elif test == 6:
+        comp = Comparator(list(range(222)), rand=True)
+        for i in range(222): print(i, comp.getLatentScore(i)[1])
+        comp.genRand(135, 87, 7.72, 'exponential')
+        for i in range(222): print(i, comp.getLatentScore(i)[1])
