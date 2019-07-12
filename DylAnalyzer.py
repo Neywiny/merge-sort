@@ -6,6 +6,7 @@ import matplotlib.lines as lines
 from matplotlib.colors import LogNorm
 from tqdm import trange, tqdm
 from os import stat
+from sys import getsizeof
 
 length = 222
 remainder = int(bin(length)[3:], 2)
@@ -20,37 +21,52 @@ avgEstimate = np.array([np.zeros((i + 1)) for i in range(layers - 1)])
 
 avgMinSeps = np.zeros((length, layers - 1))
 
-varEstimates = [list() for __ in range(layers)]
-aucs = [list() for __ in range(layers)]
+varEstimates = np.zeros((layers, 0))
+aucs = np.zeros((layers, 0))
 
 iters = 0
 fileName = "results12160"
 fileLength = stat(fileName).st_size
 old = 0
-with open(fileName, "rb") as f:
-    with tqdm(total=fileLength, unit="B", unit_scale=True) as pBar:
-        unpickler = pickle.Unpickler(f)
-        while f.tell() < fileLength:
-            iteration = unpickler.load()
-            iters += 1
-            for iLevel, (auc, varEstimate, hanleyMcNeil, lowBoot, highBoot, lowSine, highSine, smVAR, npVAR, *estimates, compLen, minSeps) in enumerate(iteration):
+with open(fileName, "rb") as f, tqdm(total=fileLength, unit="B", unit_scale=True) as pBar:
+    unpickler = pickle.Unpickler(f)
+    reshapeCount = 0
+    while f.tell() < fileLength:
+        iteration = unpickler.load()
+        iters += 1
+        iterEstimate = int(fileLength /(f.tell() / iters))
+        if iterEstimate > len(aucs[0]):
+            reshapeCount += 1
+            new = np.zeros((layers, iterEstimate))
+            new[:aucs.shape[0], :aucs.shape[1]] = aucs
+            aucs = new
+            new = np.zeros((layers, iterEstimate))
+            new[:varEstimates.shape[0], :varEstimates.shape[1]] = varEstimates
+            varEstimates = new
+            del new
+        for iLevel, (auc, varEstimate, hanleyMcNeil, lowBoot, highBoot, lowSine, highSine, smVAR, npVAR, *estimates, compLen, minSeps) in enumerate(iteration):
+            if iters < len(aucs[0]):
+                aucs[iLevel][iters - 1] = auc
+                varEstimates[iLevel][iters - 1] = varEstimate
+            else:
+                aucs[iLevel] = np.append(aucs[iLevel], auc)
+                varEstimates[iLevel] = np.append(varEstimates[iLevel], varEstimate)
 
-                aucs[iLevel].append(auc)
-                varEstimates[iLevel].append(varEstimate)
+            avgAUC[iLevel] += auc
+            avgComps[iLevel] += compLen
+            avgHanleyMcNeil[iLevel] += hanleyMcNeil
+            avgErrorBars[iLevel] += [lowBoot, highBoot, lowSine, highSine, 0, 0]
 
-                avgAUC[iLevel] += auc
-                avgComps[iLevel] += compLen
-                avgHanleyMcNeil[iLevel] += hanleyMcNeil
-                avgErrorBars[iLevel] += [lowBoot, highBoot, lowSine, highSine, 0, 0]
-
-                for layer, estimate in enumerate(estimates, start=layers-len(estimates) - 1):
-                    avgEstimate[layer][iLevel] += estimate
-                for key, val in enumerate(minSeps):
-                    if val != (2 * length):
-                        avgMinSeps[key][iLevel - 1] += val
-            pBar.update(f.tell() - old)
-            pBar.desc = f"{iters}/{fileLength / (f.tell() / iters):0.0f}"
-            old = f.tell()
+            for layer, estimate in enumerate(estimates, start=layers-len(estimates) - 1):
+                avgEstimate[layer][iLevel] += estimate
+            for key, val in enumerate(minSeps):
+                if val != (2 * length):
+                    avgMinSeps[key][iLevel - 1] += val
+        pBar.update(f.tell() - old)
+        pBar.desc = f"{iters}/{iterEstimate}, {reshapeCount}, {getsizeof(unpickler)}"
+        old = f.tell()
+aucs = aucs[:,:iters]
+varEstimates = varEstimates[:,:iters]
 
 # axis=1 is across the simulations
 avgAUC = (avgAUC / iters).transpose()[0]
@@ -164,4 +180,4 @@ cbar = fig.colorbar(plot, cax=cbaxes)
 ax5.set_title("Average Distance Between Compairisons per ID per Layer")
 
 plt.subplots_adjust(wspace=0.45)
-plt.show()
+#plt.show()

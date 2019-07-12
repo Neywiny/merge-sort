@@ -30,7 +30,7 @@ def sort(tid, i=0):
 
 if __name__ == "__main__":
     filterwarnings('ignore')
-    test = 4
+    test = 3
     if test == 1:
         lMax: int = 2**8
         iters: int = 1
@@ -111,7 +111,7 @@ if __name__ == "__main__":
             except FileExistsError as e:
                 sleep(0.1)
         try:
-            with open('results12160','ab') as f:
+            with open('results','ab') as f:
                 print("have lock")
                 f.writelines(results)
                 #pickler = pickle.Pickler(f)
