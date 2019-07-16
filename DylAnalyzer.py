@@ -17,15 +17,15 @@ avgAUC = np.zeros((layers, 1))
 avgComps = np.zeros((layers, 1))
 avgHanleyMcNeil = np.zeros((layers, 1))
 avgErrorBars = np.zeros((layers, 6))
-avgEstimate = np.array([np.zeros((i + 1)) for i in range(layers - 1)])
+avgEstimate = np.array([np.zeros((i)) for i in range(layers)])
 
-avgMinSeps = np.zeros((length, layers - 1))
+avgMinSeps = np.zeros((layers, length))
 
 varEstimates = np.zeros((layers, 0))
 aucs = np.zeros((layers, 0))
 
 iters = 0
-fileName = "results12160"
+fileName = "results1000000"
 fileLength = stat(fileName).st_size
 old = 0
 with open(fileName, "rb") as f, tqdm(total=fileLength, unit="B", unit_scale=True) as pBar:
@@ -56,15 +56,18 @@ with open(fileName, "rb") as f, tqdm(total=fileLength, unit="B", unit_scale=True
             avgComps[iLevel] += compLen
             avgHanleyMcNeil[iLevel] += hanleyMcNeil
             avgErrorBars[iLevel] += [lowBoot, highBoot, lowSine, highSine, 0, 0]
-
-            for layer, estimate in enumerate(estimates, start=layers-len(estimates) - 1):
-                avgEstimate[layer][iLevel] += estimate
-            for key, val in enumerate(minSeps):
-                if val != (2 * length):
-                    avgMinSeps[key][iLevel - 1] += val
+            avgEstimate[layers - iLevel - 1] += estimates
+            #for layer, estimate in enumerate(estimates, start=layers-len(estimates) - 1):
+            #    avgEstimate[layer][iLevel] += estimate
+            avgMinSeps[iLevel] += minSeps
+            #for key, val in enumerate(minSeps):
+            #    if val != (2 * length):
+            #        avgMinSeps[key][iLevel - 1] += val
         pBar.update(f.tell() - old)
         pBar.desc = f"{iters}/{iterEstimate}, {reshapeCount}, {getsizeof(unpickler)}"
         old = f.tell()
+
+avgMinSeps = avgMinSeps.transpose()[:,1:,]
 aucs = aucs[:,:iters]
 varEstimates = varEstimates[:,:iters]
 

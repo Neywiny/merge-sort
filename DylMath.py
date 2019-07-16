@@ -227,10 +227,12 @@ def successMatrix(predicted: list, D0: list=None, D1: list=None):
     if D1 == None:
         D1 = [i for i in range(len(predicted) // 2, len(predicted))]
     arr = np.full((len(D1), len(D0)), -1)
+    indecies = dict()
+    for val in D0 + D1:
+        indecies[val] = predicted.index(val)
     for col, x in enumerate(reversed(D0)):
         for row, y in enumerate(reversed(D1)):
-            yInd, xInd = predicted.index(y), predicted.index(x)
-            arr[row, col] = int(xInd < yInd)
+            arr[row, col] = indecies[x] < indecies[y]
     if -1 in arr:
         raise EnvironmentError("failed to create success matrix")
     return arr
