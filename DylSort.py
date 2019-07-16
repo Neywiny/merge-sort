@@ -83,7 +83,7 @@ def runStats(groups, d0d1, n, currLayer, nLayers):
     #stats = [aucs, vars, float(npvar)]
     return stats
 
-def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n: int=2, d0d1 = None, combGroups: bool=True) -> list:
+def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n: int=2, d0d1 = None, combGroups: bool=True, sortGroups: bool=False) -> list:
     """mergeSort(arr: list, level=3)
     Can either be provided a comparator or will make its own
     merge sorts the list arr with 'level' amount of optimization
@@ -114,34 +114,15 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
     while len(groups) != 1:
         currLayer += 1
         i = 0
-        # interleave big and small groups for merging
-        #groups.sort(key=lambda x: len(x))
-        #smalls = groups[:len(groups) // 2]
-        #bigs = list(reversed(groups[len(smalls):]))
-        #groups = list()
-        #smallsI = 0
-        #bigsI = 0
-        #ratio = len(bigs) / len(smalls)
-        #while smallsI < len(smalls):
-        #    groups.append(smalls[smallsI])
-        #    smallsI += 1
-        #    percent = smallsI * ratio
-        #    while bigsI < percent:
-        #        groups.append(bigs[bigsI])
-        #        bigsI += 1
-
-        while groups:
-            #last group, odd one out
-            if i + 1 >= len(groups):
-                break
+        while len(groups) >= n:
+            # last group, odd one out
             # get n arrays
             # feed the MultiMergers with them
-            segments = min(n, len(groups) - i)
             arrays = list()
-            for iSegment in range(segments):
+            for iSegment in range(n):
                 arrays.append(groups.pop(0))
             mergers.append(MultiMerger(arrays, comp, i, 0))
-        i += n
+            i += 1
         #while we have active mergers
         while mergers:
             for merger in mergers:
@@ -154,13 +135,14 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
                         if merger.output.count(v) > 1:
                             raise EnvironmentError(f"duplicated {v}")
                     comp.learn(merger.output)
-                    groups.append(merger.output)
+                    if sortGroups:
+                        groups.append(merger.output)
+                    else:
+                        groups.insert(0, merger.output)
                     mergers.remove(merger)
         if combGroups:
             arr = []
             for group in groups:
-                if currLayer > 8:
-                    print(currLayer, len(group))
                 arr.extend(group)
         else:
             arr = groups
@@ -243,7 +225,7 @@ def treeMergeSort(arr: list, comp, n: int=2, retStats: bool=False, d0d1 = None, 
 if __name__ == "__main__":
     from DylRand import *
 
-    test = 15
+    test = 14
     if test == 1:
         from random import shuffle, seed
         from tqdm import trange
@@ -300,13 +282,11 @@ if __name__ == "__main__":
         from DylComp import Comparator
         from random import shuffle
 
-        data = [i for i in range(256)]
+        data = [i for i in range(21)]
         shuffle(data)
         comp = Comparator(data)
-        res = bitonic_sort(True, data, comp)
-        if res != sorted(data):
-            print("woops")
-        print(len(comp))
+        for _ in mergeSort(data, comp, combGroups=False):
+            print(_)
     elif test == 7:
         from DylData import continuousScale
         from DylComp import Comparator
@@ -480,7 +460,7 @@ if __name__ == "__main__":
         matplotlib.use('QT4Agg')
         import matplotlib.pyplot as plt
         font = {'size' : 24}
-        #matplotlib.rc('font', **font)
+        matplotlib.rc('font', **font)
 
         data, D0, D1 = continuousScale(135, 87)
         comp = Comparator(data, rand=True)
@@ -531,8 +511,9 @@ if __name__ == "__main__":
                 ('dashdotdotted',         (0, (3, 5, 1, 5, 1, 5))),
                 ('loosely dashdotdotted', (0, (3, 10, 1, 10, 1, 10))),
                 ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))]
+            ax.plot([], [], lw=0, label='Comparisons, AUC')
             for i, roc in enumerate(rocs):
-                ax.plot(*zip(*roc), linestyle=linestyle_tuple[i][1], label=f"Comparisons: {comps[i]:03d} AUC={auc(list(roc)):0.4f}", lw=0.4*(i + 3))
+                ax.plot(*zip(*roc), linestyle=linestyle_tuple[i][1], label=f"{comps[i]:04d}, {-auc(list(roc)):0.4f}", lw=0.4*(i + 3))
             ax.legend()
             ax.set_ylim(top=1, bottom=0)
             ax.set_xlim(left=0, right=1)
