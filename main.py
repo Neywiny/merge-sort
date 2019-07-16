@@ -30,7 +30,7 @@ def sort(tid, i=0):
 
 if __name__ == "__main__":
     filterwarnings('ignore')
-    test = 3
+    test = 4
     if test == 1:
         lMax: int = 2**8
         iters: int = 1
@@ -126,22 +126,47 @@ if __name__ == "__main__":
         from random import shuffle
         import numpy as np
         import matplotlib.pyplot as plt
+        from matplotlib.patches import Rectangle
+        import matplotlib
+        font = {'size' : 24}
+        matplotlib.rc('font', **font)
 
-        power = 12
+        power = 9
         length = int(2**power*(2/3))
 
-        img = np.zeros((power + 1, length))
+        power += 1
+        yStep = length / power
+        print(yStep)
+        fig, axes = plt.subplots(ncols=2, nrows=1)
+        for ax in axes:
+            if ax == axes[0]:
+                color = 'r'
+                sorter = mergeSort
+            else:
+                color = 'lime'
+                sorter = treeMergeSort
+            data = list(range(int(2**(power - 1)*(2/3))))
+            img = np.zeros((power, length))
 
-        data = list(range(length))
-        comp = Comparator(data, level=0)
+            shuffle(data)
+            img[0] = data[:]
+            comp = Comparator(data, level=0)
+            for gIndex, group in enumerate(data):
+                ax.add_patch(Rectangle((gIndex, (power) * yStep), 1, -yStep, color=color, lw=1/power, fill=False))
+            for y, groups in enumerate(sorter(data, comp=comp, combGroups=False), start=1):
+                arr = []
+                x = 0
+                for gIndex, group in enumerate(groups):
+                    ax.add_patch(Rectangle((x, (power - y) * yStep), len(group), -yStep, color=color, lw=3*y/power, fill=False))
+                    arr.extend(group)
+                    x += len(group)
+                if len(arr) < len(img[0]):
+                    arr.extend([0 for i in range(len(img[0]) - len(arr))])
+                img[y] = arr
 
-        shuffle(data)
-        img[0] = data[:]
-        for i,_ in enumerate(mergeSort(data, comp=comp), start=1):
-            if len(_) < len(img[0]):
-                _.extend([0 for i in range(len(img[0]) - len(_))])
-            img[i] = _
-
-        plt.imshow(img, cmap='Greys', extent=[0, length, 0, length], aspect=1)
-
+            ax.imshow(img, cmap='Greys', extent=[0, length, 0, length], aspect=1)
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_ylabel("Layer")
+            ax.set_xlabel("Position")
         plt.show()
