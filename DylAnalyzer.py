@@ -14,6 +14,8 @@ remainder = int(bin(length)[3:], 2)
 layers = 8
 
 avgAUC = np.zeros((layers, 1))
+avgSMVARs = np.zeros((layers, 1))
+avgnpVARs = np.zeros((layers, 1))
 avgComps = np.zeros((layers, 1))
 avgHanleyMcNeil = np.zeros((layers, 1))
 avgErrorBars = np.zeros((layers, 6))
@@ -44,15 +46,18 @@ with open(fileName, "rb") as f, tqdm(total=fileLength, unit="B", unit_scale=True
             new[:varEstimates.shape[0], :varEstimates.shape[1]] = varEstimates
             varEstimates = new
             del new
+        if iters > len(aucs[0]):
+                aucs = np.pad(aucs, ((0,0), (0,1)), mode='constant', constant_values=0)
+                varEstimates = np.pad(varEstimates, ((0,0), (0,1)), mode='constant', constant_values=0)
+                reshapeCount += 1
         for iLevel, (auc, varEstimate, hanleyMcNeil, lowBoot, highBoot, lowSine, highSine, smVAR, npVAR, *estimates, compLen, minSeps) in enumerate(iteration):
-            if iters < len(aucs[0]):
-                aucs[iLevel][iters - 1] = auc
-                varEstimates[iLevel][iters - 1] = varEstimate
-            else:
-                aucs[iLevel] = np.append(aucs[iLevel], auc)
-                varEstimates[iLevel] = np.append(varEstimates[iLevel], varEstimate)
+                        
+            aucs[iLevel][iters - 1] = auc
+            varEstimates[iLevel][iters - 1] = varEstimate
 
             avgAUC[iLevel] += auc
+            avgSMVARs[iLevel] += smVAR
+            avgnpVARs[iLevel] += npVAR
             avgComps[iLevel] += compLen
             avgHanleyMcNeil[iLevel] += hanleyMcNeil
             avgErrorBars[iLevel] += [lowBoot, highBoot, lowSine, highSine, 0, 0]
@@ -75,6 +80,8 @@ varEstimates = varEstimates[:,:iters]
 avgAUC = (avgAUC / iters).transpose()[0]
 avgComps = avgComps // iters
 avgMinSeps /= iters
+avgSMVARs /= iters
+avgnpVARs /= iters
 avgEstimate /= iters
 avgHanleyMcNeil /= iters
 avgErrorBars = np.transpose(avgErrorBars / iters)
@@ -133,11 +140,11 @@ ax1.set_title("Average AUC per Layer")
 #xVals = [*range(0, len(avgComps) + 1)]
 xVals = avgComps
 ax2 = fig.add_subplot(2, 3, 2)
-#ax2.plot(xVals[1:], smVARs[1:], 'b.', ls=':', label='VAR sm')
+ax2.plot(xVals, avgSMVARs, 'b.', ls=':', label='VAR sm')
 ax2.plot(xVals, varAUCnp, 'g.', ls='--', lw=5, label='$var_{real}$')
-#ax2.plot(xVals[:-1], npVARs[:-1], '.', c='orange', ls='--', label='VAR np')
+ax2.plot(xVals, avgnpVARs, '.', c='orange', ls='--', label='VAR np')
 ax2.errorbar(xVals, varEstimate, yerr=stdVarEstimate, c='r', marker='.', ls=':', lw=2, label='$var_{estimate}$')
-ax2.plot(xVals, avgHanleyMcNeil, 'c.', ls='-', lw=2, label='HmN Variance')
+#ax2.plot(xVals, avgHanleyMcNeil, 'c.', ls='-', lw=2, label='HmN Variance')
 #ax2.set_xticklabels(tickLabels)
 #ax2.plot(xVals[1:], hanleyMcNeilToVarEstimate, 'm.', ls=':', lw=2, label='HmN estimate')
 for layer in range(1, layers):
@@ -183,4 +190,4 @@ cbar = fig.colorbar(plot, cax=cbaxes)
 ax5.set_title("Average Distance Between Compairisons per ID per Layer")
 
 plt.subplots_adjust(wspace=0.45)
-#plt.show()
+plt.show()
