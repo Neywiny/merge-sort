@@ -4,13 +4,14 @@ from ROC1 import *
 from scipy.special import erfinv
 from math import sqrt
 from warnings import filterwarnings
+from DylMath import MSE
 filterwarnings('ignore')
 
-def AUC(x1, x0):
+def AUCVAR(x1, x0):
 	sm = successmatrix(x1, np.transpose(x0))
 	return np.mean(sm), unbiasedMeanMatrixVar(sm)
 
-def simulation_ELO_targetAUC(N):
+def simulation_ELO_targetAUC(retX0X1=False):
 	results = []
 	N = 128
 	##
@@ -25,8 +26,6 @@ def simulation_ELO_targetAUC(N):
 	# DATA GENERATION 
 	#
 	
-	auc = 0.8
-	K = ( 2 * erfinv(2*auc-1) ) ** 2
 	K1 = 400
 	K2 = 32
 
@@ -39,15 +38,17 @@ def simulation_ELO_targetAUC(N):
 	
 	#neg = np.random.normal(mu0, si0, (N, 1))
 	#plus = np.random.normal(mu1, si1, (N, 1))
-	neg = np.random.normal(0, 1, (N, 1))
-	plus = np.random.normal(1.7, 1, (N, 1))
+	#neg = np.random.normal(0, 1, (N, 1))
+	#plus = np.random.normal(1.7, 1, (N, 1))
+	neg = np.random.exponential(size=(N, 1))
+	plus = np.random.exponential(scale=7.72, size=(N, 1))
 	
 	scores = np.append(neg, plus)
 	truth = np.append(mb.zeros((N, 1)), mb.ones((N, 1)), axis=0)
 	
 	
 	
-	AUC_orig = AUC(neg, plus)
+	AUC_orig, _ = AUCVAR(neg, plus)
 	#print(f'AUC original: {AUC_orig:.3f}\n')
 	
 	#
@@ -104,21 +105,21 @@ def simulation_ELO_targetAUC(N):
 			rating[a] = rating[a] + K2 * ( SA - EA )
 			rating[b] = rating[b] + K2 * ( SB - EB )
 	
-		x0 = rating[0:N]
-		x1 = rating[N:(2*N) + 1]
-		auc1 = AUC(x1, x0)
+		x0 = np.array(rating[0:N])[:,0]
+		x1 = np.array(rating[N:])[:,0]
+		auc, var = AUCVAR(x1, x0)
 
-		results.append(f"{N}, {cnt}, {ncmp}, {auc1[0]}, {auc1[1]}\n")
+		results.append((x1, x0) if retX0X1 == True else f"{N}, {cnt}, {ncmp}, {var}, {auc}\n")
 	return results
 if __name__ == '__main__':
-	test = 2
+	test = 1
 	if test == 1:
 		#simulation_ELO_targetAUC(200)
 		from tqdm import tqdm, trange
 		from multiprocessing import Pool
 		#from p_tqdm import p_umap
 
-		iters = 256
+		iters = 1_000_000
 		n = list(range(iters))
 		resultss = list()
 		with tqdm(total=iters, smoothing=0) as pbar:
@@ -127,7 +128,7 @@ if __name__ == '__main__':
 					pbar.update(1)
 					resultss.append(result)
 
-		with open("res2.csv", "w") as f:
+		with open("resElo1000000.csv", "w") as f:
 			for results in resultss:
 				for result in results:
 					f.write(result)
@@ -141,12 +142,12 @@ if __name__ == '__main__':
 		mAUC = [0.8853836862664474, 0.8853178325452302, 0.885256636770148, 0.8853289955540707, 0.8853519640470806, 0.8853439130281148, 0.885368537902832, 0.8853677799827174]
 		mComp = [128.0, 291.64925986842104, 494.84457236842104, 722.2412006578948, 963.2411184210526, 1211.5435855263158, 1463.6465460526315, 1717.6822368421053]
 
-		iters = 1000000
+		iters = 36000
 		passes = 100
 		sampleSize = 128
 
-		aucs = np.zeros((iters, passes), dtype=np.float32)
-		vars = np.zeros((iters, passes), dtype=np.float32)
+		aucs = np.zeros((iters, passes), dtype=float)
+		vars = np.zeros((iters, passes), dtype=float)
 
 		#aucs = dict()
 		#vars = dict()
@@ -154,13 +155,13 @@ if __name__ == '__main__':
 		#for i in range(128, 12980, 128):
 			#aucs[i] = 0
 			#vars[i] = list()
-		with open("res1000000.csv") as f:
+		with open(f"resElo{iters}.csv") as f:
 			for iter, line in enumerate(tqdm(f, unit="line", total=iters*100, unit_scale=True)):
 				line = line.split(", ")
-				line[2] = int(line[2])//sampleSize - 1
+				comps = int(line[2])//sampleSize - 1
 				idx = iter // passes
-				aucs[idx][line[2]] = np.float32(line[3])
-				vars[idx][line[2]] = np.float32(line[4])
+				vars[idx, comps] = float(line[3])
+				aucs[idx, comps] = float(line[4])
 
 		avgAUC = np.mean(aucs, axis=0)
 		varAUC = np.var(aucs, ddof=1, axis=0)
@@ -175,14 +176,52 @@ if __name__ == '__main__':
 		ax1.set_title("AUC")
 
 		ax2 = fig.add_subplot(1, 2, 2)
-		ax2.plot(mComp, mVar, 'b.-', label='merge var of auc')
-		ax2.plot(mComp, mavgVAR, 'b.--', label='merge mean of var')
-		#ax2.legend(loc=2)
-		#ax2 = ax2.twinx()
-		ax2.plot(list(range(128, 1920, 128)), varAUC[:14], 'r.-', label='elo var of auc')
-		ax2.plot(list(range(128, 1920, 128)), avgVAR[:14], 'r.--', label='elo mean of var')
+		ax2.plot(mComp, mVar,	'b.-',	label='merge var of auc')
+		ax2.plot(mComp, mavgVAR,'c.--',	label='merge mean of var')
+		#ax2.plot(list(range(128, 1920, 128)), varAUC[:14], 'r.-', label='elo var of auc')
+		#ax2.plot(list(range(128, 1920, 128)), avgVAR[:14], 'm.--', label='elo mean of var')
+		if False:
+			avgVAR, varAUC = avgVAR[:14], varAUC[:14]
+		ax2.plot(list(range(128, 128*(len(avgVAR) + 1), 128)), avgVAR, 'r.-',	label='elo mean of var')
+		ax2.plot(list(range(128, 128*(len(varAUC) + 1), 128)), varAUC, 'm.--',	label='elo var of auc')
 		ax2.legend()
 		ax2.set_title("VAR")
+		ax2.set_xlabel("comparisons")
 		plt.show()
+	elif test == 3:
+		animation = False
+		if animation:
+			import matplotlib.pyplot as plt
+			from matplotlib.animation import FuncAnimation
+			from matplotlib.animation import PillowWriter
+			from tqdm import tqdm
+			results = simulation_ELO_targetAUC(True)
+			fig, ax = plt.subplots()
+			fig.set_tight_layout(True)
+			pbar = tqdm(total=len(results))
+			def update(i):
+				pbar.update()
+				label = f"timestep {i}"
+				ax.clear()
+				roc = rocxy(*results[i])
+				ax.plot(roc['x'], roc['y'])
+				ax.set_title(f"{i:02d}")
+				return label, ax
+			anim = FuncAnimation(fig, update, frames=np.arange(0, 100), interval=100)
+			anim.save("rocs.gif", writer=PillowWriter(fps=10))
+			pbar.close()
+		else:
+			import matplotlib.pyplot as plt
+			from tqdm import tqdm
+			results = simulation_ELO_targetAUC(True)
+			print(len(results))
 
+			ax = plt.gca()
+			for i, result in enumerate(tqdm(results)):
+				roc = rocxy(*result)
+				ax.plot(roc['x'], roc['y'])
+				error = MSE(7.72, zip(roc['x'], roc['y']))
+				ax.set_title(f"{i:02d}, {error[0]*1000:02.3f}E(-3)")
+				plt.savefig(f"eloResults/{i:02d}")
+				ax.clear()
 
