@@ -11,13 +11,11 @@ from DylComp import Comparator
 from DylMath import *
 from DylSort import mergeSort, treeMergeSort
 
-def sort(tid, i=0):
+def sort(tid, i=0, seed=None):
     results = list()
-    data, D0, D1 = continuousScale(135, 87)
-    sm = successMatrix(data)
-    comp = Comparator(data, level=0, rand=True)
-    #comp.genRand(len(D0), len(D1), 1, 'normal')
-    comp.genRand(len(D0), len(D1), 7.72, 'exponential')
+    data, D0, D1 = continuousScale(128, 128)
+    comp = Comparator(data, level=0, rand=True, seed=seed)
+    comp.genRand(len(D0), len(D1), sep, dist)
     for l, (arr, stats) in enumerate(treeMergeSort(data, comp, retStats=True, n=2, d0d1=(D0, D1))):
         stats.extend([len(comp), comp.genSeps()])
         results.append(stats)
@@ -30,7 +28,7 @@ def sort(tid, i=0):
 
 if __name__ == "__main__":
     filterwarnings('ignore')
-    test = 4
+    test = 3
     if test == 1:
         lMax: int = 2**8
         iters: int = 1
@@ -82,46 +80,56 @@ if __name__ == "__main__":
     elif test == 3:
         from tqdm import tqdm
         from time import sleep
-        results = list()
-        if len(sys.argv) > 1:
-            iters = int(sys.argv[1])
-            ids = [*range(iters)]
-            topBar = tqdm(total=iters, smoothing=0, bar_format="{percentage:3.0f}% {n_fmt}/{total_fmt} {remaining}, {rate_fmt}")
-            botBar = tqdm(total=iters, smoothing=0, bar_format="{bar}")
-            with Pool() as p:
-                for result in p.imap_unordered(sort, ids):
-                    topBar.update()
-                    botBar.update()
-                    results.append(pickle.dumps(result))
-            botBar.close()
-            topBar.close()
-            print('\n')
-        else:
-            retMid = False
-            iters = 1
-            results = [pickle.dumps(sort(0, i)) for i in range(iters)]
-        #change output file if requested to do so
-        print("waiting for lock")
-        locked = False
-        while not locked:
-            try:
-                lock = open(".lock", "x")
-                print("made lock")
-                locked = True
-            except FileExistsError as e:
-                sleep(0.1)
-        try:
-            with open('results','ab') as f:
-                print("have lock")
-                f.writelines(results)
-                #pickler = pickle.Pickler(f)
-                #for result in tqdm(results, total=iters, smoothing=0, bar_format="{percentage:3.0f}% {n_fmt}/{total_fmt} {remaining}, {rate_fmt}"):
-                #    pickler.dump(result)
-        except BaseException as e:
-            print(e)
-        finally:
-            lock.close()
-            os.remove(".lock")
+        from scipy.stats import norm
+        for dist in ['normal', 'exponential']:
+            for AUC in [0.65, 0.85, 0.95]:
+                if dist == 'normal':
+                    sep = norm.ppf(AUC)*(2**0.5)
+                elif dist == 'exponential':
+                    sep = abs(AUC/(1-AUC))
+                results = list()
+                if len(sys.argv) > 1:
+                    iters = int(sys.argv[1])
+                    if len(sys.argv) < 3:
+                        sys.argv.append(AUC)
+                        sys.argv.append(dist)
+                    else:
+                        sys.argv[-2] = AUC
+                        sys.argv[-1] = dist
+                    ids = [*range(iters)]
+                    topBar = tqdm(total=iters, smoothing=0, bar_format="{percentage:3.0f}% {n_fmt}/{total_fmt} {remaining}, {rate_fmt}")
+                    botBar = tqdm(total=iters, smoothing=0, bar_format="{bar}")
+                    with Pool() as p:
+                        for result in p.imap_unordered(sort, ids):
+                            topBar.update()
+                            botBar.update()
+                            results.append(pickle.dumps(result))
+                    botBar.close()
+                    topBar.close()
+                    print('\n')
+                else:
+                    retMid = False
+                    iters = 1
+                    results = [pickle.dumps(sort(0, i)) for i in range(iters)]
+                #change output file if requested to do so
+                print("waiting for lock")
+                locked = False
+                while not locked:
+                    try:
+                        lock = open(".lock", "x")
+                        print("made lock")
+                        locked = True
+                    except FileExistsError as e:
+                        sleep(0.1)
+                try:
+                    with open(f'resultsMerge{dist.title()}{int(AUC*100)}','ab') as f:
+                        print("have lock")
+                        f.writelines(results)
+                except BaseException as e:
+                    print(e)
+                finally:
+                    lock.close()
+                    os.remove(".lock")
     elif test == 4:
         from random import shuffle
         import numpy as np

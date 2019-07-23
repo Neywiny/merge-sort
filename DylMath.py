@@ -8,6 +8,7 @@ from random import random
 from tqdm import trange, tqdm
 from multiprocessing import Pool
 from scipy.interpolate import interp1d
+from scipy.stats import norm
 #from p_tqdm import p_map
 try:
     import matplotlib
@@ -89,13 +90,25 @@ def fRange(stop, step):
         yield i
         i += step
 
-def MSE(lamb, ROC):
-    approx = interp1d(*zip(*ROC), 'linear')
+def MSE(sep, dist, ROC, rocEmpiric=None):
+    if len(ROC) == 2:
+        approx = interp1d(*((ROC['x'], ROC['y']) if isinstance(ROC, dict) else ROC))
+    else:
+        approx = interp1d(*zip(*ROC))
     step = 10**-4
+    if dist == 'exponential':
+        mseTrue = np.sum([(approx(fpf) - (fpf**(1/sep)))**2 for fpf in fRange(1, step)]) / (1/step)
+    elif dist == 'normal':
+        mseTrue = np.sum([(approx(fpf) - (1-norm.cdf(norm.ppf(1-fpf) - sep)))**2 for fpf in fRange(1, step)]) / (1/step)
 
-    mse = np.sum([(approx(fpf) - (fpf**(1/lamb)))**2 for fpf in fRange(1, step)]) / (1/step)
+    if rocEmpiric != None:
+        if len(rocEmpiric) == 2:
+            trueApprox = interp1d(rocEmpiric['x'], rocEmpiric['y'])
+        else:
+            trueApprox = interp1d(*zip(*rocEmpiric))
+        mseEmperic = np.sum([(approx(fpf) - (trueApprox(fpf)))**2 for fpf in fRange(1, step)]) / (1/step)
     calcAUC = np.sum([0.5*(approx(fpf) + approx(fpf + step))*step for fpf in fRange(1 - step, step)])
-    return mse, calcAUC
+    return (mseTrue, calcAUC) if rocEmpiric == None else (mseTrue, mseEmperic, calcAUC)
 
 
 def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple: 

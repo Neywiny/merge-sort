@@ -1,4 +1,6 @@
 import numpy as np
+from scipy.stats import kendalltau
+from ROC1 import rocxy
 np.seterr(all="ignore")
 from warnings import filterwarnings
 filterwarnings("ignore")
@@ -34,6 +36,9 @@ class Comparator:
     def __call__(self, a, b):
         """returns a < b"""
         return self.compare(a,b)
+
+    def kendalltau(self, predicted):
+        return kendalltau(self.getLatentScore(predicted), list(filter(lambda x: x in self.getLatentScore(predicted), sorted(self.vals))))[0]
     
     def genRand(self, n0, n1, sep, dist):
         from os import getpid, uname
@@ -50,7 +55,11 @@ class Comparator:
             self.vals = (tuple(np.random.exponential(size=n0,scale=1)) + tuple(np.random.exponential(size=n1,scale=sep)))
         else:
             raise NotImplementedError("distibution must be one of ['normal','exponential']")
-
+    def empericROC(self):
+        emperic = getattr(self, 'emperic', None)
+        if emperic == None:
+            self.emperic = rocxy(self.vals[self.n0:], self.vals[:self.n0])
+        return self.emperic
     def record(self, vals):
         if not self.bRecord:
             return
@@ -122,6 +131,8 @@ class Comparator:
 
     def getLatentScore(self, index: int) -> float:
         """gets the latent score of a given index"""
+        if isinstance(index, (tuple, list)):
+            return [self.getLatentScore(val)[0] for val in index]
         if self.rand:
             return self.vals[index], index <= self.n0
 
@@ -218,7 +229,7 @@ class Comparator:
         return 0
 
 if __name__ == "__main__":
-    test = 6
+    test = 7
     if test == 1:
         comp = Comparator([i for i in range(10)], 2)
         print(comp.compare(0, 1))
@@ -265,3 +276,11 @@ if __name__ == "__main__":
         for i in range(222): print(i, comp.getLatentScore(i)[1])
         comp.genRand(135, 87, 7.72, 'exponential')
         for i in range(222): print(i, comp.getLatentScore(i)[1])
+    elif test == 7:
+        from DylData import continuousScale
+        from DylSort import treeMergeSort
+        data = continuousScale(256)
+        comp = Comparator(data, level=0, rand=True)
+        comp.genRand(128, 128, 7.72, 'exponential')
+        for groups in treeMergeSort(data, comp, combGroups=False):
+            print(np.mean([comp.kendalltau(group) for group in groups]))

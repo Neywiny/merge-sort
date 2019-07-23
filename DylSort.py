@@ -1,4 +1,6 @@
 import numpy as np
+from sys import argv
+from scipy.stats import norm
 
 from DylMath import *
 from DylMerger import *
@@ -14,7 +16,12 @@ def genD0D1(d0d1: list, arr: list) -> tuple:
             D1.append(item)
     return D0, D1
 
-def runStats(groups, d0d1, n, currLayer, nLayers):
+def runStats(groups, d0d1, n, currLayer, nLayers, comp=None):
+    AUC = float(sys.argv[2])
+    if sys.argv[3] == 'exponential':
+        sep = abs(AUC/(1-AUC))
+    elif sys.argv[3] == 'normal':
+        sep = norm.ppf(AUC)*(2**0.5)
     aucs, varOfSM, hanleyMcNeils, estimates = list(), list(), list(), list()
     start = 0
     for group in groups:
@@ -29,7 +36,7 @@ def runStats(groups, d0d1, n, currLayer, nLayers):
                 aucs.append(auc)
             hanleyMcNeils.append((len(D0), len(D1)))
             smVAR = unbiasedMeanMatrixVar(sm)
-            if smVAR == smVAR and len(D0) > 2 and len(D1) > 2: # if not NaN
+            if smVAR == smVAR and len(D0) > 3 and len(D1) > 3: # if not NaN
                 varOfSM.append(smVAR)
     varOfAverageAUC = np.var(aucs, ddof=1) / len(aucs)
     aucs = np.array(aucs)
@@ -55,32 +62,42 @@ def runStats(groups, d0d1, n, currLayer, nLayers):
         estimateNs[-1].sort(key=lambda x:sum(x))
         estimates.append(hanleyMcNeil(avgAUC, estimateNs[-1][-1][0], estimateNs[-1][-1][1]) / len(estimateNs[-1]))
 
-
     for i, (N0, N1) in enumerate(hanleyMcNeils):
         hanleyMcNeils[i] = hanleyMcNeil(avgAUC, N0, N1)
+
     if len(varOfSM) == 0:
         varEstimate = float(varOfAverageAUC)
     elif currLayer == nLayers:
         varEstimate = (sum(varOfSM) / (len(varOfSM)**2))
     else:
-        varEstimate = (currLayer*(sum(varOfSM) / (len(varOfSM)**2)) + (nLayers - currLayer) * float(varOfAverageAUC)) / nLayers
+        varEstimate = (currLayer * (sum(varOfSM) / (len(varOfSM)**2)) + (nLayers - currLayer) * float(varOfAverageAUC)) / nLayers
 
     # bootstimate
-    iters = min(len(aucs)**len(aucs), 1000)
-    z = np.array([np.mean(aucs[np.random.randint(len(aucs), size=len(aucs))]) for i in range(iters)])
-    z.sort()
-    lowBoot = z[int(len(z) * 0.16)]
-    highBoot = z[len(z) - int(len(z) * 0.16) - 1]
+    #iters = min(len(aucs)**len(aucs), 1000)
+    #z = np.array([np.mean(aucs[np.random.randint(len(aucs), size=len(aucs))]) for i in range(iters)])
+    #z.sort()
+    #lowBoot = z[int(len(z) * 0.16)]
+    #highBoot = z[len(z) - int(len(z) * 0.16) - 1]
+    lowBoot = 0
+    highBoot = 0
     # arcsin transform
     thingy = 1 / (2*np.sqrt(len(aucs)))
     lowSine = np.sin(np.arcsin(np.sqrt(avgAUC)) - thingy)**2
     highSine = np.sin(np.arcsin(np.sqrt(avgAUC)) + thingy)**2
 
-    try:
+    if (len(varOfSM)**2) != 0:
         stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, lowBoot, highBoot, lowSine, highSine, (sum(varOfSM) / (len(varOfSM)**2)), float(varOfAverageAUC), *estimates]
-    except ZeroDivisionError:
+    else:
         stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, lowBoot, highBoot, lowSine, highSine, 0, float(varOfAverageAUC), *estimates]
     #stats = [aucs, vars, float(npvar)]
+    if True:
+        rocs = list()
+        for group in groups:
+            gD0, gD1 = genD0D1(d0d1, group)
+            rocs.append(genROC(group, gD0, gD1))
+        avgROC = avROC(rocs)
+        empericROC = comp.empericROC()
+        stats.extend(MSE(sep, sys.argv[3], avgROC, empericROC)[:2])
     return stats
 
 def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n: int=2, d0d1 = None, combGroups: bool=True, sortGroups: bool=False) -> list:
@@ -220,7 +237,7 @@ def treeMergeSort(arr: list, comp, n: int=2, retStats: bool=False, d0d1 = None, 
             for group in groups: arr.extend(group)
         else:
             arr = groups
-        yield (arr, runStats(groups, d0d1, n, layer, len(mergerss))) if retStats else arr
+        yield (arr, runStats(groups, d0d1, n, layer, len(mergerss), comp)) if retStats else arr
     #print(f"n? {n} Did it sort right? {mergerss[-1][-1].output == sorted(mergerss[-1][-1].output)}. How many layers? {layer} How many comparisons? {len(comp)}")
 if __name__ == "__main__":
     from DylRand import *
@@ -462,19 +479,23 @@ if __name__ == "__main__":
         font = {'size' : 24}
         matplotlib.rc('font', **font)
 
-        data, D0, D1 = continuousScale(135, 87)
+        data, D0, D1 = continuousScale(137, 85)
         comp = Comparator(data, rand=True)
+        comp.genRand(len(D0), len(D1), 7.72, 'exponential')
         comps = list()
         rocs = list()
         for groups in treeMergeSort(data, comp, combGroups=False):
             rocs.append(list())
             comps.append(len(comp))
+            arr = []
             for group in groups:
+                arr.extend(group)
                 gD0, gD1 = genD0D1((D0, D1), group)
                 if gD0 and gD1:
                     rocs[-1].append(genROC(group, gD0, gD1))
             rocs[-1] = list(zip(*avROC(rocs[-1])))
-            rocs[-1].reverse()
+            #rocs[-1].reverse()
+            #print(comp.kendalltau(arr), MSE(7.72, rocs[-1], comp.empericROC()))
         
         if False:
             rows = int(math.ceil(math.sqrt(len(rocs))))
@@ -495,6 +516,7 @@ if __name__ == "__main__":
             fig = plt.figure(figsize=(8, 8))
             plt.title("ROC Curves")
             ax = fig.add_subplot(1, 1, 1)
+            ax.plot(comp.empericROC()['x'], comp.empericROC()['y'], ls='-', lw=2)
             linestyle_tuple = [
                 ('loosely dashdotted',    (0, (3, 10, 1, 10))),
                 ('dashdotted',            (0, (3, 5, 1, 5))),
@@ -513,7 +535,7 @@ if __name__ == "__main__":
                 ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))]
             ax.plot([], [], lw=0, label='Comparisons, AUC')
             for i, roc in enumerate(rocs):
-                ax.plot(*zip(*roc), linestyle=linestyle_tuple[i][1], label=f"{comps[i]:04d}, {-auc(list(roc)):0.4f}", lw=0.4*(i + 3))
+                ax.plot(*zip(*roc), linestyle=linestyle_tuple[i][1], label=f"{comps[i]:04d}, {auc(list(roc)):0.4f}", lw=0.4*(i + 3))
             ax.legend()
             ax.set_ylim(top=1, bottom=0)
             ax.set_xlim(left=0, right=1)

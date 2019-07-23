@@ -2,18 +2,33 @@ import numpy as np
 from numpy import matlib as mb
 from ROC1 import *
 from scipy.special import erfinv
+from scipy.stats import norm
 from math import sqrt
 from warnings import filterwarnings
 from DylMath import MSE
+from tqdm import tqdm, trange
+from pickle import dumps, Unpickler
+from struct import unpack
+import sys
+argv = sys.argv
 filterwarnings('ignore')
 
 def AUCVAR(x1, x0):
 	sm = successmatrix(x1, np.transpose(x0))
 	return np.mean(sm), unbiasedMeanMatrixVar(sm)
 
-def simulation_ELO_targetAUC(retX0X1=False):
-	results = []
-	N = 128
+def queueReader(queue, total):
+	with tqdm(total=total, smoothing=0) as pbar, open(f"resultsElo{argv[1].title()}{argv[2][2:]}", "wb") as f:
+		while True:
+			msg = queue.get()
+			if msg == 'DONE':
+				break
+			else:
+				pbar.update()
+				pbar.set_description(str(len(msg)))
+				f.write(msg)
+
+def simulation_ELO_targetAUC(retStats=False, queue=None):
 	##
 	# Function for the simulation of ELO rating given an AUC of 0.8 (most of it, hard-coded), 
 	# the input to the function is N (the number of samples on the rating study).
@@ -22,6 +37,14 @@ def simulation_ELO_targetAUC(retX0X1=False):
 	# @Author: Francesc Massanes (fmassane@iit.edu)
 	# @Version: 0.1 (really beta)
 
+	if isinstance(retStats, (tuple, list)):
+		rounds = retStats[2]
+		queue = retStats[1]
+		retStats = retStats[0]
+
+	N = 256 # use this for matching to merge sort
+	N //= 2 # this function doubles N so here we halve it
+	
 	## 
 	# DATA GENERATION 
 	#
@@ -40,9 +63,30 @@ def simulation_ELO_targetAUC(retX0X1=False):
 	#plus = np.random.normal(mu1, si1, (N, 1))
 	#neg = np.random.normal(0, 1, (N, 1))
 	#plus = np.random.normal(1.7, 1, (N, 1))
-	neg = np.random.exponential(size=(N, 1))
-	plus = np.random.exponential(scale=7.72, size=(N, 1))
-	
+	with open("/dev/urandom", "rb") as f:
+		seed = unpack("<I", f.read(4))[0]
+	np.random.seed(seed=seed)
+
+	if len(sys.argv) > 1:
+		AUC = float(sys.argv[2])
+		if sys.argv[1] == 'exponential':
+			neg = np.random.exponential(size=(N, 1))
+			sep = abs(AUC/(1-AUC))
+			plus = np.random.exponential(scale=sep, size=(N, 1))
+		elif sys.argv[1] == 'normal':
+			sep = norm.ppf(AUC)*(2**0.5)
+			neg = np.random.normal(0, 1, (N, 1))
+			plus = np.random.normal(sep, 1, (N, 1))
+		else:
+			print("invalid argument")
+			while True: pass
+	else:
+		neg = np.random.normal(0, 1, (N, 1))
+		plus = np.random.normal(1.7, 1, (N, 1))
+
+	x0 = np.array(neg)[:,0]
+	x1 = np.array(plus)[:,0]
+	empiricROC = rocxy(x1, x0)
 	scores = np.append(neg, plus)
 	truth = np.append(mb.zeros((N, 1)), mb.ones((N, 1)), axis=0)
 	
@@ -55,7 +99,8 @@ def simulation_ELO_targetAUC(retX0X1=False):
 	## 
 	# PRE-STABLISHED COMPARISONS
 	#
-	rounds = 100; 
+	if not 'rounds' in locals():
+		rounds = 14
 	M = rounds*N
 	rating = np.append(mb.zeros((N, 1)), mb.zeros((N, 1)), axis=0)
 	
@@ -68,10 +113,10 @@ def simulation_ELO_targetAUC(retX0X1=False):
 		if round == 1:
 			# option A: only compare + vs -
 			arr = list(range(N))
-			np.random.shuffle(arr)
+			#np.random.shuffle(arr)
 			toCompare[0::2] = np.array(arr, ndmin=2).transpose()
 			arr = list(range(N, 2 * N))
-			np.random.shuffle(arr)
+			#np.random.shuffle(arr)
 			toCompare[1::2] = np.array(arr, ndmin=2).transpose()
 		else:
 			# option B: everything is valid
@@ -109,92 +154,39 @@ def simulation_ELO_targetAUC(retX0X1=False):
 		x1 = np.array(rating[N:])[:,0]
 		auc, var = AUCVAR(x1, x0)
 
-		results.append((x1, x0) if retX0X1 == True else f"{N}, {cnt}, {ncmp}, {var}, {auc}\n")
-	return results
+		roc = rocxy(x1, x0)
+		mseTruth, mseEmperic, auc = MSE(sep, sys.argv[1], roc, empiricROC)
+		if retStats == True:
+			pass
+			#yield roc, mseTruth, mseEmperic, empiricROC
+		if queue != None:
+			queue.put(dumps((N, cnt, ncmp, var, auc, mseTruth, mseEmperic)))
 if __name__ == '__main__':
-	test = 1
+	if len(argv) > 1:
+		test = 1
+	else:
+		test = 2
 	if test == 1:
 		#simulation_ELO_targetAUC(200)
-		from tqdm import tqdm, trange
-		from multiprocessing import Pool
+		from multiprocessing import Manager, Process, Pool
 		#from p_tqdm import p_umap
-
-		iters = 1_000_000
-		n = list(range(iters))
-		resultss = list()
-		with tqdm(total=iters, smoothing=0) as pbar:
-			with Pool() as p:
-				for result in p.imap_unordered(simulation_ELO_targetAUC, n):
-					pbar.update(1)
-					resultss.append(result)
-
-		with open("resElo1000000.csv", "w") as f:
-			for results in resultss:
-				for result in results:
-					f.write(result)
+		iters = int(argv[3]) if len(argv) > 1 else 8
+		rounds = 14
+		manager = Manager()
+		with Pool() as p:
+			queue = manager.Queue()
+			readerProcess = Process(target=queueReader, args=((queue, iters*rounds)))
+			readerProcess.daemon = True
+			readerProcess.start()
+			p.map(simulation_ELO_targetAUC, ((i, queue, rounds) for i in range(iters)))
+		queue.put('DONE')
+		readerProcess.join()
 	elif test == 2:
-		import matplotlib.pyplot as plt
-		import numpy as np
-		from tqdm import tqdm
-
-		mavgVAR = [0.0007928570819701683, 0.000624243348662616, 0.0005402276755908466, 0.0004963394115731297, 0.0004755500709900993, 0.00046520331114676235, 0.00045806630192552476, 0.0004566737278141967]
-		mVar = [0.00078663, 0.00061926, 0.00054135, 0.00049812, 0.00047672, 0.00046507, 0.0004615, 0.00045958]
-		mAUC = [0.8853836862664474, 0.8853178325452302, 0.885256636770148, 0.8853289955540707, 0.8853519640470806, 0.8853439130281148, 0.885368537902832, 0.8853677799827174]
-		mComp = [128.0, 291.64925986842104, 494.84457236842104, 722.2412006578948, 963.2411184210526, 1211.5435855263158, 1463.6465460526315, 1717.6822368421053]
-
-		iters = 36000
-		passes = 100
-		sampleSize = 128
-
-		aucs = np.zeros((iters, passes), dtype=float)
-		vars = np.zeros((iters, passes), dtype=float)
-
-		#aucs = dict()
-		#vars = dict()
-
-		#for i in range(128, 12980, 128):
-			#aucs[i] = 0
-			#vars[i] = list()
-		with open(f"resElo{iters}.csv") as f:
-			for iter, line in enumerate(tqdm(f, unit="line", total=iters*100, unit_scale=True)):
-				line = line.split(", ")
-				comps = int(line[2])//sampleSize - 1
-				idx = iter // passes
-				vars[idx, comps] = float(line[3])
-				aucs[idx, comps] = float(line[4])
-
-		avgAUC = np.mean(aucs, axis=0)
-		varAUC = np.var(aucs, ddof=1, axis=0)
-		avgVAR = np.mean(vars, axis=0)
-
-
-		fig = plt.figure()
-		ax1 = fig.add_subplot(1, 2, 1)
-		ax1.errorbar(list(range(128, 1920, 128)), avgAUC[:14],c='r', ls='-', marker='.', yerr=np.sqrt(varAUC[:14]), capsize=10, label='elo')
-		ax1.plot(mComp, mAUC, 'b.-', label='merge')
-		ax1.legend()
-		ax1.set_title("AUC")
-
-		ax2 = fig.add_subplot(1, 2, 2)
-		ax2.plot(mComp, mVar,	'b.-',	label='merge var of auc')
-		ax2.plot(mComp, mavgVAR,'c.--',	label='merge mean of var')
-		#ax2.plot(list(range(128, 1920, 128)), varAUC[:14], 'r.-', label='elo var of auc')
-		#ax2.plot(list(range(128, 1920, 128)), avgVAR[:14], 'm.--', label='elo mean of var')
-		if False:
-			avgVAR, varAUC = avgVAR[:14], varAUC[:14]
-		ax2.plot(list(range(128, 128*(len(avgVAR) + 1), 128)), avgVAR, 'r.-',	label='elo mean of var')
-		ax2.plot(list(range(128, 128*(len(varAUC) + 1), 128)), varAUC, 'm.--',	label='elo var of auc')
-		ax2.legend()
-		ax2.set_title("VAR")
-		ax2.set_xlabel("comparisons")
-		plt.show()
-	elif test == 3:
 		animation = False
 		if animation:
 			import matplotlib.pyplot as plt
 			from matplotlib.animation import FuncAnimation
 			from matplotlib.animation import PillowWriter
-			from tqdm import tqdm
 			results = simulation_ELO_targetAUC(True)
 			fig, ax = plt.subplots()
 			fig.set_tight_layout(True)
@@ -212,16 +204,51 @@ if __name__ == '__main__':
 			pbar.close()
 		else:
 			import matplotlib.pyplot as plt
-			from tqdm import tqdm
-			results = simulation_ELO_targetAUC(True)
-			print(len(results))
+			from apng import APNG
+			from DylSort import treeMergeSort, genD0D1
+			from DylComp import Comparator
+			from DylData import continuousScale
+			from DylMath import genROC, avROC
+			seed = 15
+			data, D0, D1 = continuousScale(128, 128)
+			comp = Comparator(data, level=0, rand=True, seed=seed)
+			comp.genRand(len(D0), len(D1), 7.72, 'exponential')
 
-			ax = plt.gca()
-			for i, result in enumerate(tqdm(results)):
-				roc = rocxy(*result)
-				ax.plot(roc['x'], roc['y'])
-				error = MSE(7.72, zip(roc['x'], roc['y']))
-				ax.set_title(f"{i:02d}, {error[0]*1000:02.3f}E(-3)")
-				plt.savefig(f"eloResults/{i:02d}")
-				ax.clear()
+			np.random.seed(seed)
+			im = APNG()
+			fig, (ax1, ax2) = plt.subplots(nrows=1, ncols=2)
+			fig.suptitle("Pass number, MSE true, MSE empirical")
+			x = np.linspace(0, 1, num=200)
+			y = x**(1/7.72)
+			ax1.set_aspect('equal', 'box')
+			ax2.set_aspect('equal', 'box')
+			elo = simulation_ELO_targetAUC(True)
+			merge = treeMergeSort(data, comp, d0d1 = (D0, D1), combGroups=False)
+			plt.tight_layout()
+			for i in trange(8):
+				roc, mseTheo, mseEmp, empiricROC = next(elo)
+				ax1.plot(x, y, linestyle='--', label='true', lw=3)
+				ax1.plot(empiricROC['x'], empiricROC['y'], linestyle=':', lw=2, label='empirical')
+				ax1.plot(roc['x'], roc['y'], label='predicted')
+				ax1.legend(loc=4)
+				ax1.set_title(f"ELO\n{i+1}, {mseTheo[0]*1000:02.3f}E(-3), {mseEmp[0]*1000:02.3f}E(-3)")
+				
+				groups = next(merge)
+				rocs = []
+				for group in groups:
+					gD0, gD1 = genD0D1((D0, D1), group)
+					rocs.append(genROC(group, gD0, gD1))
+				roc = avROC(rocs)
+				mseTheo, mseEmp, auc = MSE(7.72, zip(*roc)), MSE(7.72, zip(*roc), zip(empiricROC['x'], empiricROC['y']))
+				ax2.plot(x, y, linestyle='--', label='true', lw=3)
+				ax2.plot(empiricROC['x'], empiricROC['y'], linestyle=':', lw=2, label='empirical')
+				ax2.plot(*roc, label='predicted')
+				ax2.legend()
+				ax2.set_title(f"merge\n{i+1}, {mseTheo[0]*1000:02.3f}E(-3), {mseEmp[0]*1000:02.3f}E(-3)")
+				
+				plt.savefig(f"both")
+				im.append_file(f"both.png", delay=1000)
+				ax1.clear()
+				ax2.clear()
+			im.save("both.png")
 
