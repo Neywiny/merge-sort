@@ -8,7 +8,7 @@ from tqdm import trange, tqdm
 from os import stat
 from sys import getsizeof
 
-def analyze(fileName, length, layers, justOne=False):
+def analyze(fileName, length, layers, justOne=False, bar=False):
     avgAUC = np.zeros((layers,))
     avgSMVAR = np.zeros((layers,))
     avgnpVARs = np.zeros((layers,))
@@ -27,7 +27,7 @@ def analyze(fileName, length, layers, justOne=False):
     iters = 0
     fileLength = stat(fileName).st_size
     old = 0
-    with open(fileName, "rb") as f, tqdm(total=fileLength, unit="B", unit_scale=True, disable=True) as pBar:
+    with open(fileName, "rb") as f, tqdm(total=fileLength, unit="B", unit_scale=True, disable=not bar) as pBar:
         unpickler = pickle.Unpickler(f)
         reshapeCount = 0
         while f.tell() < fileLength:
@@ -47,7 +47,6 @@ def analyze(fileName, length, layers, justOne=False):
                 
                 aucs[iLevel][iters - 1] = auc
                 varEstimates[iLevel][iters - 1] = varEstimate
-                print(npVAR, end=',')
                 avgAUC[iLevel] += auc
                 avgSMVAR[iLevel] += smVAR
                 avgnpVARs[iLevel] += npVAR
@@ -58,7 +57,6 @@ def analyze(fileName, length, layers, justOne=False):
                 avgErrorBars[iLevel] += [lowBoot, highBoot, lowSine, highSine, 0, 0]
                 avgEstimates[layers - iLevel - 1] += estimates
                 avgMinSeps[iLevel] += minSeps
-            print()
             pBar.update(f.tell() - old)
             pBar.desc = f"{iters}/{iterEstimate}, {reshapeCount}, {getsizeof(unpickler)}"
             old = f.tell()
@@ -101,8 +99,11 @@ if __name__ == "__main__":
     length = 256
     layers = 8
 
-    aucs, varEstimate, avgAUC, avgSMVAR, avgnpVARs, avgMSETrues, avgMSEEmperic, avgComps, avgHanleyMNeil, avgErrorBars, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, iters = analyze("resultsMergeExponential65", length, layers)
-
+    aucs, varEstimate, avgAUC, avgSMVAR, avgnpVARs, avgMSETrues, avgMSEEmperic, avgComps, avgHanleyMNeil, avgErrorBars, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, iters = analyze("resultsMergeNormal65", length, layers, bar=True)
+    plt.plot(avgComps, avgMSEEmperic, label='emperic')
+    plt.plot(avgComps, avgMSETrues, label='true')
+    plt.legend()
+    plt.show()
     labels = [f'{np.median(list(filter(lambda x: x != 0, avgMinSeps[0]))):3.02f}']
     for val in np.median(avgMinSeps, axis=0)[1:]:
         labels.append(f'{val:3.02f}')
@@ -193,4 +194,4 @@ if __name__ == "__main__":
     ax5.set_title("Average Distance Between Compairisons per ID per Layer")
 
     plt.subplots_adjust(wspace=0.45)
-    #plt.show()
+    plt.show()

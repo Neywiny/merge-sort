@@ -67,10 +67,11 @@ def runStats(groups, d0d1, n, currLayer, nLayers, comp=None):
 
     if len(varOfSM) == 0:
         varEstimate = float(varOfAverageAUC)
-    elif currLayer == nLayers:
-        varEstimate = (sum(varOfSM) / (len(varOfSM)**2))
+    #elif currLayer == nLayers:
     else:
-        varEstimate = (currLayer * (sum(varOfSM) / (len(varOfSM)**2)) + (nLayers - currLayer) * float(varOfAverageAUC)) / nLayers
+        varEstimate = (sum(varOfSM) / (len(varOfSM)**2))
+    #else:
+    #    varEstimate = (currLayer * (sum(varOfSM) / (len(varOfSM)**2)) + (nLayers - currLayer) * float(varOfAverageAUC)) / nLayers
 
     # bootstimate
     #iters = min(len(aucs)**len(aucs), 1000)
@@ -78,12 +79,11 @@ def runStats(groups, d0d1, n, currLayer, nLayers, comp=None):
     #z.sort()
     #lowBoot = z[int(len(z) * 0.16)]
     #highBoot = z[len(z) - int(len(z) * 0.16) - 1]
-    lowBoot = 0
-    highBoot = 0
+    lowBoot = highBoot = lowSine = highSine = 0
     # arcsin transform
-    thingy = 1 / (2*np.sqrt(len(aucs)))
-    lowSine = np.sin(np.arcsin(np.sqrt(avgAUC)) - thingy)**2
-    highSine = np.sin(np.arcsin(np.sqrt(avgAUC)) + thingy)**2
+    #thingy = 1 / (2*np.sqrt(len(aucs)))
+    #lowSine = np.sin(np.arcsin(np.sqrt(avgAUC)) - thingy)**2
+    #highSine = np.sin(np.arcsin(np.sqrt(avgAUC)) + thingy)**2
 
     if (len(varOfSM)**2) != 0:
         stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, lowBoot, highBoot, lowSine, highSine, (sum(varOfSM) / (len(varOfSM)**2)), float(varOfAverageAUC), *estimates]
@@ -479,7 +479,7 @@ if __name__ == "__main__":
         font = {'size' : 24}
         matplotlib.rc('font', **font)
 
-        data, D0, D1 = continuousScale(137, 85)
+        data, D0, D1 = continuousScale(16, 16)
         comp = Comparator(data, rand=True)
         comp.genRand(len(D0), len(D1), 7.72, 'exponential')
         comps = list()
@@ -517,29 +517,15 @@ if __name__ == "__main__":
             plt.title("ROC Curves")
             ax = fig.add_subplot(1, 1, 1)
             ax.plot(comp.empericROC()['x'], comp.empericROC()['y'], ls='-', lw=2)
-            linestyle_tuple = [
-                ('loosely dashdotted',    (0, (3, 10, 1, 10))),
-                ('dashdotted',            (0, (3, 5, 1, 5))),
-                ('densely dashdotted',    (0, (3, 1, 1, 1))),
-
-                ('loosely dashed',        (0, (5, 10))),
-                ('dashed',                (0, (5, 5))),
-                ('densely dashed',        (0, (5, 1))),
-
-                ('loosely dotted',        (0, (1, 5))),
-                ('dotted',                (0, (1, 2))),
-                ('densely dotted',        (0, (1, 1))),
-
-                ('dashdotdotted',         (0, (3, 5, 1, 5, 1, 5))),
-                ('loosely dashdotdotted', (0, (3, 10, 1, 10, 1, 10))),
-                ('densely dashdotdotted', (0, (3, 1, 1, 1, 1, 1)))]
+            linestyle_tuple = [':', '--', '-.', (0, (1, 1)), (0, (1, 1, 1, 0))]
             ax.plot([], [], lw=0, label='Comparisons, AUC')
             for i, roc in enumerate(rocs):
-                ax.plot(*zip(*roc), linestyle=linestyle_tuple[i][1], label=f"{comps[i]:04d}, {auc(list(roc)):0.4f}", lw=0.4*(i + 3))
+                ax.plot(*zip(*roc), linestyle=linestyle_tuple[i], label=f"{comps[i]:03d}, {auc(list(roc)):0.4f}", lw=(i + 3))
             ax.legend()
             ax.set_ylim(top=1, bottom=0)
             ax.set_xlim(left=0, right=1)
             ax.set(xlabel="False Positive Fraction", ylabel="True Positive Fraction")
+            
         plt.tight_layout()
         plt.show()
     elif test == 15:

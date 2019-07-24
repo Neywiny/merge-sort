@@ -91,23 +91,24 @@ def fRange(stop, step):
         i += step
 
 def MSE(sep, dist, ROC, rocEmpiric=None):
-    if len(ROC) == 2:
-        approx = interp1d(*((ROC['x'], ROC['y']) if isinstance(ROC, dict) else ROC))
-    else:
-        approx = interp1d(*zip(*ROC))
     step = 10**-4
+    fpf = np.arange(0, 1, step)
+    if len(ROC) == 2:
+        approx = interp1d(*((ROC['x'], ROC['y']) if isinstance(ROC, dict) else ROC))(fpf)
+    else:
+        approx = interp1d(*zip(*ROC))(fpf)
     if dist == 'exponential':
-        mseTrue = np.sum([(approx(fpf) - (fpf**(1/sep)))**2 for fpf in fRange(1, step)]) / (1/step)
+        mseTrue = np.mean((approx - (fpf**(1/sep)))**2)
     elif dist == 'normal':
-        mseTrue = np.sum([(approx(fpf) - (1-norm.cdf(norm.ppf(1-fpf) - sep)))**2 for fpf in fRange(1, step)]) / (1/step)
+        mseTrue = np.mean((approx - (1-norm.cdf(norm.ppf(1-fpf) - sep)))**2)
 
     if rocEmpiric != None:
         if len(rocEmpiric) == 2:
             trueApprox = interp1d(rocEmpiric['x'], rocEmpiric['y'])
         else:
             trueApprox = interp1d(*zip(*rocEmpiric))
-        mseEmperic = np.sum([(approx(fpf) - (trueApprox(fpf)))**2 for fpf in fRange(1, step)]) / (1/step)
-    calcAUC = np.sum([0.5*(approx(fpf) + approx(fpf + step))*step for fpf in fRange(1 - step, step)])
+        mseEmperic = np.mean((approx - (trueApprox(fpf)))**2)
+    calcAUC = np.trapz(approx) / (1/step)
     return (mseTrue, calcAUC) if rocEmpiric == None else (mseTrue, mseEmperic, calcAUC)
 
 
@@ -358,7 +359,8 @@ if __name__ == "__main__":
         from DylSort import treeMergeSort, genD0D1
         from DylComp import Comparator
         import matplotlib.pyplot as plt
-
+        from time import time
+        t1 = time()
         data, D0, D1 = continuousScale(1000, 1000)
         comp = Comparator(data, rand=True)
         comp.genRand(len(D0), len(D1), 7.72, 'exponential')
@@ -371,7 +373,7 @@ if __name__ == "__main__":
                     rocs.append(genROC(group, gD0, gD1))
             rocs = list(zip(*avROC(rocs)))
             rocs.reverse()
-            mse = MSE(7.72, rocs)
+            mse = MSE(7.72, 'exponential', rocs)
             #print(*mse, auc(rocs))
             print(f"{mse[0]:03.3e}, {-auc(rocs):0.3f}, {len(comp)}")
             ax = fig.add_subplot(3, 4, level + 1)
@@ -379,5 +381,6 @@ if __name__ == "__main__":
             ax.plot(list(fRange(1 - 10**-4, 10**-4)), [approx(fp) for fp in fRange(1 - 10**-4, 10**-4)])
             ax.plot(list(fRange(1 - 10**-4, 10**-4)), [fp**(1/7.72) for fp in fRange(1 - 10**-4, 10**-4)])
             ax.set(title=f"{mse[0]:03.6e}:{len(comp)}")
-        plt.subplots_adjust(hspace=0.25)
-        plt.show()
+        #plt.subplots_adjust(hspace=0.25)
+        #plt.show()
+        print(time() - t1)
