@@ -9,7 +9,6 @@ from tqdm import trange, tqdm
 from os import stat
 from sys import getsizeof
 from scipy import stats
-
 def analyze(fileName, length, layers, justOne=False, bar=False):
     avgAUC = np.zeros((layers,))
     avgSMVAR = np.zeros((layers,))
@@ -21,12 +20,9 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
     avgPC = np.zeros((layers,))
     avgErrorBars = np.zeros((layers, 6))
     avgEstimates = np.array([np.zeros((i)) for i in range(layers)])
-
     avgMinSeps = np.ones((layers, length))
-
     varEstimates = np.zeros((layers, 0))
     aucs = np.zeros((layers, 0))
-
     iters = 0
     fileLength = stat(fileName).st_size
     old = 0
@@ -47,7 +43,6 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
                 varEstimates = new
                 del new
             for iLevel, (auc, varEstimate, hanleyMcNeil, lowBoot, highBoot, lowSine, highSine, smVAR, npVAR, *estimates, mseTrue, mseEmperic, compLen, minSeps, pc) in enumerate(iteration):
-                
                 varEstimates[iLevel][iters - 1] = varEstimate
                 avgHanleyMNeil[iLevel] += hanleyMcNeil
                 avgMSEEmperic[iLevel] += mseEmperic
@@ -60,7 +55,6 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
                 avgAUC[iLevel] += auc
                 avgPC[iLevel] += pc
                 #print(pc, end=',')
-
                 avgErrorBars[iLevel] += [lowBoot, highBoot, lowSine, highSine, 0, 0]
                 avgEstimates[layers - iLevel - 1] += estimates
             #print()
@@ -72,7 +66,6 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
     avgMinSeps = avgMinSeps.transpose()[:,1:,]
     aucs = aucs[:,:iters]
     varEstimates = varEstimates[:,:iters]
-
     # axis=1 is across the simulations
     avgAUC = (avgAUC / iters).transpose()
     avgComps = avgComps // iters
@@ -85,24 +78,17 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
     avgSMVAR /= iters
     avgPC   /= iters
     avgErrorBars = np.transpose(avgErrorBars / iters)
-
     varEstimate = np.mean(varEstimates, axis=1)
-
     varAUCnp = np.var(aucs, ddof=1, axis=1)
     stdVarEstimate = np.sqrt(np.var(varEstimates, axis=1, ddof=1))
-
     remainder = int(bin(length)[3:], 2)
     thingies = [remainder, length / 2]
     for i in range(2, layers):
         thingies.append(thingies[-1] // 2)
     thingies = [1/(2*np.sqrt(thingy)) for thingy in thingies]
-
     avgErrorBars[4] = [np.sin(np.arcsin(np.sqrt(auc)) - thingies[i])**2 for i, auc in enumerate(avgAUC)]
     avgErrorBars[5] = [np.sin(np.arcsin(np.sqrt(auc)) + thingies[i])**2 for i, auc in enumerate(avgAUC)]
-
     return varEstimate, avgAUC, avgSMVAR, avgnpVARs, avgMSETrues, avgMSEEmperic, avgComps, avgHanleyMNeil, avgErrorBars, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters
-
-
 def analyzeStudy(fileName, headerLine=False):
     times = list()
     x0 = list()
@@ -127,11 +113,9 @@ def analyzeStudy(fileName, headerLine=False):
         return times
 if __name__ == "__main__":
     test = 2
-
     if test == 1:
         length = 256
         layers = 8
-
         varEstimate, avgAUC, avgSMVAR, avgnpVARs, avgMSETrues, avgMSEEmperic, avgComps, avgHanleyMNeil, avgErrorBars, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters = analyze("resultsMergeExponential85", length, layers, bar=True)
         plt.plot(avgComps, avgMSEEmperic, label='emperic')
         plt.plot(avgComps, avgMSETrues, label='true')
@@ -140,12 +124,9 @@ if __name__ == "__main__":
         labels = [f'{np.median(list(filter(lambda x: x != 0, avgMinSeps[0]))):3.02f}']
         for val in np.median(avgMinSeps, axis=0)[1:]:
             labels.append(f'{val:3.02f}')
-
         slopeFirst = (varEstimate[1]/avgHanleyMNeil[1]) - (varEstimate[0]/avgHanleyMNeil[0])
         slopeTotal = slopeFirst / 3
-
         hanleyMcNeilToVarEstimate = [avgHanleyMNeil[i] * (1 + i * slopeTotal) for i in range(layers)]
-
         #print(varEstimate)
         #print(varAUCnp)
         #print(avgAUC)
@@ -169,7 +150,6 @@ if __name__ == "__main__":
         #ax1.set_xticklabels(tickLabels)
         ax1.set_ylim(top=0.96)
         ax1.legend()
-
         ax1.set_ylabel('AUC', color='b')
         #ax1.ticklabel_format(useOffset=False)
         ax1.set_title("Average AUC per Layer")
@@ -191,7 +171,6 @@ if __name__ == "__main__":
                 #ax2.text(layer + 1, point, str(i), fontsize=12, horizontalalignment='center', verticalalignment='center')
         ax2.legend()
         ax2.set_title("Variance Estimate per Layer")
-
         ax3 = fig.add_subplot(2, 3, 3)
         info = [-1 for i in range(layers - 1)]
         for layer in range(layers - 1):
@@ -203,29 +182,23 @@ if __name__ == "__main__":
         #ax3.set_xticklabels(tickLabels)
         ax3.set_title("Information Gained per Comparison per Layer")
         #ax3.set_yscale('log')
-
         ax4 = fig.add_subplot(2, 2, 3)
         ax4.plot([0, len(avgComps)], [0, max(avgComps)], 'b:')
         ax4.plot(list(range(9)), [0, *avgComps], 'r.-', label='comparisons')
-        ax4.set_ylabel('Comparisons', color='r') 
+        ax4.set_ylabel('Comparisons', color='r')
         ax4.set_yticks([0] + [int(avgComp) for avgComp in avgComps])
         ax4.set_title("Average Comparisons per Layer")
-
         ax5 = fig.add_subplot(2, 2, 4)
         plot = ax5.imshow(avgMinSeps,norm=LogNorm(), extent=[0, length, 0, length], aspect=0.5)
         ax5.set_xticks([*range(length//(2*layers), length, int((layers / (layers - 1))*(length//layers)))])
-
         start, end = ax5.get_xlim()
         step = length / (layers - 1)
         #ax5.set_xticks(list(range(step, length, step)))
         ax5.set_xticks(np.arange(start + (step / 2), end + (step / 2), step))
         ax5.set_xticklabels(tickLabels[1:])
-
         cbaxes = fig.add_axes([0.91, 0.13, 0.01, 0.31])
         cbar = fig.colorbar(plot, cax=cbaxes)
-
         ax5.set_title("Average Distance Between Compairisons per ID per Layer")
-
         plt.subplots_adjust(wspace=0.45)
         plt.show()
     elif test == 2:
@@ -242,7 +215,6 @@ if __name__ == "__main__":
         xVals = np.linspace(xmin, xmax, 1000)
         print(xmin, xmax)
         ax1.fill_between(xVals, kernal(xVals), label="merge", alpha=0.5)
-        
         ax1.legend()
         ax1.set_ylim(bottom=0)
         ax1.set_xlim(left=xmin, right=xmax)
@@ -258,5 +230,4 @@ if __name__ == "__main__":
         ax2.plot(*roc4, label="layer 4")
         ax2.plot(scaleROC['x'], scaleROC['y'], label="scale (emperic)")
         ax2.legend()
-
         plt.show()

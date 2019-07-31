@@ -5,7 +5,6 @@ import os
 import socket
 from random import random, randint
 from time import sleep, time
-
 class AFC:
     def __init__(self, posDir, negDir, ansDir, ip, port, n0, n1, f):
         self.decision = -1
@@ -16,7 +15,7 @@ class AFC:
         self.posDir = posDir
         self.negDir = negDir
         self.ansDir = ansDir
-        self.counter = 0   
+        self.counter = 0
         self.imgIndex = 0
         self.ip = ip
         self.port = port
@@ -26,11 +25,9 @@ class AFC:
         self.connected = False
         self.f = open(f, 'w')
     def connect(self):
-        
         TCP_IP = self.ip
         TCP_PORT = int(self.port)
         BUFFER_SIZE = 10  # Normally 1024, but we want fast response
-        
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("waiting for connection")
         self.title.configure(text="Waiting for Connection...")
@@ -63,10 +60,8 @@ class AFC:
         for img in self.images:
             img.thumbnail((IMGWIDTH, IMGHEIGHT))
         self.images = [ImageTk.PhotoImage(img) for img in self.images]
-
         for i, image in enumerate(self.images):
             setattr(image, "filename", names[i])
-
         ansImages = [Image.open(name) for name in ansNames]
         for img in ansImages:
             img.thumbnail((IMGWIDTH, IMGHEIGHT))
@@ -95,7 +90,6 @@ class AFC:
             self.img1.configure(image=self.images[pic1])
             self.img2.configure(image=self.images[pic2])
         root.update()
-
     def switchModes(self):
         self.ready = True
         self.decision = -1
@@ -185,7 +179,6 @@ class AFC:
                 self.decision = -1
                 self.ready = True
         root.after(16, self.run)
-
     def pressed(self, event):
         #print("event!")
         self.counter = 0
@@ -206,8 +199,6 @@ class AFC:
             root.destroy()
         except: #root already destroyed
             pass
-
-
 HEIGHT = 700
 WIDTH = 1300
 IMGWIDTH = 600

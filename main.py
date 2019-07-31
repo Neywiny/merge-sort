@@ -1,16 +1,13 @@
 #!/usr/bin/python3.6
-
 import math
 import pickle
 import os
 import sys
 from multiprocessing import Pool
 from warnings import filterwarnings
-
 from DylComp import Comparator
 from DylMath import *
 from DylSort import mergeSort, treeMergeSort
-
 def sort(tid, i=0, seed=None):
     results = list()
     data, D0, D1 = continuousScale(128, 128)
@@ -26,8 +23,6 @@ def sort(tid, i=0, seed=None):
         print(sorted(arr, key=lambda x: comp.getLatentScore(x)[0]))
         raise EOFError("did not sort")
     return results
-
-
 if __name__ == "__main__":
     filterwarnings('ignore')
     test = 3
@@ -140,10 +135,8 @@ if __name__ == "__main__":
         import matplotlib
         font = {'size' : 24}
         matplotlib.rc('font', **font)
-
         power = 9
         length = int(2**power*(2/3))
-
         power += 1
         yStep = length / power
         print(yStep)
@@ -157,7 +150,6 @@ if __name__ == "__main__":
                 sorter = treeMergeSort
             data = list(range(int(2**(power - 1)*(2/3))))
             img = np.zeros((power, length))
-
             shuffle(data)
             img[0] = data[:]
             comp = Comparator(data, level=0)
@@ -173,7 +165,6 @@ if __name__ == "__main__":
                 if len(arr) < len(img[0]):
                     arr.extend([0 for i in range(len(img[0]) - len(arr))])
                 img[y] = arr
-
             ax.imshow(img, cmap='Greys', extent=[0, length, 0, length], aspect=1)
             ax.set_xticks([])
             ax.set_yticks([])

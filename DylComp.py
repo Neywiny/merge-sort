@@ -9,7 +9,6 @@ import socket
 from time import sleep
 from random import random
 from pickle import dump
-
 class Comparator:
     """A class for comparing 2 values.
         Controlled with the optimizaiton level and if you want random decisions or not
@@ -44,10 +43,8 @@ class Comparator:
     def __call__(self, a, b):
         """returns a < b"""
         return self.compare(a,b)
-
     def kendalltau(self, predicted):
         return kendalltau(self.getLatentScore(predicted), list(filter(lambda x: x in self.getLatentScore(predicted), sorted(self.vals))))[0]
-    
     def genRand(self, n0, n1, sep, dist):
         from os import getpid, uname
         from time import time
@@ -73,17 +70,13 @@ class Comparator:
             return
         for val in vals:
             self.counts[val] += 1
-
             #count minimum separations
             self.seps[val].append(len(self))
-
             if self.last:
                 if val in self.last:
                     self.dupCount += 1
-
         self.compHistory.append(tuple(vals))
         self.last = tuple(vals)
-
     def compare(self, a, b) -> bool:
         """returns a < b"""
         #if not self.rand and self.level == 0:
@@ -99,20 +92,16 @@ class Comparator:
                 #only gets it right 80% of the time
                 needComp = True
                 if self.rand: # where we are for most things
-                    
                     aScore, aNeg = self.getLatentScore(a)
                     bScore, bNeg = self.getLatentScore(b)
-
                     res: bool = aScore < bScore
                 else:
                     res: bool = a < b
                 if needComp:
                     self.record([a, b])
-                    
                     if self.level > 0:
                         self.lookup[a][b]:bool = res
                         self.lookup[b][a]:bool = not res
-
                     if self.level > 1:
                         # print("optimizing")
                         # single optimization
@@ -120,14 +109,14 @@ class Comparator:
                             # for all c s.t. we know the relationship b/t b and c
                             if self.lookup[b][c] == res:# a < b < c or a > b > c
                                 # print("optimized", a, c)
-                                self.lookup[a][c]:bool = res  # a < c or a > c 
+                                self.lookup[a][c]:bool = res  # a < c or a > c
                                 self.lookup[c][a]:bool = not res
                                 self.optCount += 1
                         for c in self.lookup[a].keys():
                             # for all c s.t. we know the relationship b/t b and c
                             if self.lookup[a][c] == (not res):# a < b < c or a > b > c
                                 # print("optimized", b, c)
-                                self.lookup[b][c]:bool = not res  # a < c or a > c 
+                                self.lookup[b][c]:bool = not res  # a < c or a > c
                                 self.lookup[c][b]:bool = res
                                 self.optCount += 1
                     if self.level > 2:
@@ -136,7 +125,6 @@ class Comparator:
                 return res
         except AttributeError as e:
             raise LookupError("You need to generate the lookup first")
-
     def getLatentScore(self, index: int) -> float:
         """gets the latent score of a given index"""
         if isinstance(index, (tuple, list)):
@@ -145,15 +133,12 @@ class Comparator:
             return self.vals[index], index <= self.n0
         else:
             return index
-
     def genSeps(self):
         minseps = [2*len(self.objects) for i in range(len(self.objects))]
         for img, times in self.seps.items():
             if len(times) > 1:
                 minseps[img] = min(map(lambda x: times[x + 1] - times[x], range(len(times) - 1)))
         return minseps
-
-
     def genLookup(self, objects: list):
         """generate the lookup table and statistics for each object provided"""
         self.lookup:dict = dict()
@@ -161,7 +146,6 @@ class Comparator:
         for object in objects:
             self.lookup[object] = dict()
         self.clearHistory()
-    
     def clearHistory(self):
         """clear the history statistics of comparisons"""
         if hasattr(self, "objects"):
@@ -171,7 +155,6 @@ class Comparator:
             for object in self.objects:
                 self.counts[object] = 0
                 self.seps[object] = list()
-
     def learn(self, arr: list, img=None, maxi=False):
         """learn the order of the array provided, assuming the current optimization level allows it
         if img is provided, learns the arr w.r.t. the img and if it is max or min"""
@@ -189,7 +172,6 @@ class Comparator:
                     self.lookup[b][img] = maxi
                     if self.level > 2:
                         Comparator.optimize(self.objects, self.lookup, maxi, b, img)
-
     def max(self, arr) -> (int, int):
         if len(arr) == 0:
             raise NotImplementedError("I can't take the max of nothing")
@@ -224,11 +206,9 @@ class Comparator:
             self.pc.append(self.c / (len(self.pc) + 1))
         self.desHist.append(maxVal)
         return maxInd, maxVal
-
     def min(self, arr) -> (int, int):
         if len(arr) == 0:
             raise NotImplementedError("I can't take the min of nothing")
-
         if len(arr) == 2:
             a,b = arr
             if b in self.lookup[a].keys():
@@ -260,15 +240,14 @@ class Comparator:
             self.pc.append(self.c / (len(self.pc) + 1))
         self.desHist.append(arr[int(not minInd)])
         return minInd, minVal
-
     @staticmethod
     def optimize(objects: list, lookup: dict, res: bool, a, b):
         """recursive optimization algorithm for adding a node to a fully connected graph"""
         if objects:
             nObjects: list = []
-            for c in list(lookup[b]): 
+            for c in list(lookup[b]):
                 # for all c s.t. c is a neighbor of b
-                if c in objects and lookup[b][c] == res and c != a and c not in lookup[a]: 
+                if c in objects and lookup[b][c] == res and c != a and c not in lookup[a]:
                     # s.t. a > b > c or a < b < c
                     nObjects.append(c)
                     # print("optimized", a, c)
@@ -276,7 +255,6 @@ class Comparator:
                     lookup[c][a]:bool = not res
                     return 1 + Comparator.optimize(nObjects, lookup, res, b, c)
         return 0
-
 class NetComparator(Comparator):
     # keep payloads to 10 bytes, try for little endian
     # 'op codes'
@@ -292,7 +270,6 @@ class NetComparator(Comparator):
         self.recorder.write('Image 1,Image 2,Chosen\n')
         self.desHist = list()
         self.plots = list()
-
     def __enter__(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("getting connected")
@@ -312,7 +289,6 @@ class NetComparator(Comparator):
         self.conn.send(b"I'm going!")
         self.conn.close()
         self.s.close()
-
     def min(self, arr) -> (int, int):
         res = self.max(arr)
         if res != 'done':
@@ -322,7 +298,6 @@ class NetComparator(Comparator):
             return mini, arr[mini]
         else:
             return 'done'
-
     def max(self, arr, tryingAgain=False) -> (int, int):
         if not tryingAgain:
             data = self.conn.recv(10)
@@ -358,7 +333,6 @@ class NetComparator(Comparator):
         self.desHist.append(maxVal)
         self.recorder.write(str(self.compHistory[-1])[1:-1] + f" ,{maxVal}\n")
         return maxInd, maxVal
-
     def replot(self):
         return
         if hasattr(self, 'pax'): #has an axis to plot onto
@@ -375,9 +349,7 @@ class NetComparator(Comparator):
             ax1.set_xticks(self.xVals)
             plt.savefig("temp.svg")
             replace("temp.svg", "figure.svg")
-
 if __name__ == "__main__":
-    
     test = 9
     if test == 1:
         comp = Comparator([i for i in range(10)], 2)
@@ -451,7 +423,6 @@ if __name__ == "__main__":
             hmnEstimates = np.full((layers, layers), np.nan)
             compLens = np.full((layers,), np.nan)
             info = [np.nan for i in range(layers)]
-
             comp.aucs = aucs
             comp.pax = ax1
             comp.plt = plt
@@ -519,9 +490,7 @@ if __name__ == "__main__":
                     plots.append(ax3.plot(xVals, xVals, lw=0))
                 plots.append(ax3.plot(xVals, info, c='orange', marker='.', ls='-'))
                 ax3.set_xticklabels(xLabels, rotation="vertical")
-
                 plots.append(ax4.plot(xVals, compLens, '.-'))
-                
                 plots.append(ax5.plot(*avgROC))
                 if len(groups) == 16:
                     roc4 = avgROC

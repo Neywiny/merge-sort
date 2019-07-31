@@ -1,21 +1,17 @@
 import numpy as np
 from sys import argv
 from scipy.stats import norm
-
 from DylMath import *
 from DylMerger import *
 from tqdm import tqdm
-
 def genD0D1(d0d1: list, arr: list) -> tuple:
     D0, D1 = list(), list()
-    
     for item in arr:
         if item in d0d1[0]:
             D0.append(item)
         elif item in d0d1[1]:
             D1.append(item)
     return D0, D1
-
 def runStats(groups, params, comp=None):
     aucs, varOfSM, hanleyMcNeils, estimates = list(), list(), list(), list()
     start = 0
@@ -34,11 +30,9 @@ def runStats(groups, params, comp=None):
     varOfAverageAUC = np.var(aucs, ddof=1) / len(aucs)
     aucs = np.array(aucs)
     avgAUC = np.mean(aucs)
-
     estimateNs = [list()]
     for i, ns in enumerate(hanleyMcNeils):
         estimateNs[0].append(ns)
-
     # while there are groups to 'merge'
     while len(estimateNs[-1]) != 1:
         # get the previous layer and sort by N0 + N1
@@ -54,10 +48,8 @@ def runStats(groups, params, comp=None):
             estimateNs[-1].append([sum((x[0] for x in toMerge)), sum((x[1] for x in toMerge))])
         estimateNs[-1].sort(key=lambda x:sum(x))
         estimates.append(hanleyMcNeil(avgAUC, estimateNs[-1][-1][0], estimateNs[-1][-1][1]) / len(estimateNs[-1]))
-
     for i, (N0, N1) in enumerate(hanleyMcNeils):
         hanleyMcNeils[i] = hanleyMcNeil(avgAUC, N0, N1)
-
     if len(varOfSM) == 0:
         varEstimate = float(varOfAverageAUC)
     #elif currLayer == nLayers:
@@ -65,7 +57,6 @@ def runStats(groups, params, comp=None):
         varEstimate = (sum(varOfSM) / (len(varOfSM)**2))
     #else:
     #    varEstimate = (currLayer * (sum(varOfSM) / (len(varOfSM)**2)) + (nLayers - currLayer) * float(varOfAverageAUC)) / nLayers
-
     # bootstimate
     #iters = min(len(aucs)**len(aucs), 1000)
     #z = np.array([np.mean(aucs[np.random.randint(len(aucs), size=len(aucs))]) for i in range(iters)])
@@ -77,7 +68,6 @@ def runStats(groups, params, comp=None):
     #thingy = 1 / (2*np.sqrt(len(aucs)))
     #lowSine = np.sin(np.arcsin(np.sqrt(avgAUC)) - thingy)**2
     #highSine = np.sin(np.arcsin(np.sqrt(avgAUC)) + thingy)**2
-
     if (len(varOfSM)**2) != 0:
         stats = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, lowBoot, highBoot, lowSine, highSine, (sum(varOfSM) / (len(varOfSM)**2)), float(varOfAverageAUC), *estimates]
     else:
@@ -98,7 +88,6 @@ def runStats(groups, params, comp=None):
                 sep = norm.ppf(AUC)*(2**0.5)
             stats.extend(MSE(sep, sys.argv[3], avgROC, empericROC)[:2])
     return stats
-
 def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n: int=2, d0d1 = None, combGroups: bool=True, sortGroups: bool=False) -> list:
     """mergeSort(arr: list, level=3)
     Can either be provided a comparator or will make its own
@@ -108,16 +97,12 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
     if comp == None:
         from DylComp import Comparator
         comp = Comparator(arr, level=3, rand=False)
-
     # do this after comp created just in case
     if not arr:
         yield arr, None if retStats else arr
         return
-
     groups: list = list([arr[i]] for i in range(len(arr)))
-
     mergers = []
-
     if retMid:
         mini = min(arr)
         maxi = max(arr)
@@ -171,7 +156,6 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
             yield arr
         else:
             yield percentages, medians
-
 def treeMergeSort(arr: list, comp, statParams=None, n: int=2, retStats: bool=False, combGroups: bool=True):
     if n < 2:
         raise IOError("can't split a tree with n < 2")
@@ -250,7 +234,6 @@ def treeMergeSort(arr: list, comp, statParams=None, n: int=2, retStats: bool=Fal
     #print(f"n? {n} Did it sort right? {mergerss[-1][-1].output == sorted(mergerss[-1][-1].output)}. How many layers? {layer} How many comparisons? {len(comp)}")
 if __name__ == "__main__":
     from DylRand import *
-
     test = 14
     if test == 1:
         from random import shuffle, seed
@@ -307,7 +290,6 @@ if __name__ == "__main__":
     elif test == 6:
         from DylComp import Comparator
         from random import shuffle
-
         data = [i for i in range(21)]
         shuffle(data)
         comp = Comparator(data)
@@ -317,7 +299,6 @@ if __name__ == "__main__":
         from DylData import continuousScale
         from DylComp import Comparator
         from tqdm import trange, tqdm
-
         avgs = []
         for plot in trange(100):
             data = continuousScale(256)
@@ -326,7 +307,6 @@ if __name__ == "__main__":
                 pass
             avgs.append(len(comp))
         print(sum(avgs) / 100)
-
         avgs = []
         for plot in trange(100):
             data = continuousScale(256)
@@ -343,7 +323,6 @@ if __name__ == "__main__":
                 pass
             avgs.append(len(comp))
         print(sum(avgs) / 5)
-
         avgs = []
         for plot in trange(5):
             data = continuousScale(256)
@@ -355,13 +334,11 @@ if __name__ == "__main__":
     elif test == 8:
         from DylComp import Comparator
         from DylData import continuousScale
-
         data = continuousScale(16)
         comp = Comparator(data, level=3, rand=True)
         print(data)
         for val in sorted(data):
             print(val, comp.getLatentScore(val))
-        
         for l, (arr, stats) in enumerate(mergeSort(data, comp, retStats=True, retMid=False), start=1):
             print(l, list(map(lambda x: int(x >= 8), arr)), stats)
     elif test == 9:
@@ -379,7 +356,6 @@ if __name__ == "__main__":
     elif test == 10:
         from DylComp import Comparator
         from DylData import continuousScale
-
         data = continuousScale(256)
         comp = Comparator(data, level=0, rand=True)
         print("AUC\tSMV\tNPV\tHmN")
@@ -388,7 +364,6 @@ if __name__ == "__main__":
     elif test == 11:
         from DylComp import Comparator
         from DylData import continuousScale
-
         data = continuousScale(256)
         arrays = [tuple(data)]
         print(data)
@@ -400,14 +375,12 @@ if __name__ == "__main__":
     elif test == 12:
         from DylComp import Comparator
         from DylRand import nearlySorted
-
         """ for insSort in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
             data = nearlySorted(256, 10)
             comp = Comparator(data, rand=True, level=0)
             for _ in mergeSort(data, comp):
                 print("done a layer")
             print(insSort, len(comp)) """
-        
         data = nearlySorted(256, 10)
         for shuffle in (True, False):
             comp = Comparator(data, rand=True, level=0)
@@ -421,19 +394,16 @@ if __name__ == "__main__":
         from DylRand import nearlySorted
         from functools import cmp_to_key
         from tqdm import trange
-
         class Image:
             def __init__(self, id, comp):
                 self.id = id
                 self.comp = comp
             def __lt__(self, other):
                 return self.comp(self.id, other.id)
-
         shuffle = False
-
         #if True:
         for level in range(4):
-            with open("/dev/urandom", 'rb') as file: 
+            with open("/dev/urandom", 'rb') as file:
                 rand = [x for x in file.read(10)]
             seed = 1
             for val in rand: seed *= val
@@ -444,40 +414,31 @@ if __name__ == "__main__":
             images = [Image(id, comp) for id in cont]
             images.sort()
             timCont = len(comp)
-
             comp.clearHistory()
             comp = Comparator(cont, level=level, rand=True, seed=seed)
             for _ in mergeSort(cont,comp):
                 pass
             meCont = len(comp)
-
             comp.clearHistory()
             comp = Comparator(near, level=level, rand=True, seed=seed)
-
             images = [Image(id, comp) for id in near]
             images.sort()
             timNear = len(comp)
-
             comp = Comparator(near, level=level, rand=True, seed=seed)
             comp.clearHistory()
             for _ in mergeSort(near,comp):
                 pass
             meNear = len(comp)
-
             comp = Comparator(near, level=level, rand=True, seed=seed)
-
             images = [Image(id, comp) for id in range(256)]
             images.sort()
             timFull = len(comp)
-
             data = list(range(256))
-
             comp = Comparator(data, level=level, rand=True, seed=seed)
             comp.clearHistory()
             for _ in mergeSort(data,comp):
                 pass
             meFull = len(comp)
-
             print(level, timCont, meCont, timNear, meNear, timFull, meFull)
     elif test == 14:
         from DylData import continuousScale
@@ -487,7 +448,6 @@ if __name__ == "__main__":
         import matplotlib.pyplot as plt
         font = {'size' : 24}
         matplotlib.rc('font', **font)
-
         data, D0, D1 = continuousScale(16, 16)
         comp = Comparator(data, rand=True)
         comp.genRand(len(D0), len(D1), 7.72, 'exponential')
@@ -503,7 +463,6 @@ if __name__ == "__main__":
             rocs[-1] = list(zip(*avROC(rocs[-1])))
             #rocs[-1].reverse()
             #print(comp.kendalltau(arr), MSE(7.72, rocs[-1], comp.empericROC()))
-        
         if False:
             rows = int(math.ceil(math.sqrt(len(rocs))))
             cols = int(math.ceil(len(rocs) / rows))
@@ -532,14 +491,12 @@ if __name__ == "__main__":
             ax.set_ylim(top=1, bottom=0)
             ax.set_xlim(left=0, right=1)
             ax.set(xlabel="False Positive Fraction", ylabel="True Positive Fraction")
-            
         plt.tight_layout()
         plt.show()
     elif test == 15:
         from DylComp import Comparator
         from DylData import continuousScale
         from tqdm import trange
-
         data, D0, D1 = continuousScale(135, 87)
         comp = Comparator(data, rand=True)
         comp.genRand(len(D0), len(D1), 7.72, 'exponential')
@@ -562,4 +519,3 @@ if __name__ == "__main__":
                 else:
                     print('w', end=']')
             print(']', end='\n\n')
-        

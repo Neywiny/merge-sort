@@ -3,12 +3,10 @@ def writer(arr: list):
     for val in arr:
         ret += str(val) + ','
     return ret[:-1]
-
 def bLen(*args):
     """bLen(*args) -> len(args)
     a better version of len, which takes args because in python3 everything is a generator"""
     return len(args)
-
 true = True
 false = False
 alphabet = [chr(i) for i in range(97, 97+26)]

@@ -1,8 +1,7 @@
 import numpy as np
 np.seterr(all="ignore")
-
 def continuousScale(*args):
-    """creates a set of continuous scale data. 
+    """creates a set of continuous scale data.
     If provided a filename, returns the indecies for sorting, D0, and D1
     If provided a number, just creates and returns the indecies alternating from D0 and D1 indecies
     If provided 2 numbers, returns D0 and D1 interleaved evenly into arr, D0, and D1"""
@@ -50,7 +49,6 @@ def continuousScale(*args):
                 arr.append(D1[posI])
                 posI += 1
         return arr, D0, D1
-
 if __name__ == "__main__":
     data = continuousScale(5, 4)
     print(*data)

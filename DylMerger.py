@@ -19,11 +19,9 @@ class Merger:
         self.comp = comp
         self.left: bool = True
         self.toggle: bool = toggle
-
         #hold onto these for the parent object, they're a secret tool that will help us later
         self.start = start
         self.stop = stop
-    
     def inc(self) -> bool:
         """do a merge, and if configured, switch which end the next merge will be done from
         returns True if the merge is completed"""
@@ -39,7 +37,6 @@ class Merger:
                 self.outIndex += 1
                 self.indexB += 1
             return True
-        
         if self.left == True:
             iA = self.indexA
             iB = self.indexB
@@ -56,14 +53,12 @@ class Merger:
             iA = self.indexARight
             iB = self.indexBRight
             iO = self.indexORight
-
             if iB < 0: # done with group B
                 while self.indexARight >= self.indexA:
                     self.output[self.outIndex] = self.groupA[self.indexA]
                     self.indexA += 1
                     self.outIndex += 1
                 return True
-
             # if the element from A is less than the element from B
             if self.comp(self.groupA[iA], self.groupB[iB]):
                 self.output[iO] = self.groupB[iB]
@@ -74,12 +69,10 @@ class Merger:
             self.indexORight -= 1
         else: # this signals no need to compare
             return True
-
         # go from other side
         self.left = self.toggle ^ self.left
         return (self.indexA > self.indexARight) and (self.indexB > self.indexBRight)
         #return (self.outIndex == len(self.output)) or (self.outIndex == self.indexORight)
-
 class MultiMerger:
     def __init__(self, groups: list, comp, start=0, stop=0, toggle:bool=True):
         groups = list(filter(lambda x: len(x) > 0, groups))
@@ -94,7 +87,6 @@ class MultiMerger:
         self.OIndex = 0
         self.OIndexRight = len(self.output) - 1
         self.left = True
-
     def inc(self) -> bool:
         if len(self.groups) == 0:
             return True
@@ -116,24 +108,19 @@ class MultiMerger:
             self.output[self.OIndexRight] = maxVal
             self.indeciesRight[maxInd] -= 1
             self.OIndexRight -= 1
-
-
         # check to see if that group is doneski
         for i, group in enumerate(self.groups):
             if self.indecies[i] > self.indeciesRight[i]:
                 self.groups.pop(i)
                 self.indecies.pop(i)
                 self.indeciesRight.pop(i)
-        
         if len(self.groups) == 1:
             for i in range(self.indecies[0], self.indeciesRight[0] + 1):
                 self.output[self.OIndex] = self.groups[0][i]
                 self.OIndex += 1
             return True
-
         self.left ^= self.toggle # toggle self.left if self.toggle == True
         return self.OIndex == len(self.output) or len(self.groups) == 0
-
 if __name__ == '__main__':
     from DylComp import Comparator
     for test in range(1, 4):
@@ -157,7 +144,6 @@ if __name__ == '__main__':
             while not m3.inc():
                 pass
             assert m3.output == m.output
-
         elif test == 2:
             comp = Comparator([0, 1, 2, 3, 4, 5, 6, 7])
             m = MultiMerger([[0, 3, 5], [1, 2, 4]], comp, toggle=False)
@@ -168,7 +154,6 @@ if __name__ == '__main__':
             while not m.inc():
                 pass
             assert m.output == [0, 1, 2, 3, 4, 5]
-
         elif test == 3:
             comp = Comparator([0, 1, 2, 3, 4, 5, 6, 7])
             m = MultiMerger([[0, 1, 2, 3, 5, 6, 7], [4]], comp, toggle=True)
