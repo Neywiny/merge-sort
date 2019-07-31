@@ -16,19 +16,12 @@ def genD0D1(d0d1: list, arr: list) -> tuple:
             D1.append(item)
     return D0, D1
 
-def runStats(groups, d0d1, n, currLayer, nLayers, comp=None):
-    AUC = float(sys.argv[2])
-    if sys.argv[3] == 'exponential':
-        sep = abs(AUC/(1-AUC))
-    elif sys.argv[3] == 'normal':
-        sep = norm.ppf(AUC)*(2**0.5)
+def runStats(groups, params, comp=None):
     aucs, varOfSM, hanleyMcNeils, estimates = list(), list(), list(), list()
     start = 0
+    d0d1, n, currLayer, nLayers = params
     for group in groups:
-        if d0d1 != None:
-            D0, D1 = genD0D1(d0d1, group)
-        else:
-            D0, D1 = list(sorted(group))[:len(group)//2], list(sorted(group))[len(group)//2:]
+        D0, D1 = genD0D1(d0d1, group)
         if D0 and D1:
             sm = successMatrix(group, D0, D1)
             auc = aucSM(sm)
@@ -93,11 +86,17 @@ def runStats(groups, d0d1, n, currLayer, nLayers, comp=None):
     if True:
         rocs = list()
         for group in groups:
-            gD0, gD1 = genD0D1(d0d1, group)
-            rocs.append(genROC(group, gD0, gD1))
+            rocs.append(genROC(group, D0, D1))
+        rocs = list(filter(lambda roc: np.min(np.isfinite(roc)), rocs))
         avgROC = avROC(rocs)
-        empericROC = comp.empericROC()
-        stats.extend(MSE(sep, sys.argv[3], avgROC, empericROC)[:2])
+        if len(sys.argv) > 3:
+            empericROC = comp.empericROC()
+            AUC = float(sys.argv[2])
+            if sys.argv[3] == 'exponential':
+                sep = abs(AUC/(1-AUC))
+            elif sys.argv[3] == 'normal':
+                sep = norm.ppf(AUC)*(2**0.5)
+            stats.extend(MSE(sep, sys.argv[3], avgROC, empericROC)[:2])
     return stats
 
 def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n: int=2, d0d1 = None, combGroups: bool=True, sortGroups: bool=False) -> list:
@@ -173,7 +172,7 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
         else:
             yield percentages, medians
 
-def treeMergeSort(arr: list, comp, n: int=2, retStats: bool=False, d0d1 = None, combGroups: bool=True):
+def treeMergeSort(arr: list, comp, statParams=None, n: int=2, retStats: bool=False, combGroups: bool=True):
     if n < 2:
         raise IOError("can't split a tree with n < 2")
     sizess = [[0, len(arr)]]
@@ -201,7 +200,9 @@ def treeMergeSort(arr: list, comp, n: int=2, retStats: bool=False, d0d1 = None, 
         for iSeg in range(segments):
             group = arr[sizess[-1][i + iSeg]:sizess[-1][i + iSeg + 1]]
             if len(group) != 1: # such that we need to add another layer to it
-                mergerss[0].append(MultiMerger([[img] for img in group], comp))
+                merger = MultiMerger([[img] for img in group], comp)
+                merger.left = bool(iSeg % 2)
+                mergerss[0].append(merger)
                 groups.append(mergerss[0][-1].output)
             else:
                 groups.append(group)
@@ -227,17 +228,25 @@ def treeMergeSort(arr: list, comp, n: int=2, retStats: bool=False, d0d1 = None, 
         groups = list()
         while mergers:
             for merger in mergers if left else reversed(mergers):
-                if merger.inc():
+                res = merger.inc()
+                if res == True:
+                    if -1 in merger.output:
+                        raise FloatingPointError("it didn't actually do it")
+                    for i, v in enumerate(merger.output):
+                        if merger.output.count(v) > 1:
+                            raise EnvironmentError(f"duplicated {v}")
                     groups.append(merger.output)
                     mergers.remove(merger)
                     done += 1
+                elif res == 'done':
+                    raise StopIteration()
         left != left
         if combGroups:
             arr = []
             for group in groups: arr.extend(group)
         else:
             arr = groups
-        yield (arr, runStats(groups, d0d1, n, layer, len(mergerss), comp)) if retStats else arr
+        yield (arr, runStats(groups, statParams + [n, layer, len(mergerss)], comp)) if retStats else arr
     #print(f"n? {n} Did it sort right? {mergerss[-1][-1].output == sorted(mergerss[-1][-1].output)}. How many layers? {layer} How many comparisons? {len(comp)}")
 if __name__ == "__main__":
     from DylRand import *
@@ -490,9 +499,7 @@ if __name__ == "__main__":
             arr = []
             for group in groups:
                 arr.extend(group)
-                gD0, gD1 = genD0D1((D0, D1), group)
-                if gD0 and gD1:
-                    rocs[-1].append(genROC(group, gD0, gD1))
+                rocs[-1].append(genROC(group, D0, D1))
             rocs[-1] = list(zip(*avROC(rocs[-1])))
             #rocs[-1].reverse()
             #print(comp.kendalltau(arr), MSE(7.72, rocs[-1], comp.empericROC()))
@@ -516,7 +523,7 @@ if __name__ == "__main__":
             fig = plt.figure(figsize=(8, 8))
             plt.title("ROC Curves")
             ax = fig.add_subplot(1, 1, 1)
-            ax.plot(comp.empericROC()['x'], comp.empericROC()['y'], ls='-', lw=2)
+            ax.plot(comp.empericROC()['x'], comp.empericROC()['y'], 'b-', lw=3, label="Emperic")
             linestyle_tuple = [':', '--', '-.', (0, (1, 1)), (0, (1, 1, 1, 0))]
             ax.plot([], [], lw=0, label='Comparisons, AUC')
             for i, roc in enumerate(rocs):

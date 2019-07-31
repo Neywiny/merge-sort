@@ -1,12 +1,13 @@
+from sys import argv
 from tkinter import *
 from PIL import ImageTk, Image
 import os
 import socket
 from random import random, randint
-
+from time import sleep, time
 
 class AFC:
-    def __init__(self, posDir, negDir):
+    def __init__(self, posDir, negDir, ansDir, ip, port, n0, n1, f):
         self.decision = -1
         self.ready = True
         self.img1 = -1
@@ -14,83 +15,135 @@ class AFC:
         self.mode = 'training'
         self.posDir = posDir
         self.negDir = negDir
+        self.ansDir = ansDir
         self.counter = 0   
+        self.imgIndex = 0
+        self.ip = ip
+        self.port = port
+        self.n0 = int(n0)
+        self.n1 = int(n1)
         self.exit = self.__exit__
+        self.connected = False
+        self.f = open(f, 'w')
+    def connect(self):
+        
+        TCP_IP = self.ip
+        TCP_PORT = int(self.port)
+        BUFFER_SIZE = 10  # Normally 1024, but we want fast response
+        
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        print("waiting for connection")
+        self.title.configure(text="Waiting for Connection...")
+        root.update()
+        while True:
+            try:
+                s.connect((self.ip, int(self.port)))
+                break
+            except ConnectionRefusedError:
+                sleep(0.1)
+                pass
+        data = s.recv(10)
+        if data == b"I'm ready!":
+            s.send(b'\x02' + self.n0.to_bytes(4, 'little') + self.n1.to_bytes(4, 'little') + b'\x03')
+        print("connection established")
+        self.title.configure(text="Choose Most Likely to have Signal")
+        self.s = s
+        self.connected = True
     def __enter__(self):
-        # get pics
-        posNames = [self.posDir + img for img in os.listdir(self.posDir)]
-        negNames = [self.negDir + img for img in os.listdir(self.negDir)]
+        # get pics, use sorted() to ensure it's the same ones every time
+        offset = 0
+        posNames = [self.posDir + img for img in sorted(os.listdir(self.posDir))][offset:offset + self.n1]
+        ansNames = [self.ansDir + img for img in sorted(os.listdir(self.ansDir))][offset:offset + self.n1]
+        negNames = [self.negDir + img for img in sorted(os.listdir(self.negDir))][offset:offset + self.n0]
         self.n0 = len(negNames)
         self.n1 = len(posNames)
-        print(len(posNames), len(negNames))
-        self.images = [Image.open(name) for name in posNames + negNames]
+        print(len(posNames), len(negNames), len(ansNames))
+        names = negNames + posNames
+        self.images = [Image.open(name) for name in names]
         for img in self.images:
             img.thumbnail((IMGWIDTH, IMGHEIGHT))
         self.images = [ImageTk.PhotoImage(img) for img in self.images]
 
-        TCP_IP = '127.0.0.1'
-        TCP_PORT = 6000
-        BUFFER_SIZE = 10  # Normally 1024, but we want fast response
-        
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((TCP_IP, TCP_PORT))
-        s.listen(1) # also attempt to pull the most recent connection
-        print("waiting for connection")
-        conn, addr = s.accept()
-        print('Connection address:', addr)
-        established = False
-        data = conn.recv(10)
-        if data == b"I'm ready!":
-            conn.send(b'\x02' + self.n0.to_bytes(4, 'little') + self.n1.to_bytes(4, 'little') + b'\x03')
-        self.conn = conn
-        self.s = s
-        self.font = ('Arial', 72)
+        for i, image in enumerate(self.images):
+            setattr(image, "filename", names[i])
 
+        ansImages = [Image.open(name) for name in ansNames]
+        for img in ansImages:
+            img.thumbnail((IMGWIDTH, IMGHEIGHT))
+        ansImages = [ImageTk.PhotoImage(img) for img in ansImages]
+        self.ansPairs = list(zip(self.images[self.n0:], ansImages))
+        self.font = ('Arial', 72)
+        self.correct = ImageTk.PhotoImage(Image.open("correct.png"))
+        self.wrong = ImageTk.PhotoImage(Image.open("wrong.png"))
         return self
-    def showPics(self, pic1, pic2):
-        canvas.delete('image')
-        canvas.create_image(0, HEIGHT, anchor=SW, image=self.images[pic1], tags=('image'))
-        canvas.create_image(WIDTH, HEIGHT, anchor=SE, image=self.images[pic2], tags=('image'))
-    def run(self):
-        if self.mode == 'training':
-            if self.ready and self.counter <= 0: #put up new pictures
-                if random() > 0.5:
-                    self.showPics(randint(0, self.n1 - 1), randint(self.n1, self.n1 + self.n0 - 1))
-                    self.answer = 'left'
+    def showPics(self, pic1, pic2=None):
+        if self.mode.get() == 'answers':
+            self.img1.configure(image=self.ansPairs[pic1][0])
+            self.img2.configure(image=self.ansPairs[pic1][1])
+        elif self.mode.get() == 'training':
+            if isinstance(pic2, int):
+                self.img1.configure(image=self.images[pic1])
+                self.img2.configure(image=self.images[pic2])
+            else: #boolean
+                if pic1: #correct
+                    self.img1.configure(image=self.correct)
+                    self.img2.configure(image=self.correct)
                 else:
-                    self.showPics(randint(self.n1, self.n1 + self.n0 - 1), randint(0, self.n1 - 1))
-                    self.answer = 'right'
-                self.ready = False
-                root.update()
-            elif self.decision == 113 or self.decision == 114:
-                    if (self.decision == 114 and self.answer == 'right') or (self.decision == 113 and self.answer == 'left'): #correct
-                        canvas.create_text(WIDTH/2, HEIGHT/2, fill="green2", text="CORRECT", font=self.font, tags=('image'))
-                    else: #incorrect
-                        canvas.create_text(WIDTH/2, HEIGHT/2, fill="red", text="WRONG", font=self.font, tags=('image'))
+                    self.img1.configure(image=self.wrong)
+                    self.img2.configure(image=self.wrong)
+        else:
+            self.img1.configure(image=self.images[pic1])
+            self.img2.configure(image=self.images[pic2])
+        root.update()
+
+    def switchModes(self):
+        self.ready = True
+        self.decision = -1
+        self.imgIndex = 0
+    def run(self):
+        root.update()
+        if self.mode.get() == 'training':
+            if self.counter <= 0 and self.decision == -1: #put up new pictures
+                if self.ready:
+                    if random() > 0.5:
+                        self.imgID1, self.imgID2 = randint(0, self.n0 - 1), randint(self.n0, self.n1 + self.n0 - 1)
+                        self.showPics(self.imgID1, self.imgID2)
+                        self.answer = 'right'
+                    else:
+                        self.imgID1, self.imgID2 = randint(self.n0, self.n1 + self.n0 - 1), randint(0, self.n0 - 1)
+                        self.showPics(self.imgID1, self.imgID2)
+                        self.answer = 'left'
+                    self.ready = False
+                    self.decision = -1
+                else: # default place, pseudo main loop
+                    self.showPics(self.imgID1, self.imgID2)
+            elif not self.ready and (self.decision == 113 or self.decision == 114):
                     self.counter = 1000
+                    self.showPics((self.decision == 114 and self.answer == 'right') or (self.decision == 113 and self.answer == 'left'))
                     self.decision = -1
                     self.ready = True
             elif self.counter > 0:
                 self.counter -= 16
-        else:
+                self.ready = self.counter <= 0
+        elif self.mode.get() == 'study':
+            if not self.connected:
+                self.connect()
             if self.ready: #ready for another comparison
                 try:
                     #print("requesting pics")
-                    self.conn.send(b"send pics!")
-                    data = self.conn.recv(10)
+                    self.s.send(b"send pics!")
+                    data = self.s.recv(10)
                     #print(data)
                     if data:
                         if data == b"I'm going!":
                             print("Client exited succesfully")
                             root.destroy()
                         elif data[0] == 2 and data[9] == 3: #valid frame
-                            img1, img2 = int.from_bytes(data[1:5], 'little'), int.from_bytes(data[5:9], 'little')
+                            self.imgID1, self.imgID2 = img1, img2 = int.from_bytes(data[1:5], 'little'), int.from_bytes(data[5:9], 'little')
                             self.data = data
                             #print(img1, img2)
                             self.showPics(img1, img2)
-                            #canvas.delete('image')
-                            #canvas.create_text(WIDTH / 4, HEIGHT / 2, text=str(img1), font=self.font, tags=('image', 'text'))
-                            #canvas.create_text(3* WIDTH / 4, HEIGHT / 2, text=str(img2), font=self.font, tags=('image', 'text'))
+                            self.t1 = time()
                             root.update()
                             self.ready = False
                 except ConnectionResetError:
@@ -102,10 +155,13 @@ class AFC:
             if self.decision == 113 or self.decision == 114:
                 if self.decision == 114: #right key
                     payload = (1).to_bytes(4, 'little') + self.data[5:9]
+                    des = self.imgID2
                 elif self.decision == 113: #left key
                     payload = (0).to_bytes(4, 'little') + self.data[1:5]
+                    des = self.imgID2
                 try:
-                    self.conn.send(b'\x02' + payload + b'\x03')
+                    self.f.write(f"{self.images[self.imgID1].filename} {self.images[self.imgID2].filename} {self.images[des].filename} {time() - self.t1}\n")
+                    self.s.send(b'\x02' + payload + b'\x03')
                 except ConnectionResetError:
                     print("Client Disconnected")
                     self.exit()
@@ -114,7 +170,22 @@ class AFC:
                     self.exit()
                 self.decision = -1
                 self.ready = True
+        elif self.mode.get() == "answers":
+            if self.ready: #put up new pictures
+                self.showPics(self.imgIndex)
+                self.ready = False
+                root.update()
+            elif self.decision == 114:
+                #print("saw the event")
+                self.imgIndex += 1 if self.imgIndex < self.n1 - 1 else 0
+                self.decision = -1
+                self.ready = True
+            elif self.decision == 113:
+                self.imgIndex -= 1if self.imgIndex > 0 else 0
+                self.decision = -1
+                self.ready = True
         root.after(16, self.run)
+
     def pressed(self, event):
         #print("event!")
         self.counter = 0
@@ -127,13 +198,10 @@ class AFC:
                 self.decision = 114
             elif event.x < IMGWIDTH:
                 self.decision = 113
-            if event.x > IMGWIDTH and event.x < IMGWIDTH + 100 and event.y > HEIGHT/2 - 50 and event.y < HEIGHT/2 + 50:
-                canvas.delete('button')
-                self.mode = 'actual'
-                self.ready = True
     def __exit__(self, *args):
-        self.conn.close()
-        self.s.close()
+        self.f.close()
+        if self.connected:
+            self.s.close()
         try:
             root.destroy()
         except: #root already destroyed
@@ -145,20 +213,50 @@ WIDTH = 1300
 IMGWIDTH = 600
 IMGHEIGHT = 600
 root = Tk()
-canvas = Canvas(root, width=WIDTH, height=HEIGHT)
-canvas.pack()
+#canvas = Canvas(root, width=WIDTH, height=HEIGHT)
+#canvas.pack()
 img = Image.open("repository-pic.png")
 img.thumbnail((IMGWIDTH, IMGHEIGHT))
 img = ImageTk.PhotoImage(img)
-canvas.create_text(WIDTH / 2, 50, text="Choose Most Likely to have Signal", font=('Arial', 56), tags=('text'))
-#canvas.create_image(0, HEIGHT, anchor=SW, image=img)
-#canvas.create_image(WIDTH, HEIGHT, anchor=SE, image=img)
-with AFC('/nashome/images/targetPresentImages/', '/nashome/images/targetAbsentImages/') as afc:
-    if afc.mode == 'training':
-        canvas.create_rectangle(WIDTH / 2 - 50, HEIGHT / 2 - 50, WIDTH / 2 + 49, HEIGHT / 2 + 50, tags=('button'))
-        canvas.create_text(WIDTH / 2, HEIGHT / 2, text="click when ready to proceed", width=100, tags=('button'))
+label = Label(root, text="Choose Most Likely to have Signal", font=('Arial', 56))
+label.grid(row=0, column=0)
+frame = Frame(root)
+img1 = Label(frame)#, image=img)
+img2 = Label(frame)#, image=img)
+img1.grid(row=0, column=0, sticky=E)
+img2.grid(row=0, column=2, sticky=W)
+if len(argv) == 1:
+    argv.append('/nashome/images/testImages1/targetPresentImages/')
+    argv.append('/nashome/images/testImages1/targetAbsentImages/')
+    argv.append('/nashome/images/testImages1/targetPresentAnswerImages/')
+    argv.append('127.0.0.1')
+    argv.append('6000')
+    argv.append('64')
+    argv.append('64')
+    argv.append('log.csv')
+elif len(argv) < 9:
+    print(f"Usage: {__file__} [target present directory] [target absent directory] [answers directory] [merge ip] [merger port] [n0] [n1] [log file]")
+    exit(-1)
+modes = [
+    ("Answers", "answers"),
+    ("AFC Training", "training"),
+    ("Study", "study")
+]
+frame.grid_columnconfigure(1, weight=1)
+with AFC(*argv[1:]) as afc:
+    afc.title = label
+    afc.mode = StringVar()
+    afc.mode.set("answers")
+    afc.img1 = img1
+    afc.img2 = img2
+    buttons = Frame(frame)
+    for i, (text, mode) in enumerate(modes):
+        b = Radiobutton(buttons, text=text, value=mode, variable=afc.mode, indicatoron=0, command=afc.switchModes)
+        b.grid(row=i, column=0)
+    buttons.grid(row=0, column=1)
     root.bind("<Key>", afc.pressed)
     root.bind("<Button-1>", afc.clicked)
-    root.protocol("WM_DELETE_WINDOW", afc.__exit__)
+    root.protocol("WM_DELETE_WINDOW", afc.exit)
     root.after(1, afc.run)
+    frame.grid(row=1, column=0)
     mainloop()

@@ -100,15 +100,21 @@ class MultiMerger:
             return True
         if self.left == True:
             group = [group[self.indecies[i]] for i, group in enumerate(self.groups)]
-            gI, iI = self.comp.min(group)
-            self.output[self.OIndex] = iI
-            self.indecies[gI] += 1
+            res = self.comp.min(group)
+            if res == 'done':
+                return 'done'
+            maxInd, maxVal = res
+            self.output[self.OIndex] = maxVal
+            self.indecies[maxInd] += 1
             self.OIndex += 1
         elif self.left == False:
             group = [group[self.indeciesRight[i]] for i, group in enumerate(self.groups)]
-            gI, iI = self.comp.max(group)
-            self.output[self.OIndexRight] = iI
-            self.indeciesRight[gI] -= 1
+            res = self.comp.max(group)
+            if res == 'done':
+                return 'done'
+            maxInd, maxVal = res
+            self.output[self.OIndexRight] = maxVal
+            self.indeciesRight[maxInd] -= 1
             self.OIndexRight -= 1
 
 

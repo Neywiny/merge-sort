@@ -69,7 +69,7 @@ def auc(results: tuple, D0=None, D1=None) -> float:
     total: float = 0.0
     for i,(x,y) in enumerate(results[:-1], start=1):
         total += 0.5*(y + results[i][1]) * (x - results[i][0])
-    return total
+    return -total
 
 def hanleyMcNeil(auc, n0, n1):
     # The very good power-law variance estimate from Hanley/McNeil
@@ -112,27 +112,17 @@ def MSE(sep, dist, ROC, rocEmpiric=None):
     return (mseTrue, calcAUC) if rocEmpiric == None else (mseTrue, mseEmperic, calcAUC)
 
 
-def genROC(predicted: tuple, D0: tuple=None, D1: tuple=None) -> tuple: 
+def genROC(predicted: tuple, D1: tuple=None, D0: tuple=None) -> tuple: 
     predicted, D0, D1 = paramToParams(predicted, D0, D1)
-    length: int = len(predicted)
-    if D0 == None:
-        D0 = tuple((i for i in range(length//2)))
-    if D1 == None:
-        D1 =  tuple((i for i in range(length//2, length + (length % 2))))
-    actual: tuple = tuple(int(i > length/2 - 1) for i in range(length))
-    points: list = [(1,1)]
-    FPcount: int = len(D0)
-    TPcount: int = len(D1)
-    for threshold in reversed(range(length)):
-        if predicted[threshold] in D0: # false positive
-            FPcount -= 1
-        if predicted[threshold] in D1: # true positive
-            TPcount -= 1
-        TPF: float = TPcount / len(D1)
-        FPF: float = FPcount / len(D0)
-        points.append((TPF, FPF))
-    points.append((0,0))
-    return points
+    x0 = list()
+    x1 = list()
+    for i, val in enumerate(predicted):
+        if val in D1:
+            x1.append(i)
+        elif val in D0:
+            x0.append(i)
+    roc = ROC1.rocxy(x1, x0)
+    return list(zip(roc['x'], roc['y']))
 
 
 def graphROC(predicted: tuple, D0=None, D1=None):
@@ -152,7 +142,7 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
     rows = int(math.ceil(math.sqrt(len(arrays))))
     cols = int(math.ceil(len(arrays) / rows))
     fig, axes = plt.subplots(rows, cols, sharex=True, sharey=True, num="plots")
-    fig.suptitle("ROC curves")
+    #fig.suptitle("ROC curves")
     
     if withLine:
         params = [(array, D0, D1) for array in arrays]
@@ -163,7 +153,7 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
                 results = list(p.imap(genROC,params))
     if withPatches:
         pbar = tqdm(total=len(arrays)*(len(arrays[0])//2)**2)
-    for i,ax in enumerate(axes.flat):
+    for i,ax in enumerate(axes.flat if (rows * cols > 1) else [axes]):
         if i >= len(arrays):
             continue
         ax.set(xlabel="False Positive Fraction", ylabel="True Positive Fraction")
@@ -195,7 +185,8 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
             area = len(yes) / (len(yes) + len(no))
             ax.set_ylim(top=1, bottom=0)
             ax.set_xlim(left=0, right=1)
-            ax.set_title(f"Iteration #{i} PC: {int(pc(arrays[i], D0, D1)*100)}% AUC: {area:.5f}")
+            #ax.set_title(f"Iteration #{i} PC: {int(pc(arrays[i], D0, D1)*100)}% AUC: {area:.5f}")
+            ax.set_aspect('equal', 'box')
     if withPatches:
         pbar.close()
     figManager = plt.get_current_fig_manager()
@@ -232,7 +223,7 @@ def avROC(rocs):
     fpout = stdA - ymean
     tpout = stdA + ymean
 
-    ret = (1-tpout).tolist(), (1-fpout).tolist()
+    ret = tpout.tolist(), fpout.tolist()
     return ret[0][0], ret[1][0]
 
 def successMatrix(predicted: list, D0: list=None, D1: list=None):
@@ -280,47 +271,24 @@ if __name__ == "__main__":
     elif test == 5:
         graphROC([4, 1, 2, 3], [1, 2], [3, 4])
     elif test == 6:
-        from DylSort import mergeSort
+        from DylSort import treeMergeSort
         from DylComp import Comparator
         from DylData import continuousScale
+        from ROC1 import rocxy
+        import matplotlib
+        font = {'size' : 10}
+        matplotlib.rc('font', **font)
         
         data, D0, D1 = continuousScale(128, 128)
         comp = Comparator(data, rand=True, level=0, seed=15)
 
-        arrays = [data[:]]
-
-        for _ in mergeSort(data, comp=comp):
-            arrays.append(data[:])
-
-        graphROC(arrays[-1], D0=D0, D1=D1)
-
-        data = arrays[-2]
-
-        chunk1 = data[:len(data) // 2]
-        chunk2 = data[len(data) // 2:]
-        D01 = list(filter(lambda img: img in chunk1, D0))
-        D11 = list(filter(lambda img: img in chunk1, D1))
-        D02 = list(filter(lambda img: img in chunk2, D0))
-        D12 = list(filter(lambda img: img in chunk2, D1))
-        rocs = [genROC(chunk1, D0=D01, D1=D11), genROC(chunk2, D0=D02, D1=D12)]
-        roc1 = genROC(chunk1, D01, D11)
-        roc2 = genROC(chunk2, D02, D12)
-        roc = avROC(rocs)
-        print(auc(roc1, D01, D11))
-        print(auc(roc2, D02, D12))
-        print(auc(roc, D0, D1))
-        fig = plt.figure(figsize=(4,4))
-        ax = fig.add_subplot(111)
-        ax.plot(*zip(*roc), 'b', label='avg')
-        ax.plot(*zip(*roc1), 'm', label='chunk1')
-        ax.plot(*zip(*roc2), 'g', label='chunk2')
-        ax.plot((0,1),(0,1),c="r", linestyle="--")
-        ax.set_ylim(top=1.1,bottom=-0.1)
-        ax.set_xlim(left=-0.1,right=1.1)
-        ax.set_xlabel("FPF")
-        ax.set_ylabel("TPF") 
-        ax.legend()
-        plt.show()
+        for arr in treeMergeSort(data, comp=comp):
+            pass
+        D0.sort(key = lambda x: comp.getLatentScore(x))
+        D1.sort(key = lambda x: comp.getLatentScore(x))
+        roc = rocxy(comp.getLatentScore(D1), comp.getLatentScore(D0))
+        graphROCs([arr], True, True, D0, D1)
+        
     elif test == 7:
         roc1 = [[0, 0], [0, 1], [1, 1]]
         roc3 = roc2 = roc1
@@ -368,9 +336,7 @@ if __name__ == "__main__":
         for level, groups in enumerate(treeMergeSort(data, comp, combGroups=False)):
             rocs = list()
             for group in groups:
-                gD0, gD1 = genD0D1((D0, D1), group)
-                if gD0 and gD1:
-                    rocs.append(genROC(group, gD0, gD1))
+                rocs.append(genROC(group, D0, D1))
             rocs = list(zip(*avROC(rocs)))
             rocs.reverse()
             mse = MSE(7.72, 'exponential', rocs)
@@ -382,5 +348,5 @@ if __name__ == "__main__":
             ax.plot(list(fRange(1 - 10**-4, 10**-4)), [fp**(1/7.72) for fp in fRange(1 - 10**-4, 10**-4)])
             ax.set(title=f"{mse[0]:03.6e}:{len(comp)}")
         #plt.subplots_adjust(hspace=0.25)
-        #plt.show()
+        plt.show()
         print(time() - t1)

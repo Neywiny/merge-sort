@@ -16,8 +16,10 @@ def sort(tid, i=0, seed=None):
     data, D0, D1 = continuousScale(128, 128)
     comp = Comparator(data, level=0, rand=True, seed=seed)
     comp.genRand(len(D0), len(D1), sep, dist)
-    for l, (arr, stats) in enumerate(treeMergeSort(data, comp, retStats=True, n=2, d0d1=(D0, D1))):
-        stats.extend([len(comp), comp.genSeps()])
+    for l, (arr, stats) in enumerate(treeMergeSort(data, comp, [(D0, D1)], retStats=True, n=2)):
+        stats.extend([len(comp), comp.genSeps(), comp.pc[-1]])
+        comp.pc = list()
+        comp.c = 0
         results.append(stats)
     if arr != sorted(arr, key=lambda x: comp.getLatentScore(x)[0]):
         print(arr)

@@ -66,7 +66,6 @@ def simulation_ELO_targetAUC(retStats=False, queue=None):
     with open("/dev/urandom", "rb") as f:
         seed = unpack("<I", f.read(4))[0]
     np.random.seed(seed=seed)
-
     if len(sys.argv) > 1:
         AUC = float(sys.argv[2])
         if sys.argv[3] == 'exponential':
@@ -81,6 +80,7 @@ def simulation_ELO_targetAUC(retStats=False, queue=None):
             print("invalid argument", sys.argv[3])
             while True: pass
     else:
+        np.random.seed(seed=20)
         neg = np.random.normal(0, 1, (N, 1))
         plus = np.random.normal(1.7, 1, (N, 1))
 
@@ -88,6 +88,7 @@ def simulation_ELO_targetAUC(retStats=False, queue=None):
     x1 = np.array(plus)[:,0]
     empiricROC = rocxy(x1, x0)
     scores = np.append(neg, plus)
+    print(scores)
     truth = np.append(mb.zeros((N, 1)), mb.ones((N, 1)), axis=0)
     
     AUC_orig, _ = AUCVAR(neg, plus)
@@ -102,6 +103,7 @@ def simulation_ELO_targetAUC(retStats=False, queue=None):
     M = rounds*N
     rating = np.append(mb.zeros((N, 1)), mb.zeros((N, 1)), axis=0)
     
+    pc = list()
     cnt = 0
     ncmp = 0
     results = list()
@@ -139,10 +141,12 @@ def simulation_ELO_targetAUC(retStats=False, queue=None):
                 SA = 1
                 SB = 0
 
-            if ( SA == 1 and truth[a] == 1 ):
-                cnt = cnt + 1
-            if ( SB == 1 and truth[b] == 1 ):
-                cnt = cnt +1
+            if bool(truth[a]) ^ bool(truth[b]):
+                if ( SA == 1 and truth[a] == 1 ):
+                    cnt = cnt + 1
+                if ( SB == 1 and truth[b] == 1 ):
+                    cnt = cnt +1
+                pc.append(cnt / (len(pc) + 1))
             ncmp = ncmp+1
     
             rating[a] = rating[a] + K2 * ( SA - EA )
@@ -153,21 +157,22 @@ def simulation_ELO_targetAUC(retStats=False, queue=None):
         auc, var = AUCVAR(x1, x0)
 
         roc = rocxy(x1, x0)
-        mseTruth, mseEmperic, auc = MSE(sep, sys.argv[3], roc, empiricROC)
+        results.append((roc, ncmp))
+        """mseTruth, mseEmperic, auc = MSE(sep, sys.argv[3], roc, empiricROC)
         if retStats == True:
             pass
             #yield roc, mseTruth, mseEmperic, empiricROC
         if queue != None:
-            queue.put(dumps((N, cnt, ncmp, var, auc, mseTruth, mseEmperic)))
+            queue.put(dumps((N, cnt, ncmp, var, auc, mseTruth, mseEmperic, pc[-1])))
         else:
-            results.append((N, cnt, ncmp, var, auc, mseTruth, mseEmperic))
+            results.append((N, cnt, ncmp, var, auc, mseTruth, mseEmperic, pc[-1]))"""
     if queue == None:
         return results
 if __name__ == '__main__':
     if len(argv) > 1:
         test = 1
     else:
-        test = 2
+        test = 3
     if test == 1:
         #simulation_ELO_targetAUC(200)
         from multiprocessing import Manager, Process, Pool
@@ -236,9 +241,6 @@ if __name__ == '__main__':
                 finally:
                     lock.close()
                     os.remove(".lock")
-
-
-
     elif test == 2:
         animation = False
         if animation:
@@ -294,8 +296,7 @@ if __name__ == '__main__':
                 groups = next(merge)
                 rocs = []
                 for group in groups:
-                    gD0, gD1 = genD0D1((D0, D1), group)
-                    rocs.append(genROC(group, gD0, gD1))
+                    rocs.append(genROC(group, D0, D1))
                 roc = avROC(rocs)
                 mseTheo, mseEmp, auc = MSE(7.72, zip(*roc)), MSE(7.72, zip(*roc), zip(empiricROC['x'], empiricROC['y']))
                 ax2.plot(x, y, linestyle='--', label='true', lw=3)
@@ -309,4 +310,43 @@ if __name__ == '__main__':
                 ax1.clear()
                 ax2.clear()
             im.save("both.png")
+    elif test == 3:
+        from DylComp import Comparator
+        from DylSort import treeMergeSort, genD0D1
+        from DylData import continuousScale
+        from DylMath import genROC, avROC
+        import matplotlib
+        import matplotlib.pyplot as plt
 
+        data, D0, D1 = continuousScale(128, 128)
+        comp = Comparator(data, rand=True, level=0, seed=20)
+        results = [res for res in simulation_ELO_targetAUC()]
+
+        mergeResults = list()
+        for groups in treeMergeSort(data, comp, combGroups=False):
+            rocs = list()
+            for group in groups:
+                rocs.append(genROC(group, D1, D0))
+            mergeResults.append((avROC(rocs), len(comp)))
+            
+        matches = [(np.argmin([abs(res[1] - mergeLen) for res in results])) for (groups, mergeLen) in mergeResults]
+        #print(*[abs(results[matches[i]][1] - mergeResults[i][1]) for i in range(len(mergeResults))])
+
+        fig, axes = plt.subplots(nrows=4, ncols=2, sharex=True, sharey=True)
+        for axn, layer in enumerate([0, 3, 5, 7]):
+            axes[axn][0].plot(mergeResults[layer][0][1], mergeResults[layer][0][0], 'r')
+            axes[axn][1].plot(results[matches[layer]][0]['x'], results[matches[layer]][0]['y'], 'r')
+            axes[axn][0].plot(comp.empericROC()['x'], comp.empericROC()['y'], 'b:')
+            axes[axn][1].plot(comp.empericROC()['x'], comp.empericROC()['y'], 'b:')
+            axes[axn][0].set_aspect('equal', 'box')
+            axes[axn][1].set_aspect('equal', 'box')
+            axes[axn][0].set_title(str(mergeResults[layer][1]))
+            axes[axn][1].set_title(str(results[matches[layer]][1]))
+            print(layer)
+        fig.suptitle("Merge    Massanes")
+        figManager = plt.get_current_fig_manager()
+        figManager.window.showMaximized()
+        fig.subplots_adjust(hspace=0.24)
+        for i in range(10):
+            fig.tight_layout()
+        plt.show()
