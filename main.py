@@ -13,7 +13,7 @@ def sort(tid, i=0, seed=None):
     data, D0, D1 = continuousScale(128, 128)
     comp = Comparator(data, level=0, rand=True, seed=seed)
     comp.genRand(len(D0), len(D1), sep, dist)
-    for l, (arr, stats) in enumerate(treeMergeSort(data, comp, [(D0, D1)], retStats=True, n=2)):
+    for arr, stats in treeMergeSort(data, comp, [(D0, D1)], retStats=True, n=2):
         stats.extend([len(comp), comp.genSeps(), comp.pc[-1]])
         comp.pc = list()
         comp.c = 0
@@ -51,13 +51,13 @@ if __name__ == "__main__":
                         for arr in tqdm(sorter(data, comp=comp), total=math.ceil(math.log(lMax, 2))):
                             #f.write(str(list(comp.minSeps.values())) + ', ' + str(unbiasedMeanMatrixVar(successMatrix(data))) + '\n')
                             arrs.append(data[:])
-                    """for key, value in comp.counts.items():
-                        f.write(str(key))
-                        f.write(",")
-                        f.write(str(value))
-                        f.write(",")
-                        f.write(str(comp.minSeps[key]))
-                        f.write("\n")"""
+                    #for key, value in comp.counts.items():
+                    #    f.write(str(key))
+                    #    f.write(",")
+                    #    f.write(str(value))
+                    #    f.write(",")
+                    #    f.write(str(comp.minSeps[key]))
+                    #    f.write("\n")
         #print(arrs)
         graphROCs(arrs)
     elif test == 2:
@@ -116,14 +116,14 @@ if __name__ == "__main__":
                         lock = open(".lock", "x")
                         print("made lock")
                         locked = True
-                    except FileExistsError as e:
+                    except FileExistsError:
                         sleep(0.1)
                 try:
                     with open(f'resultsMerge{dist.title()}{int(AUC*100)}','ab') as f:
                         print("have lock")
                         f.writelines(results)
-                except BaseException as e:
-                    print(e)
+                except BaseException as err:
+                    print(err)
                 finally:
                     lock.close()
                     os.remove(".lock")

@@ -3,7 +3,7 @@ from tkinter import *
 from PIL import ImageTk, Image
 import os
 import socket
-from random import random, randint
+from numpy.random import random, randint
 from time import sleep, time
 class AFC:
     def __init__(self, posDir, negDir, ansDir, ip, port, n0, n1, f):
@@ -25,9 +25,6 @@ class AFC:
         self.connected = False
         self.f = open(f, 'w')
     def connect(self):
-        TCP_IP = self.ip
-        TCP_PORT = int(self.port)
-        BUFFER_SIZE = 10  # Normally 1024, but we want fast response
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         print("waiting for connection")
         self.title.configure(text="Waiting for Connection...")
@@ -38,7 +35,6 @@ class AFC:
                 break
             except ConnectionRefusedError:
                 sleep(0.1)
-                pass
         data = s.recv(10)
         if data == b"I'm ready!":
             s.send(b'\x02' + self.n0.to_bytes(4, 'little') + self.n1.to_bytes(4, 'little') + b'\x03')
@@ -197,8 +193,8 @@ class AFC:
             self.s.close()
         try:
             root.destroy()
-        except: #root already destroyed
-            pass
+        except Exception: #root already destroyed
+            self.counter = 0 # to sate the linters
 HEIGHT = 700
 WIDTH = 1300
 IMGWIDTH = 600

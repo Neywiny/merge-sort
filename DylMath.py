@@ -1,11 +1,9 @@
 import ROC1
-import sys
 import numpy as np
 import math
 np.set_printoptions(threshold=np.inf)
 np.seterr(all="ignore")
-from random import random
-from tqdm import trange, tqdm
+from tqdm import tqdm
 from multiprocessing import Pool
 from scipy.interpolate import interp1d
 from scipy.stats import norm
@@ -20,7 +18,6 @@ try:
     from matplotlib.patches import Rectangle
 except BaseException as e:
     pass
-from DylRand import nearlySorted
 from DylData import *
 unbiasedMeanMatrixVar = ROC1.unbiasedMeanMatrixVar
 def paramToParams(predicted, D0=None, D1=None):
@@ -28,10 +25,6 @@ def paramToParams(predicted, D0=None, D1=None):
         return predicted[0], predicted[1], predicted[2]
     else:
         return predicted, D0, D1
-def stdev(inp: list) -> float:
-    """std(inp) -> standard deviation of the input
-    inp can be a list or the variance of that list"""
-    return math.sqrt(var(inp)) if isinstance(inp, (list, tuple)) else math.sqrt(inp)
 def se(inp: list, n=None) -> float:
     """se(inp) -> standard error of the input
     inp can be a list or the stdev of the list, in which case
@@ -50,11 +43,6 @@ def pc(arr: list, D0: list, D1: list) -> float:
             if i > len(D0):
                 pc += 1
     return pc / len(arr)
-def var(arr: list, npc=None) -> float:
-    """var(arr) -> binomial variance of the array"""
-    if npc == None:
-        npc = pc(arr)
-    return npc*(1-npc)/len(arr)
 def auc(results: tuple, D0=None, D1=None) -> float:
     if not isinstance(results[0], (list, tuple)):
         results = genROC(results, D0, D1)
@@ -123,7 +111,7 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
     rows = int(math.ceil(math.sqrt(len(arrays))))
     cols = int(math.ceil(len(arrays) / rows))
     fig, axes = plt.subplots(rows, cols, sharex=True, sharey=True, num="plots")
-    #fig.suptitle("ROC curves")
+    fig.suptitle("ROC curves")
     if withLine:
         params = [(array, D0, D1) for array in arrays]
         if len(arrays[0]) < 1024:
@@ -149,7 +137,6 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
             sm = successMatrix(arrays[i], D0, D1)
             yes = []
             no = []
-            length = len(arrays[0])//2
             yLen = len(D1)
             xLen = len(D0)
             for (y,x), value in np.ndenumerate(sm):
@@ -165,7 +152,7 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
             area = len(yes) / (len(yes) + len(no))
             ax.set_ylim(top=1, bottom=0)
             ax.set_xlim(left=0, right=1)
-            #ax.set_title(f"Iteration #{i} PC: {int(pc(arrays[i], D0, D1)*100)}% AUC: {area:.5f}")
+            ax.set_title(f"Iteration #{i} PC: {int(pc(arrays[i], D0, D1)*100)}% AUC: {area:.5f}")
             ax.set_aspect('equal', 'box')
     if withPatches:
         pbar.close()
@@ -250,8 +237,8 @@ if __name__ == "__main__":
         comp = Comparator(data, rand=True, level=0, seed=15)
         for arr in treeMergeSort(data, comp=comp):
             pass
-        D0.sort(key = lambda x: comp.getLatentScore(x))
-        D1.sort(key = lambda x: comp.getLatentScore(x))
+        D0.sort(key = comp.getLatentScore)
+        D1.sort(key = comp.getLatentScore)
         roc = rocxy(comp.getLatentScore(D1), comp.getLatentScore(D0))
         graphROCs([arr], True, True, D0, D1)
     elif test == 7:
@@ -285,7 +272,7 @@ if __name__ == "__main__":
         ax.legend()
         plt.show()
     elif test == 9:
-        from DylSort import treeMergeSort, genD0D1
+        from DylSort import treeMergeSort
         from DylComp import Comparator
         import matplotlib.pyplot as plt
         from time import time

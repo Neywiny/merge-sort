@@ -130,20 +130,24 @@ if __name__ == '__main__':
             m = MultiMerger([[0,4], [1, 5], [2, 6], [3, 7]], comp, toggle=True)
             while not m.inc():
                 pass
-            assert m.output == [0, 1, 2, 3, 4, 5, 6, 7]
+            if m.output != [0, 1, 2, 3, 4, 5, 6, 7]:
+                raise AssertionError("wasn't right")
             comp.clearHistory()
             m1 = MultiMerger([[0,4], [1, 5]], comp, toggle=True)
             while not m1.inc():
                 pass
-            assert m1.output == [0, 1, 4, 5]
+            if m1.output != [0, 1, 4, 5]:
+                raise AssertionError("wasn't right")
             m2 = MultiMerger([[2, 6], [3, 7]], comp, toggle=True)
             while not m2.inc():
                 pass
-            assert m2.output == [2, 3, 6, 7]
+            if m2.output != [2, 3, 6, 7]:
+                raise AssertionError("wasn't right")
             m3 = MultiMerger([m1.output,m2.output], comp, toggle=True)
             while not m3.inc():
                 pass
-            assert m3.output == m.output
+            if m3.output != m.output:
+                raise AssertionError("wasn't right")
         elif test == 2:
             comp = Comparator([0, 1, 2, 3, 4, 5, 6, 7])
             m = MultiMerger([[0, 3, 5], [1, 2, 4]], comp, toggle=False)

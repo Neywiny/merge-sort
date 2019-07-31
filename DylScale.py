@@ -4,7 +4,7 @@ from tkinter.constants import *
 from tkinter import *
 from PIL import ImageTk, Image, ImageDraw
 import os
-from random import random, randint, shuffle
+from random import random, shuffle
 from time import sleep, time
 class Rating:
     def __init__(self, posDir, negDir, n, outputFile, label):
@@ -15,7 +15,7 @@ class Rating:
         self.counter = 0
         self.percent = -1
         self.n = int(n)
-        self.f = open(outputFile, "w")
+        self.f = open(outputFile + str(time()), "w")
         self.f.write(posDir + ' ' + negDir + '\n')
         # get pics
         posNames = [self.posDir + img for img in os.listdir(self.posDir)][:self.n // 2]

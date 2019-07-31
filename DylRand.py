@@ -1,4 +1,4 @@
-from random import random
+from numpy.random import random
 from math import tanh
 def nearlySorted(maxi: int, factor: int) -> list:
     """creates a list of nearly sorted data ranging from 0-maximum
@@ -7,7 +7,7 @@ def nearlySorted(maxi: int, factor: int) -> list:
     output: list = list()
     pos: int = 0
     # basic scheme: move through the array taking steps back randomly
-    for i in range(maxi):
+    for _ in range(maxi):
         if random() > (0.5 + (factor/100)):
             pos += 1
         else:

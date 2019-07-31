@@ -33,7 +33,7 @@ def unbiasedMeanMatrixVar(sm,df=1):
 	MSA=n1*numpy.var(x1est,ddof=df)
 	MSB=n0*numpy.var(x0est,ddof=df)
 	ev=( (n0*n1-1)*MST - (n0-1)*MSA-(n1-1)*MSB)/((n0-1)*(n1-1))
-	sig1=(MSA-ev)/n1;   sig2=(MSB-ev)/n0
+	#sig1=(MSA-ev)/n1;   sig2=(MSB-ev)/n0
 	vout=(MSA+MSB-ev)/n0/n1
 	return vout
 def successmatrix(x1,x0):

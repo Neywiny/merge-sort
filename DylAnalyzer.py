@@ -1,14 +1,14 @@
 import pickle
 import ROC1
+import tqdm
 import numpy as np
 np.seterr(divide='ignore', invalid='ignore')
 import matplotlib.pyplot as plt
-import matplotlib.lines as lines
 from matplotlib.colors import LogNorm
-from tqdm import trange, tqdm
 from os import stat
 from sys import getsizeof
 from scipy import stats
+
 def analyze(fileName, length, layers, justOne=False, bar=False):
     avgAUC = np.zeros((layers,))
     avgSMVAR = np.zeros((layers,))
@@ -26,7 +26,7 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
     iters = 0
     fileLength = stat(fileName).st_size
     old = 0
-    with open(fileName, "rb") as f, tqdm(total=fileLength, unit="B", unit_scale=True, disable=not bar) as pBar:
+    with open(fileName, "rb") as f, tqdm.tqdm(total=fileLength, unit="B", unit_scale=True, disable=not bar) as pBar:
         unpickler = pickle.Unpickler(f)
         reshapeCount = 0
         while f.tell() < fileLength:
@@ -83,7 +83,7 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
     stdVarEstimate = np.sqrt(np.var(varEstimates, axis=1, ddof=1))
     remainder = int(bin(length)[3:], 2)
     thingies = [remainder, length / 2]
-    for i in range(2, layers):
+    for _ in range(2, layers):
         thingies.append(thingies[-1] // 2)
     thingies = [1/(2*np.sqrt(thingy)) for thingy in thingies]
     avgErrorBars[4] = [np.sin(np.arcsin(np.sqrt(auc)) - thingies[i])**2 for i, auc in enumerate(avgAUC)]
@@ -96,14 +96,14 @@ def analyzeStudy(fileName, headerLine=False):
     with open(fileName) as f:
         if headerLine:
             posDir, negDir = f.readline().strip().split()
-        for comps, line in enumerate(f, start=1):
+        for line in f:
             line = line.rstrip().split()
             times.append(float(line[-1]))
             if headerLine:
                 score = int(line[1])
                 if negDir in line[0]:
                     x0.append(score)
-                else:
+                elif posDir in line[0]:
                     x1.append(score)
     if headerLine:
         x1, x0 = np.array(x1), np.transpose(x0)
@@ -140,9 +140,11 @@ if __name__ == "__main__":
         ax1 = fig.add_subplot(2, 3, 1)
         #ax1 = fig.add_subplot(1, 1, 1)
         #ax1.plot(xVals, avgAUC, 'b', lw=0, label='Confidence Interval:')
-        """for iter in trange(1000):
-            for level in range(len(aucs[0])):
-                ax1.scatter(level, aucs[iter][level])"""
+
+        #for iter in trange(1000):
+        #    for level in range(len(aucs[0])):
+        #        ax1.scatter(level, aucs[iter][level])
+
         #ax1.errorbar(xVals, avgAUC, yerr=[avgAUC - avgErrorBars[4], avgErrorBars[5] - avgAUC], capsize=10, c='g', label="arcsine(avg x)")
         #ax1.errorbar(xVals, avgAUC, yerr=[avgAUC - avgErrorBars[2], avgErrorBars[3] - avgAUC], capsize=10, c='r', label="avg arcsine(x)")
         ax1.errorbar(xVals, avgAUC, yerr=np.sqrt(varEstimate), capsize=5, c='r', lw=1, elinewidth=2, label="$\pm\sqrt{var_{estimate}}$")

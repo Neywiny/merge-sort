@@ -1,13 +1,11 @@
 import numpy as np
 from numpy import matlib as mb
 from ROC1 import *
-from scipy.special import erfinv
 from scipy.stats import norm
-from math import sqrt
 from warnings import filterwarnings
 from DylMath import MSE
 from tqdm import tqdm, trange
-from pickle import dumps, Unpickler
+from pickle import dumps
 from struct import unpack
 import sys
 argv = sys.argv
@@ -76,9 +74,8 @@ def simulation_ELO_targetAUC(retStats=False, queue=None):
     x1 = np.array(plus)[:,0]
     empiricROC = rocxy(x1, x0)
     scores = np.append(neg, plus)
-    print(scores)
     truth = np.append(mb.zeros((N, 1)), mb.ones((N, 1)), axis=0)
-    AUC_orig, _ = AUCVAR(neg, plus)
+    #AUC_orig, _ = AUCVAR(neg, plus)
     #print(f'AUC original: {AUC_orig:.3f}\n')
     #
     ##
@@ -86,15 +83,15 @@ def simulation_ELO_targetAUC(retStats=False, queue=None):
     #
     if not 'rounds' in locals():
         rounds = 14
-    M = rounds*N
+    #M = rounds*N
     rating = np.append(mb.zeros((N, 1)), mb.zeros((N, 1)), axis=0)
     pc = list()
     cnt = 0
     ncmp = 0
     results = list()
-    for round in range(1, rounds+1):
+    for eloRound in range(1, rounds+1):
         toCompare = mb.zeros((2*N, 1))
-        if round == 1:
+        if eloRound == 1:
             # option A: only compare + vs -
             arr = list(range(N))
             #np.random.shuffle(arr)
@@ -131,17 +128,17 @@ def simulation_ELO_targetAUC(retStats=False, queue=None):
             rating[b] = rating[b] + K2 * ( SB - EB )
         x0 = np.array(rating[0:N])[:,0]
         x1 = np.array(rating[N:])[:,0]
-        auc, var = AUCVAR(x1, x0)
+        auc, _ = AUCVAR(x1, x0)
         roc = rocxy(x1, x0)
-        results.append((roc, ncmp))
-        """mseTruth, mseEmperic, auc = MSE(sep, sys.argv[3], roc, empiricROC)
+        #results.append((roc, ncmp))
+        mseTruth, mseEmperic, auc = MSE(sep, sys.argv[3], roc, empiricROC)
         if retStats == True:
             pass
             #yield roc, mseTruth, mseEmperic, empiricROC
         if queue != None:
             queue.put(dumps((N, cnt, ncmp, var, auc, mseTruth, mseEmperic, pc[-1])))
         else:
-            results.append((N, cnt, ncmp, var, auc, mseTruth, mseEmperic, pc[-1]))"""
+            results.append((N, cnt, ncmp, var, auc, mseTruth, mseEmperic, pc[-1]))
     if queue == None:
         return results
 if __name__ == '__main__':
@@ -151,21 +148,21 @@ if __name__ == '__main__':
         test = 3
     if test == 1:
         #simulation_ELO_targetAUC(200)
-        from multiprocessing import Manager, Process, Pool
+        from multiprocessing import Manager, Pool
         import os
         from time import sleep
         #from p_tqdm import p_umap
-        """iters = int(argv[3]) if len(argv) > 1 else 8
-        rounds = 14
-        manager = Manager()
-        with Pool() as p:
-            queue = manager.Queue()
-            readerProcess = Process(target=queueReader, args=((queue, iters*rounds)))
-            readerProcess.daemon = True
-            readerProcess.start()
-            p.map(simulation_ELO_targetAUC, ((i, queue, rounds) for i in range(iters)))
-        queue.put('DONE')
-        readerProcess.join()"""
+        #iters = int(argv[3]) if len(argv) > 1 else 8
+        #rounds = 14
+        #manager = Manager()
+        #with Pool() as p:
+        #    queue = manager.Queue()
+        #    readerProcess = Process(target=queueReader, args=((queue, iters*rounds)))
+        #    readerProcess.daemon = True
+        #    readerProcess.start()
+        #    p.map(simulation_ELO_targetAUC, ((i, queue, rounds) for i in range(iters)))
+        #queue.put('DONE')
+        #readerProcess.join()
         iters = int(sys.argv[1])
         for dist in ['normal', 'exponential']:
             for AUC in [0.65, 0.85, 0.95]:
@@ -241,7 +238,7 @@ if __name__ == '__main__':
         else:
             import matplotlib.pyplot as plt
             from apng import APNG
-            from DylSort import treeMergeSort, genD0D1
+            from DylSort import treeMergeSort
             from DylComp import Comparator
             from DylData import continuousScale
             from DylMath import genROC, avROC
@@ -258,7 +255,7 @@ if __name__ == '__main__':
             ax1.set_aspect('equal', 'box')
             ax2.set_aspect('equal', 'box')
             elo = simulation_ELO_targetAUC(True)
-            merge = treeMergeSort(data, comp, d0d1 = (D0, D1), combGroups=False)
+            merge = treeMergeSort(data, comp, statParams=[(D0, D1)], combGroups=False)
             plt.tight_layout()
             for i in trange(8):
                 roc, mseTheo, mseEmp, empiricROC = next(elo)
@@ -272,7 +269,7 @@ if __name__ == '__main__':
                 for group in groups:
                     rocs.append(genROC(group, D0, D1))
                 roc = avROC(rocs)
-                mseTheo, mseEmp, auc = MSE(7.72, zip(*roc)), MSE(7.72, zip(*roc), zip(empiricROC['x'], empiricROC['y']))
+                mseTheo, mseEmp, auc = MSE(7.72, 'exponential', zip(*roc)), MSE(7.72, 'exponential', zip(*roc), zip(empiricROC['x'], empiricROC['y']))
                 ax2.plot(x, y, linestyle='--', label='true', lw=3)
                 ax2.plot(empiricROC['x'], empiricROC['y'], linestyle=':', lw=2, label='empirical')
                 ax2.plot(*roc, label='predicted')
@@ -288,7 +285,7 @@ if __name__ == '__main__':
         from DylSort import treeMergeSort, genD0D1
         from DylData import continuousScale
         from DylMath import genROC, avROC
-        import matplotlib
+        #import matplotlib
         import matplotlib.pyplot as plt
         data, D0, D1 = continuousScale(128, 128)
         comp = Comparator(data, rand=True, level=0, seed=20)

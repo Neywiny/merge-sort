@@ -1,5 +1,5 @@
 # merge-sort
-### Basic Usage: 
+## Basic Usage 
 ```python main.py <iterations>```
 
 outputs to resultsMerge```Distribution``` ```AUC```

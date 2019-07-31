@@ -2,7 +2,7 @@ import numpy as np
 from sys import argv
 from scipy.stats import norm
 from DylMath import *
-from DylMerger import *
+from DylMerger import Merger, MultiMerger
 from tqdm import tqdm
 def genD0D1(d0d1: list, arr: list) -> tuple:
     D0, D1 = list(), list()
@@ -14,8 +14,7 @@ def genD0D1(d0d1: list, arr: list) -> tuple:
     return D0, D1
 def runStats(groups, params, comp=None):
     aucs, varOfSM, hanleyMcNeils, estimates = list(), list(), list(), list()
-    start = 0
-    d0d1, n, currLayer, nLayers = params
+    d0d1, n, currLayer, _ = params
     for group in groups:
         D0, D1 = genD0D1(d0d1, group)
         if D0 and D1:
@@ -36,17 +35,17 @@ def runStats(groups, params, comp=None):
     # while there are groups to 'merge'
     while len(estimateNs[-1]) != 1:
         # get the previous layer and sort by N0 + N1
-        oldNs = sorted(estimateNs[-1], key=lambda x: sum(x))
+        oldNs = sorted(estimateNs[-1], key=sum)
         # roughly the same code as mergers creation
         estimateNs.append(list())
         while oldNs:
             i = 0
             toMerge = list()
             segments = min(n, len(oldNs) - i)
-            for iSegment in range(segments):
+            for _ in range(segments):
                 toMerge.append(oldNs.pop(0))
             estimateNs[-1].append([sum((x[0] for x in toMerge)), sum((x[1] for x in toMerge))])
-        estimateNs[-1].sort(key=lambda x:sum(x))
+        estimateNs[-1].sort(key=sum)
         estimates.append(hanleyMcNeil(avgAUC, estimateNs[-1][-1][0], estimateNs[-1][-1][1]) / len(estimateNs[-1]))
     for i, (N0, N1) in enumerate(hanleyMcNeils):
         hanleyMcNeils[i] = hanleyMcNeil(avgAUC, N0, N1)
@@ -79,14 +78,14 @@ def runStats(groups, params, comp=None):
             rocs.append(genROC(group, D0, D1))
         rocs = list(filter(lambda roc: np.min(np.isfinite(roc)), rocs))
         avgROC = avROC(rocs)
-        if len(sys.argv) > 3:
+        if len(argv) > 3:
             empericROC = comp.empericROC()
-            AUC = float(sys.argv[2])
-            if sys.argv[3] == 'exponential':
+            AUC = float(argv[2])
+            if argv[3] == 'exponential':
                 sep = abs(AUC/(1-AUC))
-            elif sys.argv[3] == 'normal':
+            elif argv[3] == 'normal':
                 sep = norm.ppf(AUC)*(2**0.5)
-            stats.extend(MSE(sep, sys.argv[3], avgROC, empericROC)[:2])
+            stats.extend(MSE(sep, argv[3], avgROC, empericROC)[:2])
     return stats
 def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n: int=2, d0d1 = None, combGroups: bool=True, sortGroups: bool=False) -> list:
     """mergeSort(arr: list, level=3)
@@ -106,7 +105,7 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
     if retMid:
         mini = min(arr)
         maxi = max(arr)
-        split = (maxi - mini) // 2
+        #split = (maxi - mini) // 2
         medians = []
         percentages = []
     currLayer = -1
@@ -149,7 +148,7 @@ def mergeSort(arr: list, comp=None, retStats: bool=False, retMid: bool=False, n:
             arr = groups
         # run dem stats
         if retStats:
-            stats = runStats(groups, d0d1, n, currLayer, nLayers)
+            stats = runStats(groups, (d0d1, n, currLayer, nLayers), comp=comp)
             #stats = [aucs, vars, float(npvar)]
             yield arr, stats
         elif not retMid:
@@ -224,7 +223,7 @@ def treeMergeSort(arr: list, comp, statParams=None, n: int=2, retStats: bool=Fal
                     done += 1
                 elif res == 'done':
                     raise StopIteration()
-        left != left
+        left ^= 1 #flip left
         if combGroups:
             arr = []
             for group in groups: arr.extend(group)
@@ -253,13 +252,12 @@ if __name__ == "__main__":
         maxi = 1024
         l: list = randomDisease(maxi)
         for level in range(5):
-            for arr, comp in mergeSort(l[:], level = level, retComp=True):
+            for arr, comp in mergeSort(l[:], level = level):
                 pass
             print(level, len(comp), comp.dupHistory, min(comp.seps.values()), comp.optHistory)
     elif test == 3:
         m = Merger([0, 1, 2, 4, 5, 6, 7, 8, 9], [3], Comparator([0,1, 2, 3, 4, 5, 6, 7, 8, 9], level=3))
         while not m.inc():
-            continue
             print(m.output)
         print(m.output)
         print(m.comp.compHistory)
@@ -298,7 +296,7 @@ if __name__ == "__main__":
     elif test == 7:
         from DylData import continuousScale
         from DylComp import Comparator
-        from tqdm import trange, tqdm
+        from tqdm import trange
         avgs = []
         for plot in trange(100):
             data = continuousScale(256)
@@ -351,7 +349,8 @@ if __name__ == "__main__":
             arr = continuousScale(256)
             for _ in mergeSort(arr, comp=comp, n=n):
                 pass
-            assert arr == sorted(arr)
+            if arr != sorted(arr):
+                raise AssertionError("Didn't sort right")
             print(n, len(comp), sep=',')
     elif test == 10:
         from DylComp import Comparator
@@ -375,12 +374,12 @@ if __name__ == "__main__":
     elif test == 12:
         from DylComp import Comparator
         from DylRand import nearlySorted
-        """ for insSort in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
-            data = nearlySorted(256, 10)
-            comp = Comparator(data, rand=True, level=0)
-            for _ in mergeSort(data, comp):
-                print("done a layer")
-            print(insSort, len(comp)) """
+        #for insSort in [1, 2, 4, 8, 16, 32, 64, 128, 256]:
+        #    data = nearlySorted(256, 10)
+        #    comp = Comparator(data, rand=True, level=0)
+        #    for _ in mergeSort(data, comp):
+        #        print("done a layer")
+        #    print(insSort, len(comp))
         data = nearlySorted(256, 10)
         for shuffle in (True, False):
             comp = Comparator(data, rand=True, level=0)
@@ -392,14 +391,13 @@ if __name__ == "__main__":
         from DylData import continuousScale
         from DylComp import Comparator
         from DylRand import nearlySorted
-        from functools import cmp_to_key
         from tqdm import trange
         class Image:
-            def __init__(self, id, comp):
-                self.id = id
+            def __init__(self, imgID, comp):
+                self.imgID = imgID
                 self.comp = comp
             def __lt__(self, other):
-                return self.comp(self.id, other.id)
+                return self.comp(self.imgID, other.imgID)
         shuffle = False
         #if True:
         for level in range(4):

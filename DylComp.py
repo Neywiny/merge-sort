@@ -6,8 +6,7 @@ np.seterr(all="ignore")
 from warnings import filterwarnings
 filterwarnings("ignore")
 import socket
-from time import sleep
-from random import random
+from numpy.random import random
 from pickle import dump
 class Comparator:
     """A class for comparing 2 values.
@@ -92,8 +91,8 @@ class Comparator:
                 #only gets it right 80% of the time
                 needComp = True
                 if self.rand: # where we are for most things
-                    aScore, aNeg = self.getLatentScore(a)
-                    bScore, bNeg = self.getLatentScore(b)
+                    aScore, _ = self.getLatentScore(a)
+                    bScore, _ = self.getLatentScore(b)
                     res: bool = aScore < bScore
                 else:
                     res: bool = a < b
@@ -123,7 +122,7 @@ class Comparator:
                         # O(n!) optimization. Make sure to use a copy of objects
                         self.optCount += Comparator.optimize(list(self.lookup.keys()), self.lookup, res, a, b)
                 return res
-        except AttributeError as e:
+        except AttributeError:
             raise LookupError("You need to generate the lookup first")
     def getLatentScore(self, index: int) -> float:
         """gets the latent score of a given index"""
@@ -143,8 +142,8 @@ class Comparator:
         """generate the lookup table and statistics for each object provided"""
         self.lookup:dict = dict()
         self.objects: list = objects
-        for object in objects:
-            self.lookup[object] = dict()
+        for datum in objects:
+            self.lookup[datum] = dict()
         self.clearHistory()
     def clearHistory(self):
         """clear the history statistics of comparisons"""
@@ -152,9 +151,9 @@ class Comparator:
             self.compHistory = list()
             self.last = None
             self.dupCount = 0
-            for object in self.objects:
-                self.counts[object] = 0
-                self.seps[object] = list()
+            for datum in self.objects:
+                self.counts[datum] = 0
+                self.seps[datum] = list()
     def learn(self, arr: list, img=None, maxi=False):
         """learn the order of the array provided, assuming the current optimization level allows it
         if img is provided, learns the arr w.r.t. the img and if it is max or min"""
@@ -172,8 +171,8 @@ class Comparator:
                     self.lookup[b][img] = maxi
                     if self.level > 2:
                         Comparator.optimize(self.objects, self.lookup, maxi, b, img)
-    def max(self, arr) -> (int, int):
-        if len(arr) == 0:
+    def max(self, arr, tryingAgain=False) -> (int, int):
+        if len(arr) == 0 or tryingAgain:
             raise NotImplementedError("I can't take the max of nothing")
         if len(arr) == 2:
             a,b = arr
@@ -285,14 +284,14 @@ class NetComparator(Comparator):
             print("go flight", self.n0, self.n1)
         self.conn = conn
         return self
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, *args):
         self.conn.send(b"I'm going!")
         self.conn.close()
         self.s.close()
     def min(self, arr) -> (int, int):
         res = self.max(arr)
         if res != 'done':
-            maxi, maxv = res
+            maxi, _ = res
             mini = maxi ^ 1
             self.learn(arr, arr[mini], False)
             return mini, arr[mini]
@@ -333,22 +332,6 @@ class NetComparator(Comparator):
         self.desHist.append(maxVal)
         self.recorder.write(str(self.compHistory[-1])[1:-1] + f" ,{maxVal}\n")
         return maxInd, maxVal
-    def replot(self):
-        return
-        if hasattr(self, 'pax'): #has an axis to plot onto
-            ax1 = self.pax
-            for plot in self.plots:
-                for line in plot:
-                    try:
-                        line.remove()
-                    except ValueError:
-                        pass
-            if self.pc:
-                self.plots.append(ax1.plot(np.arange(0, self.currLayer, self.currLayer/len(self.pc))[:len(self.pc)], self.pc, color='g', label="PC"))
-            ax1.set_xticklabels(self.xLabels, rotation="vertical")
-            ax1.set_xticks(self.xVals)
-            plt.savefig("temp.svg")
-            replace("temp.svg", "figure.svg")
 if __name__ == "__main__":
     test = 9
     if test == 1:
@@ -407,7 +390,7 @@ if __name__ == "__main__":
             print(np.mean([comp.kendalltau(group) for group in groups]))
     elif test == 8:
         from DylData import continuousScale
-        from DylSort import treeMergeSort, genD0D1
+        from DylSort import treeMergeSort
         from DylMath import avROC, genROC
         import matplotlib.pyplot as plt
         from os import replace
@@ -477,7 +460,6 @@ if __name__ == "__main__":
                         except ValueError:
                             pass
                 comp.currLayer += 1
-                comp.replot()
                 plots.append(ax1.plot(xVals, aucs, 'b.-', label="Layer AUC"))
                 ax1.set_xticklabels(xLabels, rotation="vertical")
                 plots.append(ax2.plot(xVals, varEstimates, 'r.-', label="measured"))
@@ -529,19 +511,19 @@ if __name__ == "__main__":
         with open("rocs", "wb") as f:
             dump((list(zip(*roc8)), roc4), f)
         plt.show()
-        """for i, group in enumerate(l4Groups):
-            l4Groups[i] = list(map(lambda x: int(x in D1), group))
-        groups[0] = list(map(lambda x: int(x in D1), groups[0]))
-        with open("resultsBackup/scaleDylan2.csv") as f:
-            posDir, negDir = f.readline().strip().split()
-            group = list()
-            for line in f:
-                line = line.strip().split()
-                score = int(line[1])
-                if negDir in line[0]:
-                    group.append(0)
-                else:
-                    group.append(1)
-        print(group)
-        with open("4frank", "wb") as f:
-            dump((groups[0], l4Groups, group), f)"""
+        #for i, group in enumerate(l4Groups):
+        #    l4Groups[i] = list(map(lambda x: int(x in D1), group))
+        #groups[0] = list(map(lambda x: int(x in D1), groups[0]))
+        #with open("resultsBackup/scaleDylan2.csv") as f:
+        #    posDir, negDir = f.readline().strip().split()
+        #    group = list()
+        #    for line in f:
+        #        line = line.strip().split()
+        #        score = int(line[1])
+        #        if negDir in line[0]:
+        #            group.append(0)
+        #        else:
+        #            group.append(1)
+        #print(group)
+        #with open("4frank", "wb") as f:
+        #    dump((groups[0], l4Groups, group), f)
