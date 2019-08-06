@@ -8,16 +8,16 @@ def nearlySorted(maxi: int, factor: int) -> list:
     pos: int = 0
     # basic scheme: move through the array taking steps back randomly
     for _ in range(maxi):
-        if random() > (0.5 + (factor/100)):
-            pos += 1
-        else:
-            pos -= 1
-        if pos >= len(l):
-            pos = len(l) - 1
-        if pos < 0:
-            pos = 0
-        output.append(l[pos])
-        l.pop(pos)
+	if random() > (0.5 + (factor/100)):
+	    pos += 1
+	else:
+	    pos -= 1
+	if pos >= len(l):
+	    pos = len(l) - 1
+	if pos < 0:
+	    pos = 0
+	output.append(l[pos])
+	l.pop(pos)
     return output
 def randomDisease(lMax: int, sharpness: float=1.5) -> list:
     """creates a distribution of disease/nondisease as described by the tanh sigmoid with sharpness value either 1.5 or as provided"""
@@ -33,8 +33,8 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(121, projection='3d')
     for factor in range(50):
-        output: list = nearlySorted(maxi, factor)
-        outputs.append(output)
+	output: list = nearlySorted(maxi, factor)
+	outputs.append(output)
     y = np.arange(50)
     x = np.arange(maxi)
     X, Y = np.meshgrid(x, y)

@@ -1,7 +1,7 @@
 def writer(arr: list):
     ret = ''
     for val in arr:
-        ret += str(val) + ','
+	ret += str(val) + ','
     return ret[:-1]
 def bLen(*args):
     """bLen(*args) -> len(args)

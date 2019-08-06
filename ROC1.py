@@ -2,27 +2,27 @@
 # -*- coding: utf-8 -*-
 import numpy
 def table(x,levels=None):   # Like the R table function
-        if not levels: levels=set(x)
-        tbl={}
-        for i in levels: tbl[i]=0
-        for i in x: tbl[i]+=1
-        return(tbl)   # Returns a table that is a dictionary.
+	if not levels: levels=set(x)
+	tbl={}
+	for i in levels: tbl[i]=0
+	for i in x: tbl[i]+=1
+	return(tbl)   # Returns a table that is a dictionary.
 def numtable(x,levels=None):
-        # Create a numerical table that is a numpy array.
-        tbl=numpy.array(list(table(x,levels).items()),
-                        dtype=[('value','f4'),('number','i4')])
-        tbl.sort(order='value')  # put the table in order by value
-        return(tbl)
+	# Create a numerical table that is a numpy array.
+	tbl=numpy.array(list(table(x,levels).items()),
+			dtype=[('value','f4'),('number','i4')])
+	tbl.sort(order='value')  # put the table in order by value
+	return(tbl)
 def rocxy(apos,aneg):  # Data points for an empirical ROC curve.
-        def cmsm(x,lvls):
-                return 1.-numpy.append(0,numpy.cumsum(
-                          numtable(x,levels=lvls)['number']))/float(len(x))
-        lvls= set(apos) | set(aneg)
-        return { 'x':cmsm(aneg,lvls),'y':cmsm(apos,lvls) }
+	def cmsm(x,lvls):
+		return 1.-numpy.append(0,numpy.cumsum(
+			  numtable(x,levels=lvls)['number']))/float(len(x))
+	lvls= set(apos) | set(aneg)
+	return { 'x':cmsm(aneg,lvls),'y':cmsm(apos,lvls) }
 def auc(apos,aneg):  # Calculate AUC
-        n=len(aneg)
-        return(1.-(numpy.sum(stats.rankdata(numpy.c((aneg,apos)))[0:n])-
-               n*(n+1)/2.)/n/len(apos))
+	n=len(aneg)
+	return(1.-(numpy.sum(stats.rankdata(numpy.c((aneg,apos)))[0:n])-
+	       n*(n+1)/2.)/n/len(apos))
 def unbiasedMeanMatrixVar(sm,df=1):
 	# Estimate the unbiased variance of the mean of a 2D matrix with
 	# two way random effects + residuals
