@@ -160,10 +160,7 @@ class Comparator:
 				maxVal = imageID
 				maxScore = score
 		self.learn(arr, maxVal, True)
-		if (arr[0] < self.n0) ^ (arr[1] < self.n0):
-			if maxVal == max(arr):
-				self.c += 1
-				self.pc.append(self.c / (len(self.pc) + 1))
+		self.updatePC(arr, maxVal, max(arr))
 		self.desHist.append(maxVal)
 		return maxInd, maxVal
 	def min(self, arr) -> (int, int):
@@ -194,12 +191,15 @@ class Comparator:
 				minVal = imageID
 				minScore = score
 		self.learn(arr, minVal, False)
+		self.updatePC(arr, minVal, min(arr))
+		self.desHist.append(arr[int(not minInd)])
+		return minInd, minVal
+	def updatePC(self, arr, guess, answer):
 		if (arr[0] < self.n0) ^ (arr[1] < self.n0):
 			if minVal == min(arr):
 				self.c += 1
 				self.pc.append(self.c / (len(self.pc) + 1))
-		self.desHist.append(arr[int(not minInd)])
-		return minInd, minVal
+
 	@staticmethod
 	def optimize(objects: list, lookup: dict, res: bool, a, b):
 		"""recursive optimization algorithm for adding a node to a fully connected graph"""
@@ -284,10 +284,7 @@ class NetComparator(Comparator):
 		else:
 			raise ConnectionError("didn't get a response " + results.decode("utf-8"))
 		maxInd ^= flipped
-		if (arr[0] < self.n0) ^ (arr[1] < self.n0):
-			if maxVal == max(arr):
-				self.c += 1
-				self.pc.append(self.c / (len(self.pc) + 1))
+		self.updatePC(arr, maxVal, max(arr))
 		self.learn(arr, maxVal, True)
 		self.desHist.append(maxVal)
 		self.recorder.write(str(self.compHistory[-1])[1:-1] + f" ,{maxVal}\n")
@@ -295,56 +292,11 @@ class NetComparator(Comparator):
 if __name__ == "__main__":
 	from sys import argv
 	if len(argv) == 1:
-		test = 9
+		test = 3
 	else:
-		test = 8
+		test = 2
+
 	if test == 1:
-		comp = Comparator([i for i in range(10)], 2)
-		print(comp.compare(0, 1))
-		print(comp.compare(1, 2))
-		print(comp.compare(0, 2))
-		print(comp.compare(2, 0))
-		print(comp.compare(0, 3))
-		print(comp.compare(2, 3))
-	elif test == 2:
-		comp = Comparator([i for i in range(10)], level=3, rand=True)
-		print(comp.neg)
-		print(comp.pos)
-	elif test == 4:
-		comp = Comparator([*range(8)], rand=True, seed=15)
-		group1 = [0, 1, 2, 3]
-		for i in range(8):
-			print(i, comp.getLatentScore(i))
-		print(comp.max(group1))
-		print(comp.min(group1))
-		group2 = [4, 5, 6, 7]
-		print(comp.max(group2))
-		print(comp.min(group2))
-		print(comp.counts)
-	elif test == 5:
-		comp = Comparator([*range(8)], rand=False)
-		print(list(comp.seps.items()))
-		print(comp.min([3, 7]))
-		print(comp.compHistory)
-		print(list(comp.seps.items()))
-		print(comp.min([1, 5]))
-		print(comp.compHistory)
-		print(list(comp.seps.items()))
-		print(comp.min([2, 6]))
-		print(comp.compHistory)
-		print(list(comp.seps.items()))
-		print(comp.min([3, 7]))
-		print(comp.compHistory)
-		print(list(comp.seps.items()))
-		print(comp.min([2, 6]))
-		print(comp.compHistory)
-		print(list(comp.seps.items()))
-	elif test == 6:
-		comp = Comparator(list(range(222)), rand=True)
-		for i in range(222): print(i, comp.getLatentScore(i)[1])
-		comp.genRand(135, 87, 7.72, 'exponential')
-		for i in range(222): print(i, comp.getLatentScore(i)[1])
-	elif test == 7:
 		from DylData import continuousScale
 		from DylSort import treeMergeSort
 		data = continuousScale(256)
@@ -352,7 +304,7 @@ if __name__ == "__main__":
 		comp.genRand(128, 128, 7.72, 'exponential')
 		for groups in treeMergeSort(data, comp, combGroups=False):
 			print(np.mean([comp.kendalltau(group) for group in groups]))
-	elif test == 8:
+	elif test == 2:
 		from DylData import continuousScale
 		from DylSort import treeMergeSort
 		from DylMath import avROC, genROC
@@ -446,7 +398,7 @@ if __name__ == "__main__":
 				replace("temp.svg", "figure.svg")
 		with open("rocs", "wb") as f:
 			dump((avgROC, roc4), f)
-	elif test == 9:
+	elif test == 3:
 		from DylData import continuousScale
 		from DylSort import treeMergeSort
 		from DylMath import genROC, avROC

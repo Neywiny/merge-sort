@@ -8,10 +8,9 @@ from matplotlib.colors import LogNorm
 from os import stat
 from sys import getsizeof
 from scipy import stats
-from DylUtils import bettorbar
 
 def analyze(fileName, length, layers, justOne=False, bar=False):
-	""" analyze a merge sort results file. 
+	""" analyze a merge sort results file.
 	If justOne is True, only does the first simulation
 	If bar is True, shows a tqdm progress bar"""
 
@@ -63,7 +62,7 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
 				# store results
 				varEstimates[iLevel][iters - 1] = varEstimate
 				aucs[iLevel][iters - 1] = auc
-				
+
 				# add to running total
 				avgHanleyMNeil[iLevel] += hanleyMcNeil
 				avgMSEEmperic[iLevel] += mseEmperic
@@ -94,7 +93,7 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
 	# need to transpose because numpy is weird
 	avgErrorBars = np.transpose(avgErrorBars / iters)
 	avgAUC = (avgAUC / iters).transpose()
-	
+
 	# divide vectors by iters to get average
 	# // avgComps because can't have fraction of a comparison
 	avgComps = avgComps // iters
@@ -112,9 +111,9 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
 	varAUCnp = np.var(aucs, ddof=1, axis=1)
 	stdVarEstimate = np.sqrt(np.var(varEstimates, axis=1, ddof=1))
 
-	
+
 	# arcsine transform, this isn't currently used
-	
+
 	#remainder = int(bin(length)[3:], 2)
 	#thingies = [remainder, length / 2]
 	#for _ in range(2, layers):
@@ -124,7 +123,9 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
 	#avgErrorBars[5] = [np.sin(np.arcsin(np.sqrt(auc)) + thingies[i])**2 for i, auc in enumerate(avgAUC)]
 	return varEstimate, avgAUC, avgSMVAR, avgnpVARs, avgMSETrues, avgMSEEmperic, avgComps, avgHanleyMNeil, avgErrorBars, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters
 
-def analyzeScale(fileName, names=[]):
+def analyzeScale(fileName, names=None):
+	"""Analyzes a scale study.
+	If names parameter given, filters for only those names"""
 	times = list()
 	x0 = list()
 	x1 = list()
@@ -184,7 +185,7 @@ if __name__ == "__main__":
 		ax1.legend()
 		ax1.set_ylabel('AUC', color='b')
 		ax1.set_title("Average AUC per Layer")
-		
+
 		ax2 = fig.add_subplot(2, 3, 2)
 		ax2.plot(xVals, varAUCnp, 'g.', ls='--', lw=5, label='$var_{real}$')
 		ax2.errorbar(xVals, varEstimate, yerr=stdVarEstimate, c='r', marker='.', ls=':', lw=2, label='$var_{estimate}$')
@@ -231,9 +232,8 @@ if __name__ == "__main__":
 		from DylComp import Comparator
 		from DylData import continuousScale
 		from DylSort import treeMergeSort
-		from DylMath import genX0X1, genROC, MSE
+		from DylMath import genX0X1, MSE
 		from multiprocessing import Pool
-		from time import time
 
 		def bootstrapTau(arr):
 			ranks = arr[:,np.random.randint(len(arr[0]), size=len(arr[0]))]
@@ -261,8 +261,8 @@ if __name__ == "__main__":
 			return MSE(None, None, scaleROC, afcROC)[1]
 
 		data, D0, D1 = continuousScale(128, 128)
-		results = {	"Reader A":("resGabi/scaleGabi.csv1565102893.2022426", "resGabi/log2.csv", "resGabi/rocs", "resGabi/compGabi.csv"), 
-					"Reader B":("resFrank/scaleFrank.csv1565098562.1623092", "resFrank/log2.csv", "resFrank/rocs", "resFrank/results.csv"), 
+		results = {	"Reader A":("resGabi/scaleGabi.csv1565102893.2022426", "resGabi/log2.csv", "resGabi/rocs", "resGabi/compGabi.csv"),
+					"Reader B":("resFrank/scaleFrank.csv1565098562.1623092", "resFrank/log2.csv", "resFrank/rocs", "resFrank/results.csv"),
 					"Reader C":("resDylan/scaleDylan2.csv", "resDylan/log2.csv", "resDylan/rocs", "resultsBackup/resultsDylan.csv")}
 		with open("names.txt") as f:
 			names = f.read().split()
@@ -278,7 +278,7 @@ if __name__ == "__main__":
 			comp = Comparator(data, rand=True)
 			comp.learn(files[3])
 			for arr, sortstats in treeMergeSort(data[:], comp, statParams=[(D0, D1)], retStats=True):
-				pass	
+				pass
 			indeciesAFC = [arr.index(i) for i in range(256)]
 			x0, x1 = genX0X1(arr, D1, D0)
 			x0 = np.array([indeciesAFC[i] for i in range(128)])
@@ -334,8 +334,6 @@ if __name__ == "__main__":
 			#print(x0)
 			afcSM = ROC1.successmatrix(x1, x0)
 			afcAUC = ROC1.auc(x1, x0)
-			#afcROC = genROC(ranks[0], D1, D0)
-			#scaleROC = genROC(ranks[1], D1, D0)
 
 			mse = MSE(None, None, scaleROC, afcROC)[1]
 
@@ -347,7 +345,7 @@ if __name__ == "__main__":
 			scatterAxes[i].set_title(reader)
 			scatterAxes[i].set_xlabel("scale")
 			scatterAxes[i].set_ylabel("AFC")
-			
+
 			with Pool(8, initializer=np.random.seed) as p:
 				taus = p.map(bootstrapTau, (ranks for _ in range(1_000)))
 				mses = p.starmap(permutation, ((ranks, D0, D1) for _ in range(1)))
@@ -362,7 +360,7 @@ if __name__ == "__main__":
 			#xmax = max(mses)
 			#kernal = stats.gaussian_kde(mses)
 			#xVals = np.linspace(0, xmax, 1000)
-			
+
 			dSM = afcSM - scaleSM
 			varDSM = ROC1.unbiasedMeanMatrixVar(dSM)
 			dAUC = np.mean(afcSM) - np.mean(scaleSM)
@@ -377,9 +375,9 @@ if __name__ == "__main__":
 			#tauAxes[i].set_title(np.mean(scaleSM - scaleSMData))
 			#mseAxes[i].imshow(afcSM - afcSMData)
 			#mseAxes[i].set_title(np.mean(afcSM - afcSMData))
-			
+
 			#masterRanks[i] = ranks
-		
+
 		figManager = plt.get_current_fig_manager()
 		figManager.window.showMaximized()
 		plt.subplots_adjust(top=0.957,
