@@ -108,34 +108,43 @@ class Comparator:
 				self.seps[datum] = list()
 	def learn(self, arr: list, img=None, maxi=False):
 		"""learn the order of the array provided, assuming the current optimization level allows it
-		if img is provided, learns the arr w.r.t. the img and if it is max or min"""
-		if img == None and self.level > 1:
-			for i, a in enumerate(arr):
-				for b in arr[i + 1:]:
-					self.lookup[a][b] = True
-					self.lookup[b][a] = False
-					if self.level > 2:
-						Comparator.optimize(self.objects, self.lookup, True, a, b)
-		elif img != None and self.level > 1:
-			for b in arr:
-				if b != img:
-					self.lookup[img][b] = not maxi
-					self.lookup[b][img] = maxi
-					if self.level > 2:
-						Comparator.optimize(self.objects, self.lookup, maxi, b, img)
+		if img is provided, learns the arr w.r.t. the img and if it is max or min. arr can also be 
+		a filename, in whichcase it will read the file to learn"""
+		if isinstance(arr, str):
+			with open(arr) as f:
+				f.readline()
+				for line in f:
+					line = line.rstrip().replace(' ,', ', ').split(', ')
+					if len(line) == 3: # valid comparison
+						self.learn([int(line[0]), int(line[1])], int(line[2]), maxi=True)
+		else:
+			if img == None and self.level > 1:
+				for i, a in enumerate(arr):
+					for b in arr[i + 1:]:
+						self.lookup[a][b] = True
+						self.lookup[b][a] = False
+						if self.level > 2:
+							Comparator.optimize(self.objects, self.lookup, True, a, b)
+			elif img != None and self.level > 1:
+				for b in arr:
+					if b != img:
+						self.lookup[img][b] = not maxi
+						self.lookup[b][img] = maxi
+						if self.level > 2:
+							Comparator.optimize(self.objects, self.lookup, maxi, b, img)
 	def max(self, arr, tryingAgain=False) -> (int, int):
 		if len(arr) == 0 or tryingAgain:
 			raise NotImplementedError("I can't take the max of nothing")
 		if len(arr) == 2:
 			a,b = arr
 			if b in self.lookup[a].keys():
-				# print("cache hit")
+				# cache hit
 				if self.lookup[a][b]: # a < b
 					return 1, b
 				else:
 					return 0, a
 			elif a in self.lookup[b].keys():
-				# print("cache hit")
+				# cache hit
 				if self.lookup[b][a]:
 					return 0, a
 				else:
@@ -163,13 +172,13 @@ class Comparator:
 		if len(arr) == 2:
 			a,b = arr
 			if b in self.lookup[a].keys():
-				# print("cache hit")
+				# cache hit
 				if self.lookup[a][b]: # a < b
 					return 0, a
 				else:
 					return 1, b
 			elif a in self.lookup[b].keys():
-				# print("cache hit")
+				# cache hit
 				if self.lookup[b][a]:
 					return 1, b
 				else:
@@ -447,12 +456,7 @@ if __name__ == "__main__":
 		comp.n0 = len(D0)
 		comp.n1 = len(D1)
 		# reconstruct the decisions
-		with open("resGabi/compGabi.csv") as f:
-			f.readline()
-			for line in f:
-				line = line.rstrip().replace(' ,', ', ').split(', ')
-				if len(line) == 3: # valid comparison
-					comp.learn([int(line[0]), int(line[1])], int(line[2]), maxi=True)
+		comp.learn("resGabi/compGabi.csv")
 		l4Groups = list()
 		for i, groups in enumerate(treeMergeSort(data, comp, combGroups=False), start=1):
 			if i == 4:
@@ -461,6 +465,7 @@ if __name__ == "__main__":
 		roc8 = genROC(groups[0], D1, D0)
 		plt.plot(*zip(*roc8), '-', lw=2, label="layer 8 (emperic)")
 		plt.plot(*roc4, label="layer 4")
+		print(roc4)
 		plt.legend()
 		plt.gca().set_aspect('equal', 'box')
 		with open("rocs", "wb") as f:

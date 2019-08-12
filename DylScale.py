@@ -18,11 +18,16 @@ class Rating:
 		self.f = open(outputFile + str(time()), "w")
 		self.f.write(posDir + ' ' + negDir + '\n')
 		# get pics
-		posNames = [self.posDir + img for img in os.listdir(self.posDir)][:self.n // 2]
-		negNames = [self.negDir + img for img in os.listdir(self.negDir)][:self.n // 2 + self.n % 2]
-		self.n0 = len(negNames)
-		self.n1 = len(posNames)
-		names = negNames + posNames
+		#posNames = [self.posDir + img for img in os.listdir(self.posDir)][:self.n // 2]
+		#negNames = [self.negDir + img for img in os.listdir(self.negDir)][:self.n // 2 + self.n % 2]
+		self.n0 = 2#len(negNames)
+		self.n1 = 2#len(posNames)
+		#names = negNames + posNames
+		#print(len(names))
+		names = ["/nashome/images/testImages2/targetAbsentImages/SImage097987.jpeg",
+				"/nashome/images/testImages2/targetAbsentImages/SImage488310.jpeg",
+				"/nashome/images/testImages2/targetPresentImages/SImage056304.jpeg",
+				"/nashome/images/testImages2/targetPresentImages/SImage623312.jpeg"]
 		self.images = [Image.open(name) for name in names]
 		for img in self.images:
 			img.thumbnail((IMGWIDTH, IMGHEIGHT))

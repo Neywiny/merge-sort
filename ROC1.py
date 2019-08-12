@@ -1,6 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 import numpy
+import scipy.stats as stats
+
+numpy.c = numpy.concatenate
 def table(x,levels=None):   # Like the R table function
 	if not levels: levels=set(x)
 	tbl={}

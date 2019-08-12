@@ -35,7 +35,7 @@ def pc(arr: list, D0: list, D1: list) -> float:
 	# add up all the times a number is on the correct side
 	# divide by total to get the average
 	pc: float = 0.0
-	for i,val in enumerate(arr):
+	for i, val in enumerate(arr):
 		if val in D0:
 			if i < len(D0):
 				pc += 1
@@ -48,6 +48,7 @@ def auc(results: tuple, D0=None, D1=None) -> float:
 		results = genROC(results, D0, D1)
 	total: float = 0.0
 	for i,(x,y) in enumerate(results[:-1], start=1):
+		# start=1 means i is actually i + 1
 		total += 0.5*(y + results[i][1]) * (x - results[i][0])
 	return -total
 def hanleyMcNeil(auc, n0, n1):
@@ -76,6 +77,8 @@ def MSE(sep, dist, ROC, rocEmpiric=None):
 		mseTrue = np.mean((approx - (fpf**(1/sep)))**2)
 	elif dist == 'normal':
 		mseTrue = np.mean((approx - (1-norm.cdf(norm.ppf(1-fpf) - sep)))**2)
+	else:
+		mseTrue = 0
 	if rocEmpiric != None:
 		if len(rocEmpiric) == 2:
 			trueApprox = interp1d(rocEmpiric['x'], rocEmpiric['y'])
@@ -84,7 +87,7 @@ def MSE(sep, dist, ROC, rocEmpiric=None):
 		mseEmperic = np.mean((approx - (trueApprox(fpf)))**2)
 	calcAUC = np.trapz(approx) / (1/step)
 	return (mseTrue, calcAUC) if rocEmpiric == None else (mseTrue, mseEmperic, calcAUC)
-def genROC(predicted: tuple, D1: tuple=None, D0: tuple=None) -> tuple:
+def genX0X1(predicted: tuple, D1: tuple=None, D0: tuple=None) -> (list, list):
 	predicted, D0, D1 = paramToParams(predicted, D0, D1)
 	x0 = list()
 	x1 = list()
@@ -93,6 +96,9 @@ def genROC(predicted: tuple, D1: tuple=None, D0: tuple=None) -> tuple:
 			x1.append(i)
 		elif val in D0:
 			x0.append(i)
+	return np.array(x0), np.array(x1)
+def genROC(predicted: tuple, D1: tuple=None, D0: tuple=None):
+	x0, x1 = genX0X1(predicted, D1, D0)
 	roc = ROC1.rocxy(x1, x0)
 	return list(zip(roc['x'], roc['y']))
 def graphROC(predicted: tuple, D0=None, D1=None):
@@ -121,7 +127,7 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
 				results = list(p.imap(genROC,params))
 	if withPatches:
 		pbar = tqdm(total=len(arrays)*(len(arrays[0])//2)**2)
-	for i,ax in enumerate(axes.flat if (rows * cols > 1) else [axes]):
+	for i, ax in enumerate(axes.flat if (rows * cols > 1) else [axes]):
 		if i >= len(arrays):
 			continue
 		ax.set(xlabel="False Positive Fraction", ylabel="True Positive Fraction")
@@ -158,7 +164,8 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
 		pbar.close()
 	figManager = plt.get_current_fig_manager()
 	figManager.window.showMaximized()
-	plt.show()
+	#plt.show()
+	return plt
 def avROC(rocs):
 	#hard coded SeSp
 	#e = 9*sys.float_info.epsilon

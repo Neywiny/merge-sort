@@ -12,7 +12,7 @@ def continuousScale(*args):
 			D0 = []
 			D1 = []
 			with open(filename) as f:
-				for i,line in enumerate(f):
+				for i, line in enumerate(f):
 					if len(line) > 10:
 						line = line.strip().split(" ")
 						point = float(line[2])

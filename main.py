@@ -105,7 +105,6 @@ if __name__ == "__main__":
 					topBar.close()
 					print('\n')
 				else:
-					retMid = False
 					iters = 100
 					results = [pickle.dumps(sort(0, i)) for i in range(iters)]
 				#change output file if requested to do so
@@ -153,18 +152,20 @@ if __name__ == "__main__":
 			shuffle(data)
 			img[0] = data[:]
 			comp = Comparator(data, level=0)
+			
 			for gIndex, group in enumerate(data):
 				ax.add_patch(Rectangle((gIndex, (power) * yStep), 1, -yStep, color=color, lw=1/power, fill=False))
+
 			for y, groups in enumerate(sorter(data, comp=comp, combGroups=False), start=1):
 				arr = []
-			x = 0
-			for gIndex, group in enumerate(groups):
-				ax.add_patch(Rectangle((x, (power - y) * yStep), len(group), -yStep, color=color, lw=3*y/power, fill=False))
-				arr.extend(group)
-				x += len(group)
-			if len(arr) < len(img[0]):
-				arr.extend([0 for i in range(len(img[0]) - len(arr))])
-			img[y] = arr
+				x = 0
+				for group in groups:
+					ax.add_patch(Rectangle((x, (power - y) * yStep), len(group), -yStep, color=color, lw=3*y/power, fill=False))
+					arr.extend(group)
+					x += len(group)
+				if len(arr) < len(img[0]):
+					arr.extend([0 for i in range(len(img[0]) - len(arr))])
+				img[y] = arr
 			ax.imshow(img, cmap='Greys', extent=[0, length, 0, length], aspect=1)
 			ax.set_xticks([])
 			ax.set_yticks([])

@@ -41,18 +41,9 @@ def simulation_ELO_targetAUC(retStats=False, queue=None):
     # DATA GENERATION
     #
     K1 = 400
-    K2 = 32
-    #mu1 = 1
-    #mu0 = 0
-    #si0 = 0.84
-    #si1 = sqrt( 2*((mu1-mu0)**2/K - si0**2 /2 ) )
-    #neg = np.random.normal(mu0, si0, (N, 1))
-    #plus = np.random.normal(mu1, si1, (N, 1))
-    #neg = np.random.normal(0, 1, (N, 1))
-    #plus = np.random.normal(1.7, 1, (N, 1))
-    with open("/dev/urandom", "rb") as f:
-		seed = unpack("<I", f.read(4))[0]
-    np.random.seed(seed=seed)
+	K2 = 32
+	
+    np.random.seed()
     if len(sys.argv) > 1:
 		AUC = float(sys.argv[2])
 		if sys.argv[3] == 'exponential':
@@ -74,16 +65,10 @@ def simulation_ELO_targetAUC(retStats=False, queue=None):
     x1 = np.array(plus)[:,0]
     empiricROC = rocxy(x1, x0)
     scores = np.append(neg, plus)
-    truth = np.append(mb.zeros((N, 1)), mb.ones((N, 1)), axis=0)
-    #AUC_orig, _ = AUCVAR(neg, plus)
-    #print(f'AUC original: {AUC_orig:.3f}\n')
-    #
-    ##
-    # PRE-STABLISHED COMPARISONS
-    #
+	truth = np.append(mb.zeros((N, 1)), mb.ones((N, 1)), axis=0)
+	
     if not 'rounds' in locals():
 		rounds = 14
-    #M = rounds*N
     rating = np.append(mb.zeros((N, 1)), mb.zeros((N, 1)), axis=0)
     pc = list()
     cnt = 0
@@ -130,11 +115,7 @@ def simulation_ELO_targetAUC(retStats=False, queue=None):
 		x1 = np.array(rating[N:])[:,0]
 		auc, _ = AUCVAR(x1, x0)
 		roc = rocxy(x1, x0)
-		#results.append((roc, ncmp))
 		mseTruth, mseEmperic, auc = MSE(sep, sys.argv[3], roc, empiricROC)
-		if retStats == True:
-			pass
-			#yield roc, mseTruth, mseEmperic, empiricROC
 		if queue != None:
 			queue.put(dumps((N, cnt, ncmp, var, auc, mseTruth, mseEmperic, pc[-1])))
 		else:
@@ -147,22 +128,10 @@ if __name__ == '__main__':
     else:
 		test = 3
     if test == 1:
-		#simulation_ELO_targetAUC(200)
 		from multiprocessing import Manager, Pool
 		import os
 		from time import sleep
-		#from p_tqdm import p_umap
-		#iters = int(argv[3]) if len(argv) > 1 else 8
-		#rounds = 14
-		#manager = Manager()
-		#with Pool() as p:
-		#    queue = manager.Queue()
-		#    readerProcess = Process(target=queueReader, args=((queue, iters*rounds)))
-		#    readerProcess.daemon = True
-		#    readerProcess.start()
-		#    p.map(simulation_ELO_targetAUC, ((i, queue, rounds) for i in range(iters)))
-		#queue.put('DONE')
-		#readerProcess.join()
+
 		iters = int(sys.argv[1])
 		for dist in ['normal', 'exponential']:
 			for AUC in [0.65, 0.85, 0.95]:
@@ -192,7 +161,6 @@ if __name__ == '__main__':
 					topBar.close()
 					print('\n')
 				else:
-					retMid = False
 					iters = 1
 					results = [pickle.dumps(sort(0, i)) for i in range(iters)]
 				#change output file if requested to do so
@@ -285,7 +253,6 @@ if __name__ == '__main__':
 		from DylSort import treeMergeSort, genD0D1
 		from DylData import continuousScale
 		from DylMath import genROC, avROC
-		#import matplotlib
 		import matplotlib.pyplot as plt
 		data, D0, D1 = continuousScale(128, 128)
 		comp = Comparator(data, rand=True, level=0, seed=20)
@@ -297,7 +264,6 @@ if __name__ == '__main__':
 				rocs.append(genROC(group, D1, D0))
 			mergeResults.append((avROC(rocs), len(comp)))
 		matches = [(np.argmin([abs(res[1] - mergeLen) for res in results])) for (groups, mergeLen) in mergeResults]
-		#print(*[abs(results[matches[i]][1] - mergeResults[i][1]) for i in range(len(mergeResults))])
 		fig, axes = plt.subplots(nrows=4, ncols=2, sharex=True, sharey=True)
 		for axn, layer in enumerate([0, 3, 5, 7]):
 			axes[axn][0].plot(mergeResults[layer][0][1], mergeResults[layer][0][0], 'r')

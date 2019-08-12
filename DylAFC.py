@@ -50,8 +50,9 @@ class AFC:
 		negNames = [self.negDir + img for img in sorted(os.listdir(self.negDir))][offset:offset + self.n0]
 		self.n0 = len(negNames)
 		self.n1 = len(posNames)
-		print(len(posNames), len(negNames), len(ansNames))
+		#print(len(posNames), len(negNames), len(ansNames))
 		names = negNames + posNames
+		print(names)
 		self.images = [Image.open(name) for name in names]
 		for img in self.images:
 			img.thumbnail((IMGWIDTH, IMGHEIGHT))
@@ -213,13 +214,13 @@ img2 = Label(frame)#, image=img)
 img1.grid(row=0, column=0, sticky=E)
 img2.grid(row=0, column=2, sticky=W)
 if len(argv) == 1:
-	argv.append('/nashome/images/testImages1/targetPresentImages/')
-	argv.append('/nashome/images/testImages1/targetAbsentImages/')
-	argv.append('/nashome/images/testImages1/targetPresentAnswerImages/')
+	argv.append('/nashome/images/testImages2/targetPresentImages/')
+	argv.append('/nashome/images/testImages2/targetAbsentImages/')
+	argv.append('/nashome/images/testImages2/targetPresentAnswerImages/')
 	argv.append('127.0.0.1')
 	argv.append('6000')
-	argv.append('64')
-	argv.append('64')
+	argv.append('128')
+	argv.append('128')
 	argv.append('log.csv')
 elif len(argv) < 9:
 	print(f"Usage: {__file__} [target present directory] [target absent directory] [answers directory] [merge ip] [merger port] [n0] [n1] [log file]")
