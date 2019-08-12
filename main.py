@@ -152,7 +152,7 @@ if __name__ == "__main__":
 			shuffle(data)
 			img[0] = data[:]
 			comp = Comparator(data, level=0)
-			
+
 			for gIndex, group in enumerate(data):
 				ax.add_patch(Rectangle((gIndex, (power) * yStep), 1, -yStep, color=color, lw=1/power, fill=False))
 

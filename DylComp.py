@@ -108,7 +108,7 @@ class Comparator:
 				self.seps[datum] = list()
 	def learn(self, arr: list, img=None, maxi=False):
 		"""learn the order of the array provided, assuming the current optimization level allows it
-		if img is provided, learns the arr w.r.t. the img and if it is max or min. arr can also be 
+		if img is provided, learns the arr w.r.t. the img and if it is max or min. arr can also be
 		a filename, in whichcase it will read the file to learn"""
 		if isinstance(arr, str):
 			with open(arr) as f:
