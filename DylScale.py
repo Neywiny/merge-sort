@@ -3,6 +3,7 @@ from sys import argv
 from tkinter.constants import *
 from tkinter import *
 from PIL import ImageTk, Image, ImageDraw
+from time import time
 class Rating:
 	def __init__(self, posDir, negDir, n, outputFile, label):
 		self.decision = -1
