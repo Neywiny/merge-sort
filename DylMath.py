@@ -25,7 +25,7 @@ def paramToParams(predicted: list, D0: list=None, D1: list=None) -> (list, list,
 		return predicted[0], predicted[1], predicted[2]
 	else:
 		return predicted, D0, D1
-	
+
 def auc(results: tuple, D0: list=None, D1: list=None) -> float:
 	""" Takes an ROC curve from genROC and returns the AUC.
 	If results is a prediction not an ROC curve, generates the ROC curve."""

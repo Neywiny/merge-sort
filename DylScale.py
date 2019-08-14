@@ -123,7 +123,7 @@ class GradientFrame(Canvas):
 				draw.rectangle((x0, 0, x1, img_height), fill=(int(r),int(g),int(b)))
 		self._gradient_photoimage = ImageTk.PhotoImage(image)
 		self.create_image(0, 0, anchor=NW, image=self._gradient_photoimage)
-		
+
 if len(argv) == 2:
 	import ROC1
 	import matplotlib.pyplot as plt

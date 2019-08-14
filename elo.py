@@ -14,7 +14,7 @@ def simulation_ELO_targetAUC(args: list, rounds: int=14):
 	"""
 	Function for the simulation of ELO rating given an AUC of 0.8 (most of it, hard-coded),
 	the input to the function is N (the number of samples on the rating study).
-	
+
 	@Author: Francesc Massanes (fmassane@iit.edu)
 	@Version: 0.1 (really beta)
 	"""
@@ -27,8 +27,7 @@ def simulation_ELO_targetAUC(args: list, rounds: int=14):
 	#
 	K1 = 400
 	K2 = 32
-	
-	AUC = float(auc)
+
 	sep = genSep(dist, float(auc))
 	if dist == 'exponential':
 		neg = np.random.exponential(size=(N, 1))
@@ -45,7 +44,7 @@ def simulation_ELO_targetAUC(args: list, rounds: int=14):
 	empiricROC = rocxy(x1, x0)
 	scores = np.append(neg, plus)
 	truth = np.append(mb.zeros((N, 1)), mb.ones((N, 1)), axis=0)
-	
+
 	rating = np.append(mb.zeros((N, 1)), mb.zeros((N, 1)), axis=0)
 	pc = list()
 	cnt = 0

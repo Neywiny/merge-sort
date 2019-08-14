@@ -74,7 +74,7 @@ class AFC:
 		self.wrong = ImageTk.PhotoImage(Image.open("wrong.png"))
 		return self
 	def showPics(self, pic1: int, pic2: int=None):
-		""" show the pictures identified by the image number arguments. 
+		""" show the pictures identified by the image number arguments.
 		If pic2 is not provided, pic1 is a boolean value for displaying either correct or incorrect."""
 		if self.mode.get() == 'answers':
 			self.img1.configure(image=self.ansPairs[pic1][0])

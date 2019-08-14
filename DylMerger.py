@@ -89,8 +89,8 @@ def MultiMergerGenerator(groups: list, comp, start=0, stop=0, toggle:bool=True, 
 				OIndex += 1
 			yield output
 		left ^= toggle # toggle left if toggle == True
-		yield False 
-	
+		yield False
+
 if __name__ == '__main__':
 	from DylComp import Comparator
 	for test in range(1, 7):

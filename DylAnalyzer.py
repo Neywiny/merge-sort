@@ -364,7 +364,7 @@ if __name__ == "__main__":
 				x1 = ranks[0][n0:n0 + n1]
 				scaleSM = ROC1.successmatrix(x1, x0)
 				scaleAUC = ROC1.auc(x1, x0)
-				
+
 				afcSM = ROC1.successmatrix(afcX1, afcX0)
 				afcAUC = ROC1.auc(afcX1, afcX0)
 				afcROC = ROC1.rocxy(x1, x0)
@@ -410,7 +410,7 @@ if __name__ == "__main__":
 				scaleTimes: list = [0]
 				taus: list = [0]
 				tau: int = 0
-			
+
 			print(f"{reader} {np.mean(scaleTimes):0.3f}\t\t{np.std(scaleTimes):0.3f}\t\t{np.mean(mergeTimes):0.3f}\t\t\t{np.std(mergeTimes):0.3f}\t\t{tau:0.3f}\t{np.std(taus):0.3f}")
 		fig.set_size_inches(12, 8)
 		if len(argv) == 3:

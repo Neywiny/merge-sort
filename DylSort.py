@@ -29,7 +29,7 @@ def runStats(groups: list, params: list, comp=None) -> list:
 	Params must be: ((d0d1), dist, targetAUC, n, currLayer, len(mergers))"""
 
 	aucs, varOfSM, hanleyMcNeils, estimates = list(), list(), list(), list()
-	d0d1, dist, targetAUC, n, currLayer, *_ = params
+	d0d1, dist, targetAUC, n, *_ = params
 	rocs: list = list()
 	for group in groups:
 		D0, D1 = genD0D1(d0d1, group)
@@ -75,7 +75,7 @@ def runStats(groups: list, params: list, comp=None) -> list:
 	avgROC: tuple = avROC(rocs)
 	empiricROC: tuple = comp.empiricROC()
 	sep: float = genSep(dist, float(targetAUC)) # float in case it's a string
-	
+
 	stats: list = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, estimates, *MSE(sep, dist, avgROC, empiricROC)[:2]]
 
 	return stats
@@ -90,7 +90,6 @@ def mergeSort(arr: list, statParams: list=None, n: int=2, combGroups: bool=True,
 	groups: list = list([arr[i]] for i in range(len(arr)))
 	mergers: list = []
 	currLayer: int = -1
-	nLayers: int = calcNLayers(arr) - 1
 	# while there are partitions
 	while len(groups) != 1:
 		currLayer += 1
@@ -124,7 +123,7 @@ def mergeSort(arr: list, statParams: list=None, n: int=2, combGroups: bool=True,
 			arr: list = groups
 		# run dem stats
 		if statParams:
-			stats: list = runStats(groups, statParams + [n, layer, len(mergerss)], comp)
+			stats: list = runStats(groups, statParams + [n, currLayer, len(mergerss)], comp)
 			yield arr, stats
 		else:
 			yield arr
@@ -179,7 +178,7 @@ def treeMergeSort(arr: list, comp, statParams=None, n: int=2, combGroups: bool=T
 				groups.append(mergerss[-2][i + iSeg].output)
 			mergerss[-1].append(MultiMerger(groups, comp))
 			i += segments
-			
+
 	left: bool = True
 	for layer, mergers in enumerate(mergerss, start=1):
 		done: int = 0
@@ -201,7 +200,7 @@ def treeMergeSort(arr: list, comp, statParams=None, n: int=2, combGroups: bool=T
 		else:
 			arr: list = groups
 		yield (arr, runStats(groups, statParams + [n, layer, len(mergerss)], comp)) if statParams else arr
-		
+
 if __name__ == "__main__":
 	test: int = int(arv[1]) if len(argv) > 1 else 1
 	if test == 1:
@@ -330,8 +329,6 @@ if __name__ == "__main__":
 			print(']', end='\n\n')
 
 	elif test == 5:
-		from random import shuffle
-		import numpy as np
 		import matplotlib.pyplot as plt
 		from matplotlib.patches import Rectangle
 		import matplotlib
@@ -352,7 +349,7 @@ if __name__ == "__main__":
 				sorter = treeMergeSort
 			data: list = list(range(int(2**(power - 1)*(2/3))))
 			img: np.ndarray = np.zeros((power, length))
-			shuffle(data)
+			np.random.shuffle(data)
 			img[0]: list = data[:]
 			comp: Comparator = Comparator(data, level=0)
 

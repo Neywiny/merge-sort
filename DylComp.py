@@ -69,7 +69,7 @@ class Comparator:
 			raise NotImplementedError("distibution must be one of ['normal','exponential']")
 
 	def empiricROC(self) -> dict:
-		"""Generates and stores the empiric ROC if it needs to. 
+		"""Generates and stores the empiric ROC if it needs to.
 		Returns the stored ROC curve."""
 		empiric: dict = getattr(self, 'empiric', None)
 		if empiric == None:
@@ -265,7 +265,7 @@ class NetComparator(Comparator):
 		self.recorder.write('Image 1,Image 2,Chosen\n')
 		self.desHist: list = list()
 		self.plots: list = list()
-		
+
 	def __enter__(self):
 		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		print("getting connected")
@@ -281,7 +281,7 @@ class NetComparator(Comparator):
 			print("go flight", self.n0, self.n1)
 		self.conn = conn
 		return self
-	
+
 	def __exit__(self, *args):
 		self.conn.send(b"I'm going!")
 		self.conn.close()

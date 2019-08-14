@@ -25,15 +25,15 @@ The format for a result is:
 (auc, varEstimate, hanleyMcNeil, estimates, mseTrue, mseEmpiric, compLen, minSeps, pc) = resultss[layer index]
 ```
 
-* auc is the total accuracy 
-* varEstimate is the variance estimate
-* hanleyMcNeil is the current Hanley-McNeil variance estimate
-* estimates is the vector of Hanley-McNeil predictions from that layer onwards (so it will shrink in size as the layer number increases)
-* mseTruth is the MSE between the current ROC curve and the true ROC curve for the given distribution
-* mseEmpiric is the same as above just with that simulation's data set
-* compLen is th etotal number of comparisons
-* minSeps is the minimum number of comparisons between comparing the same image again for that image (it's a vector not a float)
-* pc is the percent of corrent comparisons from images of different distributions
+*   auc is the total accuracy 
+*   varEstimate is the variance estimate
+*   hanleyMcNeil is the current Hanley-McNeil variance estimate
+*   estimates is the vector of Hanley-McNeil predictions from that layer onwards (so it will shrink in size as the layer number increases)
+*   mseTruth is the MSE between the current ROC curve and the true ROC curve for the given distribution
+*   mseEmpiric is the same as above just with that simulation's data set
+*   compLen is th etotal number of comparisons
+*   minSeps is the minimum number of comparisons between comparing the same image again for that image (it's a vector not a float)
+*   pc is the percent of corrent comparisons from images of different distributions
 
 To analyze the results, run ```DylAnalyzer.py <results filename>```
 
@@ -50,14 +50,14 @@ The format for a result is:
 (N, cnt, ncmp, var, auc, mseTruth, mseEmpiric, pc) = resultss[layer index]
 ```
 
-* N is n0
-* cnt is the number of comparisons done on images from different distributions
-* ncmp is th etotal number of comparisons
-* var is the success matrix variance estimate (it's bad)
-* auc is the total accuracy 
-* mseTruth is the MSE between the current ROC curve and the true ROC curve for the given distribution
-* mseEmpiric is the same as above just with that simulation's data set
-* pc is the percent of corrent comparisons from images of different distributions
+*	N is n0
+*	cnt is the number of comparisons done on images from different distributions
+*	ncmp is th etotal number of comparisons
+*	var is the success matrix variance estimate (it's bad)
+*	auc is the total accuracy 
+*	mseTruth is the MSE between the current ROC curve and the true ROC curve for the given distribution
+*	mseEmpiric is the same as above just with that simulation's data set
+*	pc is the percent of corrent comparisons from images of different distributions
 
 ## Doing a Reader Study
 
@@ -83,10 +83,10 @@ In the directory of DylComp a file called "figure.svg" will exist. If you open "
 
 Results for reader study analysis are referenced with a json file. Each key should be a reader. Each reader should contain a list of 3 or 4 elements ordered as:
 
-1. The log from DylAFC
-2. The roc file from DylComp
-3. The log file from DylComp
-4. The log from DylScale (optional)
+1.  The log from DylAFC
+2.  The roc file from DylComp
+3.  The log file from DylComp
+4.  The log from DylScale (optional)
 
 If there is no log file from DylScale, the analysis will not be able to show the results from the scale study.
 
