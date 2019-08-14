@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>DylSort</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/nashome/merge-sort/DylSort.py">/nashome/merge-sort/DylSort.py</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/dylan/Documents/merge-sort/DylSort.py">/home/dylan/Documents/merge-sort/DylSort.py</a></font></td></tr></table>
     <p></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -18,49 +18,9 @@
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ROC1.html">ROC1</a><br>
-</td><td width="25%" valign=top><a href="math.html">math</a><br>
 </td><td width="25%" valign=top><a href="matplotlib.html">matplotlib</a><br>
 </td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
-</td></tr></table></td></tr></table><p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#ee77aa">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
-    
-<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl>
-<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
-</font></dt><dd>
-<dl>
-<dt><font face="helvetica, arial"><a href="DylSort.html#Merger">Merger</a>
-</font></dt></dl>
-</dd>
-</dl>
- <p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#ffc8d8">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#000000" face="helvetica, arial"><a name="Merger">class <strong>Merger</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
-    
-<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
-<td colspan=2><tt>A&nbsp;class&nbsp;for&nbsp;merging&nbsp;2&nbsp;arrays&nbsp;into&nbsp;1&nbsp;array<br>
-Must&nbsp;feed&nbsp;it&nbsp;a&nbsp;comparator&nbsp;<a href="builtins.html#object">object</a>.&nbsp;It&nbsp;can&nbsp;also&nbsp;hold&nbsp;onto&nbsp;start/stop&nbsp;indecies&nbsp;if&nbsp;you&nbsp;ask<br>
-'Toggle'&nbsp;parameter&nbsp;defines&nbsp;if&nbsp;you&nbsp;want&nbsp;to&nbsp;do&nbsp;a&nbsp;cocktail&nbsp;merge,&nbsp;as&nbsp;in&nbsp;switch&nbsp;which&nbsp;end&nbsp;you're&nbsp;merging&nbsp;from&nbsp;each&nbsp;call&nbsp;of&nbsp;<a href="#Merger-inc">inc</a>()<br>&nbsp;</tt></td></tr>
-<tr><td>&nbsp;</td>
-<td width="100%">Methods defined here:<br>
-<dl><dt><a name="Merger-__init__"><strong>__init__</strong></a>(self, groupA:list, groupB:list, comp:DylComp.Comparator, start=0, stop=0, toggle:bool=True)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
-
-<dl><dt><a name="Merger-inc"><strong>inc</strong></a>(self) -&gt; bool</dt><dd><tt>do&nbsp;a&nbsp;merge,&nbsp;and&nbsp;if&nbsp;configured,&nbsp;switch&nbsp;which&nbsp;end&nbsp;the&nbsp;next&nbsp;merge&nbsp;will&nbsp;be&nbsp;done&nbsp;from<br>
-returns&nbsp;True&nbsp;if&nbsp;the&nbsp;merge&nbsp;is&nbsp;completed</tt></dd></dl>
-
-<hr>
-Data descriptors defined here:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
-</dl>
+</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
@@ -68,20 +28,23 @@ Data descriptors defined here:<br>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-combsort"><strong>combsort</strong></a>(arr:list, comp:DylComp.Comparator=None, level:int=3, retComp:bool=False, rand:bool=False) -&gt; list</dt><dd><tt>performs&nbsp;a&nbsp;combsort&nbsp;sorting&nbsp;algorithm&nbsp;either&nbsp;with&nbsp;the&nbsp;given&nbsp;comparator&nbsp;or&nbsp;a&nbsp;default&nbsp;one<br>
-yields&nbsp;the&nbsp;array&nbsp;and&nbsp;(if&nbsp;configured&nbsp;to&nbsp;to)&nbsp;the&nbsp;comparator&nbsp;after&nbsp;each&nbsp;pass&nbsp;through&nbsp;the&nbsp;array</tt></dd></dl>
- <dl><dt><a name="-merge"><strong>merge</strong></a>(comp, arr:list, start:int, mid:int, stop:int)</dt><dd><tt>merges&nbsp;2&nbsp;slices&nbsp;of&nbsp;the&nbsp;array&nbsp;in&nbsp;place,&nbsp;as&nbsp;defined&nbsp;by&nbsp;arr[start]&nbsp;-&gt;&nbsp;arr[mid],&nbsp;arr[mid]&nbsp;-&gt;&nbsp;arr[stop]<br>
-no&nbsp;return&nbsp;value</tt></dd></dl>
- <dl><dt><a name="-mergeSort"><strong>mergeSort</strong></a>(arr:list, comp:DylComp.Comparator=None, shuffle:bool=False, retStats:bool=False, level=3, rand=False) -&gt; list</dt><dd><tt><a href="#-mergeSort">mergeSort</a>(arr:&nbsp;list,&nbsp;level=3)<br>
-Can&nbsp;either&nbsp;be&nbsp;provided&nbsp;a&nbsp;comparator&nbsp;or&nbsp;will&nbsp;make&nbsp;its&nbsp;own<br>
-merge&nbsp;sorts&nbsp;the&nbsp;list&nbsp;arr&nbsp;with&nbsp;'level'&nbsp;amount&nbsp;of&nbsp;optimization<br>
+<td width="100%"><dl><dt><a name="-genD0D1"><strong>genD0D1</strong></a>(d0d1:list, arr:list) -&gt; tuple</dt><dd><tt>Generates&nbsp;filtered&nbsp;D0&nbsp;and&nbsp;D1&nbsp;vectors.<br>
+d0d1&nbsp;is&nbsp;(D0,&nbsp;D1)&nbsp;together&nbsp;as&nbsp;a&nbsp;tuple/list.</tt></dd></dl>
+ <dl><dt><a name="-mergeSort"><strong>mergeSort</strong></a>(arr:list, statParams:list=None, n:int=2, combGroups:bool=True, sortGroups:bool=False) -&gt; list</dt><dd><tt><a href="#-mergeSort">mergeSort</a>(arr:&nbsp;list)<br>
+statParams&nbsp;must&nbsp;be&nbsp;the&nbsp;format&nbsp;((D0,&nbsp;D1),&nbsp;dist,&nbsp;target&nbsp;AUC)<br>
+combGroups&nbsp;determins&nbsp;if&nbsp;the&nbsp;returned&nbsp;array&nbsp;is&nbsp;one&nbsp;list&nbsp;or&nbsp;each&nbsp;group&nbsp;as&nbsp;its&nbsp;own&nbsp;list.<br>
+sortGroups&nbsp;determins&nbsp;if&nbsp;groups&nbsp;will&nbsp;be&nbsp;sorted&nbsp;by&nbsp;size&nbsp;in&nbsp;the&nbsp;sort.<br>
 yields&nbsp;the&nbsp;arr&nbsp;after&nbsp;each&nbsp;pass&nbsp;through<br>
-also&nbsp;yields&nbsp;the&nbsp;stats&nbsp;used&nbsp;if&nbsp;retStats</tt></dd></dl>
- <dl><dt><a name="-random"><strong>random</strong></a>(...)<font color="#909090"><font face="helvetica, arial"> method of <a href="random.html#Random">random.Random</a> instance</font></font></dt><dd><tt><a href="#-random">random</a>()&nbsp;-&gt;&nbsp;x&nbsp;in&nbsp;the&nbsp;interval&nbsp;[0,&nbsp;1).</tt></dd></dl>
- <dl><dt><a name="-swap"><strong>swap</strong></a>(arr:list, indexA:int, indexB:int, sizes:list=None)</dt><dd><tt>swaps&nbsp;in&nbsp;arr&nbsp;either&nbsp;the&nbsp;indecies&nbsp;indexA&nbsp;and&nbsp;indexB,&nbsp;or&nbsp;the&nbsp;slices&nbsp;of&nbsp;the&nbsp;array&nbsp;as&nbsp;defined&nbsp;by&nbsp;'sizes'</tt></dd></dl>
- <dl><dt><a name="-tanh"><strong>tanh</strong></a>(...)</dt><dd><tt><a href="#-tanh">tanh</a>(x)<br>
-&nbsp;<br>
-Return&nbsp;the&nbsp;hyperbolic&nbsp;tangent&nbsp;of&nbsp;x.</tt></dd></dl>
+also&nbsp;yields&nbsp;the&nbsp;stats&nbsp;if&nbsp;given&nbsp;statParams</tt></dd></dl>
+ <dl><dt><a name="-runStats"><strong>runStats</strong></a>(groups:list, params:list, comp=None) -&gt; list</dt><dd><tt>Runs&nbsp;stats&nbsp;on&nbsp;the&nbsp;groups&nbsp;provided.<br>
+Params&nbsp;must&nbsp;be:&nbsp;((d0d1),&nbsp;dist,&nbsp;targetAUC,&nbsp;n,&nbsp;currLayer,&nbsp;len(mergers))</tt></dd></dl>
+ <dl><dt><a name="-treeMergeSort"><strong>treeMergeSort</strong></a>(arr:list, comp, statParams=None, n:int=2, combGroups:bool=True)</dt><dd><tt>sorts&nbsp;an&nbsp;array&nbsp;with&nbsp;the&nbsp;provided&nbsp;comparator.<br>
+statParams&nbsp;must&nbsp;be&nbsp;the&nbsp;format&nbsp;((D0,&nbsp;D1),&nbsp;dist,&nbsp;target&nbsp;AUC)&nbsp;if&nbsp;it&nbsp;is&nbsp;provided.<br>
+If&nbsp;n&nbsp;is&nbsp;provided,&nbsp;does&nbsp;at&nbsp;most&nbsp;nAFC&nbsp;type&nbsp;comparisons&nbsp;(ex&nbsp;if&nbsp;n=4,&nbsp;may&nbsp;do&nbsp;most&nbsp;4AFC,&nbsp;maybe&nbsp;some&nbsp;3AFC,&nbsp;rest&nbsp;2AFC)<br>
+combGroups&nbsp;determins&nbsp;if&nbsp;the&nbsp;returned&nbsp;array&nbsp;is&nbsp;one&nbsp;list&nbsp;or&nbsp;each&nbsp;group&nbsp;as&nbsp;its&nbsp;own&nbsp;list.<br>
+Yields&nbsp;the&nbsp;current&nbsp;layer&nbsp;and&nbsp;the&nbsp;statistics&nbsp;if&nbsp;statParams&nbsp;is&nbsp;not&nbsp;None.</tt></dd></dl>
+ <dl><dt><a name="-validate"><strong>validate</strong></a>(arr:list)</dt><dd><tt>Throws&nbsp;errors&nbsp;if&nbsp;the&nbsp;array&nbsp;to&nbsp;be&nbsp;validated&nbsp;is&nbsp;invalid.<br>
+Invalid&nbsp;is&nbsp;if&nbsp;there&nbsp;is&nbsp;a&nbsp;-1&nbsp;in&nbsp;the&nbsp;array&nbsp;or&nbsp;if&nbsp;there&nbsp;are&nbsp;duplicates.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">
@@ -89,5 +52,8 @@ Return&nbsp;the&nbsp;hyperbolic&nbsp;tangent&nbsp;of&nbsp;x.</tt></dd></dl>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><strong>__annotations__</strong> = {}</td></tr></table>
+<td width="100%"><strong>__annotations__</strong> = {}<br>
+<strong>argv</strong> = ['/usr/lib/python3.6/pydoc.py', '-w', './']<br>
+<strong>font</strong> = {'size': 56}<br>
+<strong>norm</strong> = &lt;scipy.stats._continuous_distns.norm_gen object&gt;</td></tr></table>
 </body></html>

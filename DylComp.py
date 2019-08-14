@@ -20,12 +20,12 @@ class Comparator:
 		self.rand: bool = rand
 		self.seed: int = seed
 		self.level: int = level
-		self.compHistory = list()
-		self.dupCount = 0
-		self.optCount = 0
-		self.counts = dict()
-		self.seps = dict()
-		self.bRecord = True
+		self.compHistory: list = list()
+		self.dupCount: int = 0
+		self.optCount: int = 0
+		self.counts: dict = dict()
+		self.seps: dict = dict()
+		self.bRecord: bool = True
 		if objects != None:
 			self.genLookup(objects)
 			if rand:
@@ -33,38 +33,52 @@ class Comparator:
 				self.n1 += len(objects) % 2
 				self.genRand(self.n0, self.n1, 1.7, 'normal')
 		self.last: tuple = None
-		self.c = 0
-		self.pc = list()
-		self.desHist = list()
-	def __len__(self):
-		"""returns either the number of comparisons done"""
+		self.resetPC()
+		self.desHist: list = list()
+
+	def __len__(self) -> int:
+		"""Returns either the number of comparisons done"""
 		return self.compHistory if isinstance(self.compHistory, int) else len(self.compHistory)
-	def __call__(self, a, b):
-		"""returns a < b"""
-		return self.compare(a,b)
-	def kendalltau(self, predicted):
+
+	def resetPC(self):
+		"""Resets the pc statistics. Call this once per layer if you only want that layer's PC"""
+		self.c: int = 0
+		self.pc: list = list()
+
+	def kendalltau(self, predicted: list) -> float:
+		"""Returns the kendalltau statistic between the predicted image ID ordering and the true ordering of the image IDs with respect to latent score.
+		This method filters image IDs by what's in predicted, so only the ids in predicted are used."""
 		return kendalltau(self.getLatentScore(predicted), list(filter(lambda x: x in self.getLatentScore(predicted), sorted(self.vals))))[0]
-	def genRand(self, n0, n1, sep, dist):
-		from os import getpid, uname
-		from time import time
+
+	def genRand(self, n0: int, n1: int, sep: float, dist: str):
+		"""Generates the random data. If a seed has not previously been provided, it will be assigned here.
+		This new seeding may not work on Windows, so Windows users should assign the seed on their own."""
 		# get a random seed for each node and each process on that node, and the time
-		self.n0 = n0
-		self.n1 = n1
+		self.n0: int = n0
+		self.n1: int = n1
 		if self.seed == None:
-			self.seed = (int(str(ord(uname()[1][-1])) + str(getpid()) + str(int(time()))) % 2**31)
+			from os import getpid, uname
+			from time import time
+			self.seed: int = (int(str(ord(uname()[1][-1])) + str(getpid()) + str(int(time()))) % 2**31)
 		np.random.seed(self.seed)
 		if dist == 'normal':
-			self.vals = (tuple(np.random.normal(size=n0,loc=0)) + tuple(np.random.normal(size=n1,loc=sep)))
+			self.vals: tuple = (tuple(np.random.normal(size=n0,loc=0)) + tuple(np.random.normal(size=n1,loc=sep)))
 		elif dist == 'exponential':
-			self.vals = (tuple(np.random.exponential(size=n0,scale=1)) + tuple(np.random.exponential(size=n1,scale=sep)))
+			self.vals: tuple = (tuple(np.random.exponential(size=n0,scale=1)) + tuple(np.random.exponential(size=n1,scale=sep)))
 		else:
 			raise NotImplementedError("distibution must be one of ['normal','exponential']")
-	def empericROC(self):
-		emperic = getattr(self, 'emperic', None)
-		if emperic == None:
-			self.emperic = rocxy(self.vals[self.n0:], self.vals[:self.n0])
-		return self.emperic
-	def record(self, vals):
+
+	def empiricROC(self) -> dict:
+		"""Generates and stores the empiric ROC if it needs to. 
+		Returns the stored ROC curve."""
+		empiric: dict = getattr(self, 'empiric', None)
+		if empiric == None:
+			self.empiric = rocxy(self.vals[self.n0:], self.vals[:self.n0])
+		return self.empiric
+
+	def record(self, vals: list):
+		"""Record that these values were seen.
+		This is automatically called by min and max."""
 		if not self.bRecord:
 			return
 		for val in vals:
@@ -76,63 +90,75 @@ class Comparator:
 					self.dupCount += 1
 		self.compHistory.append(tuple(vals))
 		self.last = tuple(vals)
-	def getLatentScore(self, index: int) -> float:
-		"""gets the latent score of a given index"""
-		if isinstance(index, (tuple, list)):
-			return [self.getLatentScore(val)[0] for val in index]
+
+	def getLatentScore(self, imgID: int) -> float:
+		"""gets the latent score of a given imgID or array of imgIDs.
+		If only one index is provided, also returns if the image is from the disease negative distribution."""
+		if isinstance(imgID, (tuple, list)):
+			return [self.getLatentScore(val)[0] for val in imgID]
 		if self.rand:
-			return self.vals[index], index <= self.n0
+			return self.vals[imgID], imgID < self.n0
 		else:
-			return index
-	def genSeps(self):
-		minseps = [2*len(self.objects) for i in range(len(self.objects))]
+			return imgID
+
+	def genSeps(self) -> list:
+		"""Goes throguh the stored records and returns a list of the minimum separations.
+		If there is no minimum separation (the image has not been seen more than once), uses 2*(n0+n1) as a palceholder"""
+		minseps: list = [2*len(self.objects) for i in range(len(self.objects))]
 		for img, times in self.seps.items():
 			if len(times) > 1:
-				minseps[img] = min(map(lambda x: times[x + 1] - times[x], range(len(times) - 1)))
+				minseps[img]: int = min(map(lambda x: times[x + 1] - times[x], range(len(times) - 1)))
 		return minseps
+
 	def genLookup(self, objects: list):
-		"""generate the lookup table and statistics for each object provided"""
+		"""Generate the lookup table for each object provided"""
 		self.lookup:dict = dict()
 		self.objects: list = objects
 		for datum in objects:
-			self.lookup[datum] = dict()
+			self.lookup[datum]: dict = dict()
 		self.clearHistory()
+
 	def clearHistory(self):
-		"""clear the history statistics of comparisons"""
+		"""Clears the history statistics of comparisons"""
 		if hasattr(self, "objects"):
-			self.compHistory = list()
-			self.last = None
-			self.dupCount = 0
+			self.compHistory: list = list()
+			self.last: tuple = None
+			self.dupCount: int = 0
 			for datum in self.objects:
-				self.counts[datum] = 0
-				self.seps[datum] = list()
-	def learn(self, arr: list, img=None, maxi=False):
-		"""learn the order of the array provided, assuming the current optimization level allows it
+				self.counts[datum]: int = 0
+				self.seps[datum]: list = list()
+
+	def learn(self, arr: list, img: int=None, maxi: bool=False):
+		"""Learn the order of the array provided, assuming the current optimization level allows it
 		if img is provided, learns the arr w.r.t. the img and if it is max or min. arr can also be
 		a filename, in whichcase it will read the file to learn"""
 		if isinstance(arr, str):
 			with open(arr) as f:
 				f.readline()
 				for line in f:
-					line = line.rstrip().replace(' ,', ', ').split(', ')
+					line: list = line.rstrip().replace(' ,', ', ').split(', ')
 					if len(line) == 3: # valid comparison
 						self.learn([int(line[0]), int(line[1])], int(line[2]), maxi=True)
 		else:
 			if img == None and self.level > 1:
 				for i, a in enumerate(arr):
 					for b in arr[i + 1:]:
-						self.lookup[a][b] = True
-						self.lookup[b][a] = False
+						self.lookup[a][b]: bool = True
+						self.lookup[b][a]: bool = False
 						if self.level > 2:
 							Comparator.optimize(self.objects, self.lookup, True, a, b)
 			elif img != None and self.level > 1:
 				for b in arr:
 					if b != img:
-						self.lookup[img][b] = not maxi
-						self.lookup[b][img] = maxi
+						self.lookup[img][b]: bool = not maxi
+						self.lookup[b][img]: bool = maxi
 						if self.level > 2:
 							Comparator.optimize(self.objects, self.lookup, maxi, b, img)
+
 	def max(self, arr, tryingAgain=False) -> (int, int):
+		"""Gets the maximum of the array with respect to the latent scores.
+		tryingAgain should always be False unless a network comparator is used.
+		Returns the undex of the maximum ID and the maximum ID."""
 		if len(arr) == 0 or tryingAgain:
 			raise NotImplementedError("I can't take the max of nothing")
 		if len(arr) == 2:
@@ -150,20 +176,23 @@ class Comparator:
 				else:
 					return 1, b
 		self.record(arr)
-		maxVal = arr[0]
-		maxScore = self.getLatentScore(arr[0])[0] if self.rand else arr[0]
-		maxInd = 0
+		maxVal: int = arr[0]
+		maxScore: float = self.getLatentScore(arr[0])[0] if self.rand else arr[0]
+		maxInd: int = 0
 		for i, imageID in enumerate(arr[1:], start=1):
 			score = self.getLatentScore(imageID)[0] if self.rand else arr[i]
 			if score > maxScore:
-				maxInd = i
-				maxVal = imageID
-				maxScore = score
+				maxInd: int = i
+				maxVal: int = imageID
+				maxScore: float = score
 		self.learn(arr, maxVal, True)
 		self.updatePC(arr, maxVal, max(arr))
 		self.desHist.append(maxVal)
 		return maxInd, maxVal
+
 	def min(self, arr) -> (int, int):
+		"""Gets the minimum of the array with respect to the latent scores.
+		Returns the undex of the minimum ID and the minimum ID."""
 		if len(arr) == 0:
 			raise NotImplementedError("I can't take the min of nothing")
 		if len(arr) == 2:
@@ -181,28 +210,32 @@ class Comparator:
 				else:
 					return 0, a
 		self.record(arr)
-		minVal = arr[0]
-		minScore = self.getLatentScore(arr[0])[0] if self.rand else arr[0]
-		minInd = 0
+		minVal: int = arr[0]
+		minScore: float = self.getLatentScore(arr[0])[0] if self.rand else arr[0]
+		minInd: int = 0
 		for i, imageID in enumerate(arr[1:], start=1):
 			score = self.getLatentScore(imageID)[0] if self.rand else arr[i]
 			if score < minScore:
-				minInd = i
-				minVal = imageID
-				minScore = score
+				minInd: int = i
+				minVal: int = imageID
+				minScore: float = score
 		self.learn(arr, minVal, False)
 		self.updatePC(arr, minVal, min(arr))
 		self.desHist.append(arr[int(not minInd)])
 		return minInd, minVal
-	def updatePC(self, arr, guess, answer):
-		if (arr[0] < self.n0) ^ (arr[1] < self.n0):
-			if minVal == min(arr):
+
+	def updatePC(self, arr: list, guess, answer):
+		"""If the ids in arr are from different distibutions, adds 1 to the pc denominator.
+		If the guess was the answer, adds 1 to the pc numerator."""
+		if self.rand and (arr[0] < self.n0) ^ (arr[1] < self.n0):
+			if guess == answer:
 				self.c += 1
-				self.pc.append(self.c / (len(self.pc) + 1))
+			self.pc.append(self.c / (len(self.pc) + 1))
 
 	@staticmethod
-	def optimize(objects: list, lookup: dict, res: bool, a, b):
-		"""recursive optimization algorithm for adding a node to a fully connected graph"""
+	def optimize(objects: list, lookup: dict, res: bool, a, b) -> int:
+		"""Recursive optimization algorithm for adding a node to a fully connected graph.
+		Returns the number of optimizations it did."""
 		if objects:
 			nObjects: list = []
 			for c in list(lookup[b]):
@@ -215,70 +248,80 @@ class Comparator:
 					lookup[c][a]:bool = not res
 					return 1 + Comparator.optimize(nObjects, lookup, res, b, c)
 		return 0
+
 class NetComparator(Comparator):
+	"""A class for doing comparisons over a network."""
 	# keep payloads to 10 bytes, try for little endian
 	# 'op codes'
 	# cmd -> [0010, 8 bytes, 0011]
 	# max -> [0010 (image 1 32 bits) (image 2 32 bits) 0011], receive 2 32 bit ints denoting index and val respectively
 	def __init__(self, ip: str, port: int, recorder=None, objects: list = None, level: int = 3):
 		super(NetComparator, self).__init__(objects, level)
-		self.ip = ip
-		self.port = port
-		self.currLayer = 1
-		self.aucs = list()
+		self.ip: str = ip
+		self.port: int = port
+		self.currLayer: int = 1
+		self.aucs: list = list()
 		self.recorder = recorder
 		self.recorder.write('Image 1,Image 2,Chosen\n')
-		self.desHist = list()
-		self.plots = list()
+		self.desHist: list = list()
+		self.plots: list = list()
+		
 	def __enter__(self):
-			self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-			print("getting connected")
-			self.s.bind(('', self.port))
-			self.s.listen(1)
-			conn, addr = self.s.accept()
-			print('Connection address:', addr)
-			print("connection established")
-			conn.send(b"I'm ready!")
-			data = conn.recv(10)
-			if data[0] == 2 and data[9] == 3: #valid frame
-				self.n0, self.n1 = int.from_bytes(data[1:5], 'little'), int.from_bytes(data[5:9], 'little')
-				print("go flight", self.n0, self.n1)
-			self.conn = conn
-			return self
+		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		print("getting connected")
+		self.s.bind(('', self.port))
+		self.s.listen(1)
+		conn, addr = self.s.accept()
+		print('Connection address:', addr)
+		print("connection established")
+		conn.send(b"I'm ready!")
+		data: bytes = conn.recv(10)
+		if data[0] == 2 and data[9] == 3: #valid frame
+			self.n0, self.n1 = int.from_bytes(data[1:5], 'little'), int.from_bytes(data[5:9], 'little')
+			print("go flight", self.n0, self.n1)
+		self.conn = conn
+		return self
+	
 	def __exit__(self, *args):
 		self.conn.send(b"I'm going!")
 		self.conn.close()
 		self.s.close()
-	def min(self, arr) -> (int, int):
+
+	def min(self, arr: list) -> (int, int):
+		"""Gets the minimum of the array with respect to the latent scores as the opposite of the maximum.
+		Returns the undex of the minimum ID and the minimum ID."""
 		res = self.max(arr)
 		if res != 'done':
 			maxi, _ = res
-			mini = maxi ^ 1
+			mini: int = maxi ^ 1
 			self.learn(arr, arr[mini], False)
 			return mini, arr[mini]
 		else:
 			return 'done'
-	def max(self, arr, tryingAgain=False) -> (int, int):
+	def max(self, arr: list, tryingAgain=False) -> (int, int):
+		"""Gets the maximum of the array with respect to the latent scores.
+		tryingAgain is only used for if there was a hiccup in the network.
+		Returns the undex of the maximum ID and the maximum ID."""
 		if not tryingAgain:
-			data = self.conn.recv(10)
+			data: bytes = self.conn.recv(10)
 			if not data:
 				return 'done'
 			if data != b"send pics!":
 				print(data, self.desHist)
 				raise ConnectionError("shoulda gotten that")
 			self.record(arr)
-		flipped = random() > 0.5
+		flipped: bool = random() > 0.5
 		if flipped:
-			payload = b'\x02' + arr[1].to_bytes(4, 'little') + arr[0].to_bytes(4, 'little') + b'\x03'
+			payload: bytes = b'\x02' + arr[1].to_bytes(4, 'little') + arr[0].to_bytes(4, 'little') + b'\x03'
 		else:
-			payload = b'\x02' + arr[0].to_bytes(4, 'little') + arr[1].to_bytes(4, 'little') + b'\x03'
+			payload: bytes = b'\x02' + arr[0].to_bytes(4, 'little') + arr[1].to_bytes(4, 'little') + b'\x03'
 		self.conn.send(payload)
-		results = self.conn.recv(10)
+		results: bytes = self.conn.recv(10)
 		if len(results) == 0:
 			return 'done'
 		if results[0] == 2 and results[9] == 3: #valid frame
-			maxInd = int.from_bytes(results[1:5], 'little')
-			maxVal = int.from_bytes(results[5:9], 'little')
+			maxInd: int = int.from_bytes(results[1:5], 'little')
+			maxVal: int = int.from_bytes(results[5:9], 'little')
 		elif results == b"send pics!":
 			return self.max(arr, True)
 		else:
@@ -289,39 +332,30 @@ class NetComparator(Comparator):
 		self.desHist.append(maxVal)
 		self.recorder.write(str(self.compHistory[-1])[1:-1] + f" ,{maxVal}\n")
 		return maxInd, maxVal
+
 if __name__ == "__main__":
 	from sys import argv
-	if len(argv) == 1:
-		test = 3
+	if len(argv != 4):
+		print("Usage:")
+		print(f"{__file__} <log file output> <port> <roc file output>")
 	else:
-		test = 2
-
-	if test == 1:
 		from DylData import continuousScale
 		from DylSort import treeMergeSort
-		data = continuousScale(256)
-		comp = Comparator(data, level=0, rand=True)
-		comp.genRand(128, 128, 7.72, 'exponential')
-		for groups in treeMergeSort(data, comp, combGroups=False):
-			print(np.mean([comp.kendalltau(group) for group in groups]))
-	elif test == 2:
-		from DylData import continuousScale
-		from DylSort import treeMergeSort
-		from DylMath import avROC, genROC
+		from DylMath import avROC, genROC, calcNLayers
 		import matplotlib.pyplot as plt
 		from os import replace
 		fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(nrows=2, ncols=3)
-		with open(argv[1], "w") as f, NetComparator('127.0.0.1', 6000, f) as comp:
+		with open(argv[1], "w") as f, NetComparator('127.0.0.1', int(arv[2]), f) as comp:
 			data, D0, D1 = continuousScale(comp.n0, comp.n1)
 			comp.genLookup(data)
-			comp.layers = layers = int(np.ceil(np.log2((comp.n0 + comp.n1))))
-			xVals = list(range(1, layers + 1))
-			xLabels = ['' for _ in xVals]
-			aucs = np.full((layers,), np.nan)
-			varEstimates = np.full((layers,), np.nan)
-			hmnEstimates = np.full((layers, layers), np.nan)
-			compLens = np.full((layers,), np.nan)
-			info = [np.nan for i in range(layers)]
+			comp.layers = layers = calcNLayers(comp.n0 + comp.n1)
+			xVals: list = list(range(1, layers + 1))
+			xLabels: list = ['' for _ in xVals]
+			aucs: np.ndarray = np.full((layers,), np.nan)
+			varEstimates: np.ndarray = np.full((layers,), np.nan)
+			hmnEstimates: np.ndarray = np.full((layers, layers), np.nan)
+			compLens: np.ndarray = np.full((layers,), np.nan)
+			info: list = [np.nan for i in range(layers)]
 			comp.aucs = aucs
 			comp.pax = ax1
 			comp.plt = plt
@@ -355,7 +389,7 @@ if __name__ == "__main__":
 			comp.xLabels = xLabels
 			print(data)
 			plots = list()
-			for currLayer, (groups, stats) in enumerate(treeMergeSort(data, comp, [(D0, D1)], retStats=True, combGroups=False)):
+			for currLayer, (groups, stats) in enumerate(treeMergeSort(data, comp, [(D0, D1)], combGroups=False)):
 				print(groups)
 				rocs = list()
 				for group in groups:
@@ -365,10 +399,10 @@ if __name__ == "__main__":
 				auc, varEstimate, hanleyMcNeil, lowBoot, highBoot, lowSine, highSine, smVAR, npVAR, *estimates = stats
 				f.write(''.join([str(val)+',' for val in stats]))
 				f.write('\n')
-				aucs[currLayer] = auc
-				varEstimates[currLayer] = varEstimate
-				hmnEstimates[currLayer] = np.append(np.full((layers - len(estimates)), np.nan), estimates)
-				compLens[currLayer] = len(comp)
+				aucs[currLayer]: float = auc
+				varEstimates[currLayer]: float = varEstimate
+				hmnEstimates[currLayer]: np.ndarray = np.append(np.full((layers - len(estimates)), np.nan), estimates)
+				compLens[currLayer]: int = len(comp)
 				for plot in plots:
 					for line in plot:
 						try:
@@ -383,7 +417,7 @@ if __name__ == "__main__":
 				ax2.plot(xVals, hmnEstimates[currLayer], 'b-', lw=5, label=f"prediction {currLayer + 1}", alpha=0.2)
 				ax2.set_xticklabels(xLabels, rotation="vertical")
 				if currLayer > 0:
-					info[currLayer] = ((1 / varEstimates[currLayer]) - (1 / varEstimates[currLayer - 1])) / (compLens[currLayer] - compLens[currLayer - 1])
+					info[currLayer]: float = ((1 / varEstimates[currLayer]) - (1 / varEstimates[currLayer - 1])) / (compLens[currLayer] - compLens[currLayer - 1])
 				else:
 					plots.append(ax3.plot(xVals, xVals, lw=0))
 				plots.append(ax3.plot(xVals, info, c='orange', marker='.', ls='-'))
@@ -391,51 +425,10 @@ if __name__ == "__main__":
 				plots.append(ax4.plot(xVals, compLens, '.-'))
 				plots.append(ax5.plot(*avgROC))
 				if len(groups) == 16:
-					roc4 = avgROC
+					roc4: dict = avgROC
 				plt.tight_layout()
 				ax5.set_aspect('equal', 'box')
 				plt.savefig("temp.svg")
 				replace("temp.svg", "figure.svg")
-		with open("rocs", "wb") as f:
+		with open(argv[3], "wb") as f:
 			dump((avgROC, roc4), f)
-	elif test == 3:
-		from DylData import continuousScale
-		from DylSort import treeMergeSort
-		from DylMath import genROC, avROC
-		import matplotlib.pyplot as plt
-		data, D0, D1 = continuousScale(128, 128)
-		comp = Comparator(data, rand=True)
-		comp.n0 = len(D0)
-		comp.n1 = len(D1)
-		# reconstruct the decisions
-		comp.learn("resGabi/compGabi.csv")
-		l4Groups = list()
-		for i, groups in enumerate(treeMergeSort(data, comp, combGroups=False), start=1):
-			if i == 4:
-				l4Groups = [group[:] for group in groups]
-				roc4 = avROC([genROC(group, D0, D1) for group in groups])
-		roc8 = genROC(groups[0], D1, D0)
-		plt.plot(*zip(*roc8), '-', lw=2, label="layer 8 (emperic)")
-		plt.plot(*roc4, label="layer 4")
-		print(roc4)
-		plt.legend()
-		plt.gca().set_aspect('equal', 'box')
-		with open("rocs", "wb") as f:
-			dump((list(zip(*roc8)), roc4), f)
-		plt.show()
-		#for i, group in enumerate(l4Groups):
-		#	l4Groups[i] = list(map(lambda x: int(x in D1), group))
-		#groups[0] = list(map(lambda x: int(x in D1), groups[0]))
-		#with open("resultsBackup/scaleDylan2.csv") as f:
-		#	posDir, negDir = f.readline().strip().split()
-		#	group = list()
-		#	for line in f:
-		#	line = line.strip().split()
-		#	score = int(line[1])
-		#	if negDir in line[0]:
-		#		group.append(0)
-		#	else:
-		#		group.append(1)
-		#print(group)
-		#with open("4frank", "wb") as f:
-		#	dump((groups[0], l4Groups, group), f)

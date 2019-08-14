@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>main</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/nashome/merge-sort/main.py">/nashome/merge-sort/main.py</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/dylan/Documents/merge-sort/main.py">/home/dylan/Documents/merge-sort/main.py</a></font></td></tr></table>
     <p></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -21,17 +21,29 @@
 <a href="math.html">math</a><br>
 </td><td width="25%" valign=top><a href="matplotlib.html">matplotlib</a><br>
 <a href="numpy.html">numpy</a><br>
-</td><td width="25%" valign=top><a href="pickle.html">pickle</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
+<a href="pickle.html">pickle</a><br>
+</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
 <a href="sys.html">sys</a><br>
-</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+</td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
 <td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-random"><strong>random</strong></a>(...)<font color="#909090"><font face="helvetica, arial"> method of <a href="random.html#Random">random.Random</a> instance</font></font></dt><dd><tt><a href="#-random">random</a>()&nbsp;-&gt;&nbsp;x&nbsp;in&nbsp;the&nbsp;interval&nbsp;[0,&nbsp;1).</tt></dd></dl>
- <dl><dt><a name="-sort"><strong>sort</strong></a>(tid)</dt></dl>
+<td width="100%"><dl><dt><a name="-multiRunner"><strong>multiRunner</strong></a>(sorter, sorterName:str, distributions:list=None, aucs:list=None)</dt><dd><tt>calls&nbsp;the&nbsp;given&nbsp;sorter&nbsp;for&nbsp;either&nbsp;the&nbsp;provided&nbsp;distributions&nbsp;and&nbsp;aucs&nbsp;or&nbsp;the&nbsp;command&nbsp;line&nbsp;arguments:<br>
+command&nbsp;line&nbsp;args&nbsp;as:&nbsp;distributions&nbsp;and&nbsp;aucs&nbsp;each&nbsp;separated&nbsp;by&nbsp;commas&nbsp;no&nbsp;spaces,&nbsp;separated&nbsp;by&nbsp;a&nbsp;space<br>
+sorter&nbsp;must&nbsp;take:&nbsp;one&nbsp;argument&nbsp;that&nbsp;equals&nbsp;(unique&nbsp;threadID,&nbsp;distribution,&nbsp;auc,&nbsp;n0,&nbsp;n1)<br>
+sorter&nbsp;must&nbsp;return:&nbsp;a&nbsp;list&nbsp;of&nbsp;results&nbsp;to&nbsp;be&nbsp;pickled&nbsp;and&nbsp;appended&nbsp;to&nbsp;the&nbsp;file</tt></dd></dl>
+ <dl><dt><a name="-sleep"><strong>sleep</strong></a>(...)</dt><dd><tt><a href="#-sleep">sleep</a>(seconds)<br>
+&nbsp;<br>
+Delay&nbsp;execution&nbsp;for&nbsp;a&nbsp;given&nbsp;number&nbsp;of&nbsp;seconds.&nbsp;&nbsp;The&nbsp;argument&nbsp;may&nbsp;be<br>
+a&nbsp;floating&nbsp;point&nbsp;number&nbsp;for&nbsp;subsecond&nbsp;precision.</tt></dd></dl>
+ <dl><dt><a name="-sort"><strong>sort</strong></a>(args) -&gt; list</dt><dd><tt>Performs&nbsp;a&nbsp;sort&nbsp;based&nbsp;on&nbsp;the&nbsp;given&nbsp;args.<br>
+Args&nbsp;is&nbsp;of&nbsp;the&nbsp;format&nbsp;(dist,&nbsp;auc,&nbsp;n0,&nbsp;n1)&nbsp;and&nbsp;is&nbsp;one&nbsp;tuple/list.<br>
+Throws&nbsp;an&nbsp;error&nbsp;if&nbsp;the&nbsp;array&nbsp;did&nbsp;not&nbsp;sort&nbsp;correctly.<br>
+Returns&nbsp;the&nbsp;results.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">
@@ -39,5 +51,6 @@
 <font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><strong>__annotations__</strong> = {}</td></tr></table>
+<td width="100%"><strong>font</strong> = {'size': 56}<br>
+<strong>norm</strong> = &lt;scipy.stats._continuous_distns.norm_gen object&gt;</td></tr></table>
 </body></html>

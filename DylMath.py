@@ -1,6 +1,5 @@
 import ROC1
 import numpy as np
-import math
 np.set_printoptions(threshold=np.inf)
 np.seterr(all="ignore")
 from tqdm import tqdm
@@ -12,7 +11,7 @@ try:
 	import matplotlib
 	matplotlib.use('QT4Agg')
 	import matplotlib.pyplot as plt
-	font = {'size' : 56}
+	font: dict = {'size' : 56}
 	#matplotlib.rc('font', **font)
 	from matplotlib.collections import PatchCollection
 	from matplotlib.patches import Rectangle
@@ -20,88 +19,97 @@ except BaseException as e:
 	pass
 from DylData import *
 unbiasedMeanMatrixVar = ROC1.unbiasedMeanMatrixVar
-def paramToParams(predicted, D0=None, D1=None):
+def paramToParams(predicted: list, D0: list=None, D1: list=None) -> (list, list, list):
+	"""Takes one parameter and splits it into three if predicted is a 2d list"""
 	if isinstance(predicted[0], (list, tuple)):
 		return predicted[0], predicted[1], predicted[2]
 	else:
 		return predicted, D0, D1
-def se(inp: list, n=None) -> float:
-	"""se(inp) -> standard error of the input
-	inp can be a list or the stdev of the list, in which case
-	n needs to be provided"""
-	return stdev(inp) / math.sqrt(len(n) if n != None else len(inp))
-def pc(arr: list, D0: list, D1: list) -> float:
-	# calc % correct
-	# add up all the times a number is on the correct side
-	# divide by total to get the average
-	pc: float = 0.0
-	for i, val in enumerate(arr):
-		if val in D0:
-			if i < len(D0):
-				pc += 1
-		elif val in D1:
-			if i > len(D0):
-				pc += 1
-	return pc / len(arr)
-def auc(results: tuple, D0=None, D1=None) -> float:
+	
+def auc(results: tuple, D0: list=None, D1: list=None) -> float:
+	""" Takes an ROC curve from genROC and returns the AUC.
+	If results is a prediction not an ROC curve, generates the ROC curve."""
 	if not isinstance(results[0], (list, tuple)):
-		results = genROC(results, D0, D1)
+		results: list = genROC(results, D0, D1)
 	total: float = 0.0
 	for i,(x,y) in enumerate(results[:-1], start=1):
 		# start=1 means i is actually i + 1
 		total += 0.5*(y + results[i][1]) * (x - results[i][0])
 	return -total
-def hanleyMcNeil(auc, n0, n1):
-	# The very good power-law variance estimate from Hanley/McNeil
+
+def hanleyMcNeil(auc: float, n0: int, n1: int) -> float:
+	"""The very good power-law variance estimate from Hanley/McNeil"""
 	auc2=auc*auc
 	q1=auc/(2.-auc)
 	q2=2.*auc2/(1.+auc)
 	return( (auc-auc2+(n1-1.)*(q1-auc2)+(n0-1.)*(q2-auc2))/n0/n1 )
-def aucSM(sm) -> float:
-	return np.mean(sm)
-def calcNLayers(arr) -> int:
-	return math.ceil(math.log2(len(arr)))
-def fRange(stop, step):
-	i = 0
-	while i < stop:
-		yield i
-		i += step
-def MSE(sep, dist, ROC, rocEmpiric=None):
-	step = 10**-4
+
+def calcNLayers(arr: list) -> int:
+	"""Returns the number of layers that would be needed to sort.
+	If arr is the a tuple or list, uses the length.
+	If arr is already the length, uses that."""
+	if isinstance(arr, int):
+		length: int = arr
+	else:
+		length: int = len(arr)
+	return np.ceil(np.log2(length))
+
+def genSep(dist: str, auc: float) -> float:
+	"""Returns the sep parameter needed for the target AUC for the given distribution."""
+	if dist == 'exponential':
+		return abs(auc/(1-auc))
+	elif dist == 'normal':
+		return norm.ppf(auc)*(2**0.5)
+	raise NotImplementedError("Cannot gen sep for that distribution")
+
+def MSE(sep: float, dist: str, ROC: list, rocEmpiric: list=None) -> (float, float, float):
+	"""Returns the MSE of the given ROC with respect to:
+	If sep and dist are not None: the true ROC from sep and dist
+	If rocEmpiric is not None: the MSE between the Empiric and ROC
+	If sep and dist are None, the first value returned is always 0
+	The last value returned is always the AUC of the ROC"""
+	step: float = 10**-4
 	fpf = np.arange(0, 1, step)
 	if len(ROC) == 2:
 		approx = interp1d(*((ROC['x'], ROC['y']) if isinstance(ROC, dict) else ROC))(fpf)
 	else:
 		approx = interp1d(*zip(*ROC))(fpf)
 	if dist == 'exponential':
-		mseTrue = np.mean((approx - (fpf**(1/sep)))**2)
+		mseTrue: float = np.mean((approx - (fpf**(1/sep)))**2)
 	elif dist == 'normal':
-		mseTrue = np.mean((approx - (1-norm.cdf(norm.ppf(1-fpf) - sep)))**2)
+		mseTrue: float = np.mean((approx - (1-norm.cdf(norm.ppf(1-fpf) - sep)))**2)
 	else:
-		mseTrue = 0
+		mseTrue: float = 0.0
 	if rocEmpiric != None:
 		if len(rocEmpiric) == 2:
 			trueApprox = interp1d(rocEmpiric['x'], rocEmpiric['y'])
 		else:
 			trueApprox = interp1d(*zip(*rocEmpiric))
-		mseEmperic = np.mean((approx - (trueApprox(fpf)))**2)
-	calcAUC = np.trapz(approx) / (1/step)
-	return (mseTrue, calcAUC) if rocEmpiric == None else (mseTrue, mseEmperic, calcAUC)
+		mseEmpiric: float = np.mean((approx - (trueApprox(fpf)))**2)
+	calcAUC: float = np.trapz(approx) / (1/step)
+	return (mseTrue, calcAUC) if rocEmpiric == None else (mseTrue, mseEmpiric, calcAUC)
+
 def genX0X1(predicted: tuple, D1: tuple=None, D0: tuple=None) -> (list, list):
+	"""Generates x0 and x1 vectors out of the given parameters.
+	D1 and D0 should never be smaller than the predicted array, but are often bigger."""
 	predicted, D0, D1 = paramToParams(predicted, D0, D1)
-	x0 = list()
-	x1 = list()
+	x0: list = list()
+	x1: list = list()
 	for i, val in enumerate(predicted):
 		if val in D1:
 			x1.append(i)
 		elif val in D0:
 			x0.append(i)
 	return np.array(x0), np.array(x1)
-def genROC(predicted: tuple, D1: tuple=None, D0: tuple=None):
+
+def genROC(predicted: tuple, D1: list=None, D0: list=None) -> list:
+	"""Returns a list of collections of x,y coordinates in order of the threshold"""
 	x0, x1 = genX0X1(predicted, D1, D0)
-	roc = ROC1.rocxy(x1, x0)
+	roc: dict = ROC1.rocxy(x1, x0)
 	return list(zip(roc['x'], roc['y']))
-def graphROC(predicted: tuple, D0=None, D1=None):
+
+def graphROC(predicted: tuple, D0: list=None, D1: list=None):
+	"""Generates and graphs a single ROC curve and displays the results."""
 	predicted, D0, D1 = paramToParams(predicted, D0, D1)
 	fig = plt.figure(figsize=(4,4))
 	ax = fig.add_subplot(111)
@@ -113,18 +121,23 @@ def graphROC(predicted: tuple, D0=None, D1=None):
 	ax.set_xlabel("FPF")
 	ax.set_ylabel("TPF")
 	plt.show()
-def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
-	rows = int(math.ceil(math.sqrt(len(arrays))))
-	cols = int(math.ceil(len(arrays) / rows))
+
+def graphROCs(arrays: list, withPatches: bool=False, withLine: bool=True, D0: list=None, D1: list=None):
+	"""Graphs a collection of array predictions. Takes the arrays as they would come out of DylSort sorts.
+	If withPatches, puts a color coded success matrix behind the line.
+	If withLine, graphs the line.
+	Returns the plt handle, does not display the results."""
+	rows: int = int(np.ceil(np.sqrt(len(arrays))))
+	cols: int = int(np.ceil(len(arrays) / rows))
 	fig, axes = plt.subplots(rows, cols, sharex=True, sharey=True, num="plots")
 	fig.suptitle("ROC curves")
 	if withLine:
-		params = [(array, D0, D1) for array in arrays]
+		params: list = [(array, D0, D1) for array in arrays]
 		if len(arrays[0]) < 1024:
-			results = list(map(genROC, params))
+			results: list = list(map(genROC, params))
 		else:
 			with Pool() as p:
-				results = list(p.imap(genROC,params))
+				results: list = list(p.imap(genROC,params))
 	if withPatches:
 		pbar = tqdm(total=len(arrays)*(len(arrays[0])//2)**2)
 	for i, ax in enumerate(axes.flat if (rows * cols > 1) else [axes]):
@@ -140,11 +153,11 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
 			if not withPatches:
 				ax.set_title(f"Iteration #{i} AUC: {auc(results[i]):.5f}")
 		if withPatches:
-			sm = successMatrix(arrays[i], D0, D1)
-			yes = []
-			no = []
-			yLen = len(D1)
-			xLen = len(D0)
+			sm: np.ndarray = successMatrix(arrays[i], D0, D1)
+			yes: list = []
+			no: list = []
+			yLen: int = len(D1)
+			xLen: int = len(D0)
 			for (y,x), value in np.ndenumerate(sm):
 				if value:
 					yes.append(Rectangle((x/xLen,y/yLen),1/xLen,1/yLen))
@@ -158,7 +171,7 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
 			area = len(yes) / (len(yes) + len(no))
 			ax.set_ylim(top=1, bottom=0)
 			ax.set_xlim(left=0, right=1)
-			ax.set_title(f"Iteration #{i} PC: {int(pc(arrays[i], D0, D1)*100)}% AUC: {area:.5f}")
+			ax.set_title(f"Iteration #{i} AUC: {area:.5f}")
 			ax.set_aspect('equal', 'box')
 	if withPatches:
 		pbar.close()
@@ -166,66 +179,63 @@ def graphROCs(arrays: list, withPatches=False, withLine=True, D0=None, D1=None):
 	figManager.window.showMaximized()
 	#plt.show()
 	return plt
-def avROC(rocs):
+
+def avROC(rocs: list) -> tuple:
+	""" Averages ROC curves. Rocs parameter are ROC curves from genROC."""
 	#hard coded SeSp
 	#e = 9*sys.float_info.epsilon
 	# convert [(x1, y1), (x2, y2) ...] into np array for better arithmatic
-	rocs = [np.array(roc) for roc in rocs]
-	rotrocs = [{'u': tuple((roc[:,0] + roc[:,1])/2), 'v': tuple((roc[:,1]-roc[:,0])/2)} for roc in rocs]
-	stdA = list()
+	rocs: list = [np.array(roc) for roc in rocs]
+	rotrocs: list = [{'u': tuple((roc[:,0] + roc[:,1])/2), 'v': tuple((roc[:,1]-roc[:,0])/2)} for roc in rocs]
+	stdA: list = list()
 	for roc in rotrocs:
 		stdA.extend(roc['u'])
-	stdA = np.array(sorted(set(stdA)))
-	aprotrocs = np.zeros((len(rotrocs), len(stdA)))
+	stdA: np.ndarray = np.array(sorted(set(stdA)))
+	aprotrocs: np.ndarray = np.zeros((len(rotrocs), len(stdA)))
 	for iRoc, roc in enumerate(rotrocs):
 		inter = interp1d(roc['u'], roc['v'])
 		for iU, u in enumerate(stdA):
-			aprotrocs[iRoc][iU] = inter(u)
-	ymean = np.zeros((1, len(stdA)))
+			aprotrocs[iRoc][iU]: float = inter(u)
+	ymean: np.ndarray = np.zeros((1, len(stdA)))
 	for apro in aprotrocs:
 		ymean += apro
 	ymean /= len(aprotrocs)
-	fpout = stdA - ymean
-	tpout = stdA + ymean
+	fpout: np.ndarray = stdA - ymean
+	tpout: np.ndarray = stdA + ymean
 	ret = tpout.tolist(), fpout.tolist()
 	return ret[0][0], ret[1][0]
-def successMatrix(predicted: list, D0: list=None, D1: list=None):
-	if D0 == None:
-		D0 = [i for i in range(len(predicted) // 2)]
-	if D1 == None:
-		D1 = [i for i in range(len(predicted) // 2, len(predicted))]
-	arr = np.full((len(D1), len(D0)), -1)
-	indecies = dict()
+
+def successMatrix(predicted: list, D0: list, D1: list):
+	"""Creates the success matrix for the predicted ordering.
+	Checks to make sure it got every entry filled."""
+	arr: np.ndarray = np.full((len(D1), len(D0)), -1)
+	indecies: dict = dict()
 	for val in D0 + D1:
-		indecies[val] = predicted.index(val)
+		indecies[val]: int = predicted.index(val)
 	for col, x in enumerate(reversed(D0)):
 		for row, y in enumerate(reversed(D1)):
-			arr[row, col] = indecies[x] < indecies[y]
+			arr[row, col]: bool = indecies[x] < indecies[y]
 	if -1 in arr:
 		raise EnvironmentError("failed to create success matrix")
 	return arr
+
 if __name__ == "__main__":
 	from DylSort import mergeSort
-	test = 9
+	test: int = 9
 	if test == 1:
 		#print(D0, D1)
 		newData, D0, D1 = continuousScale("sampledata.csv")
 		print(auc(genROC(newData)))
-		arrays = [newData[:]]
+		arrays: list = [newData[:]]
 		for _ in mergeSort(newData):
 			arrays.append(newData[:])
 		print(arrays)
 		graphROCs(arrays)
-	elif test == 2:
-		predicted = [0, 1, 5, 2, 3, 6, 4, 7, 8, 9]
-		mat = successMatrix(predicted)
-		print(mat)
-		graphROC(predicted)
 	elif test == 3:
-		predicted = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+		predicted: list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19]
 		print(aucSM(successMatrix(predicted, [*range(10)], [*range(10,20)])))
 	elif test == 4:
-		arrays = [[0, 1, 4, 2, 5, 3, 6],
+		arrays: list = [[0, 1, 4, 2, 5, 3, 6],
 			[0, 1, 2, 4, 3, 5, 6],
 			[0, 1, 2, 4, 3, 5, 6],
 			[0, 1, 2, 3, 4, 5, 6]]
@@ -236,23 +246,22 @@ if __name__ == "__main__":
 		from DylSort import treeMergeSort
 		from DylComp import Comparator
 		from DylData import continuousScale
-		from ROC1 import rocxy
 		import matplotlib
-		font = {'size' : 10}
+		font: dict = {'size' : 10}
 		matplotlib.rc('font', **font)
 		data, D0, D1 = continuousScale(128, 128)
-		comp = Comparator(data, rand=True, level=0, seed=15)
+		comp: Comparator = Comparator(data, rand=True, level=0, seed=15)
 		for arr in treeMergeSort(data, comp=comp):
 			pass
 		D0.sort(key = comp.getLatentScore)
 		D1.sort(key = comp.getLatentScore)
-		roc = rocxy(comp.getLatentScore(D1), comp.getLatentScore(D0))
+		roc: dict = ROC1.rocxy(comp.getLatentScore(D1), comp.getLatentScore(D0))
 		graphROCs([arr], True, True, D0, D1)
 	elif test == 7:
-		roc1 = [[0, 0], [0, 1], [1, 1]]
+		roc1: list = [[0, 0], [0, 1], [1, 1]]
 		roc3 = roc2 = roc1
-		roc4 = [[0, 0], [0.5, 0], [0.5, 0.5], [1, 1]]
-		avgROC = avROC([roc1, roc2, roc3, roc4])
+		roc4: list = [[0, 0], [0.5, 0], [0.5, 0.5], [1, 1]]
+		avgROC: tuple = avROC([roc1, roc2, roc3, roc4])
 		fig = plt.figure(figsize=(4,4))
 		ax = fig.add_subplot(111)
 		ax.plot(*zip(*roc1), 'm', label='chunk1', ls='-')
@@ -268,9 +277,9 @@ if __name__ == "__main__":
 		ax.legend()
 		plt.show()
 	elif test == 8:
-		roc1 = [[0,0],[0,0.05],[0,0.1],[0,0.15],[0,0.2],[0,0.25],[0,0.3],[0,0.35],[0,0.4],[0,0.45],[0.1,0.45],[0.1,0.5],[0.1,0.55],[0.1,0.6],[0.1,0.65],[0.2,0.65],[0.3,0.65],[0.3,0.7],[0.4,0.7],[0.5,0.7],[0.5,0.75],[0.5,0.8],[0.5,0.85],[0.5,0.9],[0.5,0.95],[0.5,1],[0.6,1],[0.7,1],[0.8,1],[0.9,1],[1,1]]
-		roc2 = [[0,0],[0,0.1],[0,0.2],[0,0.3],[0,0.4],[0,0.5],[0.06666667,0.5],[0.13333333,0.5],[0.2,0.5],[0.26666667,0.5],[0.26666667,0.6],[0.26666667,0.7],[0.33333333,0.7],[0.4,0.7],[0.4,0.8],[0.4,0.9],[0.4,1],[0.46666667,1],[0.53333333,1],[0.6,1],[0.66666667,1],[0.73333333,1],[0.8,1],[0.86666667,1],[0.93333333,1],[1,1]]
-		avgROC = avROC([roc1, roc2])
+		roc1: list = [[0,0],[0,0.05],[0,0.1],[0,0.15],[0,0.2],[0,0.25],[0,0.3],[0,0.35],[0,0.4],[0,0.45],[0.1,0.45],[0.1,0.5],[0.1,0.55],[0.1,0.6],[0.1,0.65],[0.2,0.65],[0.3,0.65],[0.3,0.7],[0.4,0.7],[0.5,0.7],[0.5,0.75],[0.5,0.8],[0.5,0.85],[0.5,0.9],[0.5,0.95],[0.5,1],[0.6,1],[0.7,1],[0.8,1],[0.9,1],[1,1]]
+		roc2: list = [[0,0],[0,0.1],[0,0.2],[0,0.3],[0,0.4],[0,0.5],[0.06666667,0.5],[0.13333333,0.5],[0.2,0.5],[0.26666667,0.5],[0.26666667,0.6],[0.26666667,0.7],[0.33333333,0.7],[0.4,0.7],[0.4,0.8],[0.4,0.9],[0.4,1],[0.46666667,1],[0.53333333,1],[0.6,1],[0.66666667,1],[0.73333333,1],[0.8,1],[0.86666667,1],[0.93333333,1],[1,1]]
+		avgROC: tuple = avROC([roc1, roc2])
 		fig = plt.figure(figsize=(4,4))
 		ax = fig.add_subplot(111)
 		ax.plot(*zip(*roc1), 'm', label='chunk1', ls=':', marker='o')
@@ -283,24 +292,27 @@ if __name__ == "__main__":
 		from DylComp import Comparator
 		import matplotlib.pyplot as plt
 		from time import time
-		t1 = time()
-		data, D0, D1 = continuousScale(1000, 1000)
-		comp = Comparator(data, rand=True)
+		t1: float = time()
+		data, D0, D1 = continuousScale(2048, 2048)
+		comp: Comparator = Comparator(data, rand=True)
 		comp.genRand(len(D0), len(D1), 7.72, 'exponential')
 		fig = plt.figure()
 		for level, groups in enumerate(treeMergeSort(data, comp, combGroups=False)):
-			rocs = list()
+			rocs: list = list()
 			for group in groups:
-				rocs.append(genROC(group, D0, D1))
-				rocs = list(zip(*avROC(rocs)))
-				rocs.reverse()
-			mse = MSE(7.72, 'exponential', rocs)
+				roc: list = genROC(group, D0, D1)
+				rocs.append(roc)
+			avgROC:tuple = avROC(rocs)
+			rocs: list = list(zip(*avgROC))
+			rocs.reverse()
+			mse: float = MSE(7.72, 'exponential', rocs)
 			#print(*mse, auc(rocs))
 			print(f"{mse[0]:03.3e}, {-auc(rocs):0.3f}, {len(comp)}")
 			ax = fig.add_subplot(3, 4, level + 1)
+			ax.set_aspect('equal', 'box')
 			approx = interp1d(*zip(*rocs), 'linear')
-			ax.plot(list(fRange(1 - 10**-4, 10**-4)), [approx(fp) for fp in fRange(1 - 10**-4, 10**-4)])
-			ax.plot(list(fRange(1 - 10**-4, 10**-4)), [fp**(1/7.72) for fp in fRange(1 - 10**-4, 10**-4)])
+			ax.plot(list(np.arange(0, 1 - 10**-4, 10**-4)), [approx(fp) for fp in np.arange(0, 1 - 10**-4, 10**-4)])
+			ax.plot(list(np.arange(0, 1 - 10**-4, 10**-4)), [fp**(1/7.72) for fp in np.arange(0, 1 - 10**-4, 10**-4)])
 			ax.set(title=f"{mse[0]:03.6e}:{len(comp)}")
 		#plt.subplots_adjust(hspace=0.25)
 		plt.show()

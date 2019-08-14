@@ -1,4 +1,5 @@
 import pickle
+import json
 import ROC1
 import tqdm
 import numpy as np
@@ -6,10 +7,15 @@ np.seterr(divide='ignore', invalid='ignore')
 import matplotlib.pyplot as plt
 from matplotlib.colors import LogNorm
 from os import stat
-from sys import getsizeof
+from sys import getsizeof, argv
 from scipy import stats
+from multiprocessing import Pool
+from DylComp import Comparator
+from DylData import continuousScale
+from DylSort import treeMergeSort
+from DylMath import genX0X1, MSE, auc
 
-def analyze(fileName, length, layers, justOne=False, bar=False):
+def analyze(fileName: str, length: int, layers: int, justOne: bool=False, bar: bool=False) -> tuple:
 	""" analyze a merge sort results file.
 	If justOne is True, only does the first simulation
 	If bar is True, shows a tqdm progress bar"""
@@ -18,32 +24,29 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
 	# create vectors for each statistic for each layer
 	# add each stat, then divide by num of iters to get avg
 	# also record each AUC and var estimate for variance
-	avgAUC = np.zeros((layers,))
-	avgSMVAR = np.zeros((layers,))
-	avgnpVARs = np.zeros((layers,))
-	avgComps = np.zeros((layers,))
-	avgHanleyMNeil = np.zeros((layers,))
-	avgMSETrues = np.zeros((layers,))
-	avgMSEEmperic = np.zeros((layers,))
-	avgPC = np.zeros((layers,))
-	avgErrorBars = np.zeros((layers, 6))
-	avgEstimates = np.array([np.zeros((i)) for i in range(layers)])
-	avgMinSeps = np.ones((layers, length))
-	varEstimates = np.zeros((layers, 0))
-	aucs = np.zeros((layers, 0))
-	iters = 0
-	fileLength = stat(fileName).st_size
-	old = 0
+	avgAUC: np.ndarray = np.zeros((layers,))
+	avgComps: np.ndarray = np.zeros((layers,))
+	avgHanleyMNeil: np.ndarray = np.zeros((layers,))
+	avgMSETrues: np.ndarray = np.zeros((layers,))
+	avgMSEEmpiric: np.ndarray = np.zeros((layers,))
+	avgPC: np.ndarray = np.zeros((layers,))
+	avgEstimates: np.ndarray = np.array([np.zeros((i)) for i in range(layers)])
+	avgMinSeps: np.ndarray = np.ones((layers, length))
+	varEstimates: np.ndarray = np.zeros((layers, 0))
+	aucs: np.ndarray = np.zeros((layers, 0))
+	iters: int = 0
+	fileLength: int = stat(fileName).st_size
+	old: int = 0
 	with open(fileName, "rb") as f, tqdm.tqdm(total=fileLength, unit="B", unit_scale=True, disable=not bar) as pBar:
 		# each simulation is one pickle, so need to depickle one at a time
 		unpickler = pickle.Unpickler(f)
-		reshapeCount = 0 # just for keeping track
+		reshapeCount: int = 0 # just for keeping track
 		# while more stuff to get
 		while f.tell() < fileLength:
-			iteration = unpickler.load()
+			iteration: list = unpickler.load()
 			iters += 1
 			# extrapolate how many iterations are in the file
-			iterEstimate = int(fileLength /(f.tell() / iters))
+			iterEstimate: int = int(fileLength /(f.tell() / iters))
 			# if there is not space for another iteration:
 			if iters > len(aucs[0]):
 				reshapeCount += 1 # for keeping track
@@ -51,35 +54,32 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
 
 				# do this for an array of the predicted iters avoid repeatedly calling the function
 				# use max() to make sure there's at least one extra space
-				new = np.zeros((layers, max(iterEstimate, iters + 1)))
+				new: np.ndarray = np.zeros((layers, max(iterEstimate, iters + 1)))
 				new[:aucs.shape[0], :aucs.shape[1]] = aucs
 				aucs = new
-				new = np.zeros((layers, max(iterEstimate, iters + 1)))
+				new: np.ndarray = np.zeros((layers, max(iterEstimate, iters + 1)))
 				new[:varEstimates.shape[0], :varEstimates.shape[1]] = varEstimates
 				varEstimates = new
 				del new # we don't need it anymore
-			for iLevel, (auc, varEstimate, hanleyMcNeil, lowBoot, highBoot, lowSine, highSine, smVAR, npVAR, *estimates, mseTrue, mseEmperic, compLen, minSeps, pc) in enumerate(iteration):
+			for iLevel, (auc, varEstimate, hanleyMcNeil, estimates, mseTrue, mseEmpiric, compLen, minSeps, pc) in enumerate(iteration):
 				# store results
-				varEstimates[iLevel][iters - 1] = varEstimate
-				aucs[iLevel][iters - 1] = auc
+				varEstimates[iLevel][iters - 1]: float = varEstimate
+				aucs[iLevel][iters - 1]: float = auc
 
 				# add to running total
 				avgHanleyMNeil[iLevel] += hanleyMcNeil
-				avgMSEEmperic[iLevel] += mseEmperic
+				avgMSEEmpiric[iLevel] += mseEmpiric
 				avgMSETrues[iLevel] += mseTrue
 				avgMinSeps[iLevel] += minSeps
 				avgComps[iLevel] += compLen
-				avgnpVARs[iLevel] += npVAR
-				avgSMVAR[iLevel] += smVAR
 				avgAUC[iLevel] += auc
 				avgPC[iLevel] += pc
-				avgErrorBars[iLevel] += [lowBoot, highBoot, lowSine, highSine, 0, 0]
 				avgEstimates[layers - iLevel - 1] += estimates
 
 				# update how many bytes were read
 				pBar.update(f.tell() - old)
-				pBar.desc = f"{iters}/{iterEstimate}, {reshapeCount}, {getsizeof(unpickler)}"
-				old = f.tell()
+				pBar.desc: str = f"{iters}/{iterEstimate}, {reshapeCount}, {getsizeof(unpickler)}"
+				old: int = f.tell()
 
 				if justOne:
 					break
@@ -91,41 +91,29 @@ def analyze(fileName, length, layers, justOne=False, bar=False):
 	varEstimates = varEstimates[:,:iters]
 
 	# need to transpose because numpy is weird
-	avgErrorBars = np.transpose(avgErrorBars / iters)
 	avgAUC = (avgAUC / iters).transpose()
 
 	# divide vectors by iters to get average
 	# // avgComps because can't have fraction of a comparison
 	avgComps = avgComps // iters
 	avgHanleyMNeil /= iters
-	avgMSEEmperic /= iters
+	avgMSEEmpiric /= iters
 	avgEstimates /= iters
 	avgMSETrues /= iters
 	avgMinSeps /= iters
-	avgnpVARs /= iters
-	avgSMVAR /= iters
 	avgPC   /= iters
 
 	# axis=1 is across the simulations
-	varEstimate = np.mean(varEstimates, axis=1)
-	varAUCnp = np.var(aucs, ddof=1, axis=1)
-	stdVarEstimate = np.sqrt(np.var(varEstimates, axis=1, ddof=1))
+	varEstimate: float = np.mean(varEstimates, axis=1)
+	varAUCnp: float = np.var(aucs, ddof=1, axis=1)
+	stdVarEstimate: float = np.sqrt(np.var(varEstimates, axis=1, ddof=1))
 
+	return varEstimate, avgAUC, avgMSETrues, avgMSEEmpiric, avgComps, avgHanleyMNeil, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters
 
-	# arcsine transform, this isn't currently used
-
-	#remainder = int(bin(length)[3:], 2)
-	#thingies = [remainder, length / 2]
-	#for _ in range(2, layers):
-	#	thingies.append(thingies[-1] // 2)
-	#thingies = [1/(2*np.sqrt(thingy)) for thingy in thingies]
-	#avgErrorBars[4] = [np.sin(np.arcsin(np.sqrt(auc)) - thingies[i])**2 for i, auc in enumerate(avgAUC)]
-	#avgErrorBars[5] = [np.sin(np.arcsin(np.sqrt(auc)) + thingies[i])**2 for i, auc in enumerate(avgAUC)]
-	return varEstimate, avgAUC, avgSMVAR, avgnpVARs, avgMSETrues, avgMSEEmperic, avgComps, avgHanleyMNeil, avgErrorBars, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters
-
-def analyzeScale(fileName, names=None):
+def analyzeScale(fileName:str, names:list=None) -> tuple:
 	"""Analyzes a scale study.
-	If names parameter given, filters for only those names"""
+	If names parameter given, filters for only those names.
+	Names can be any type of iterable."""
 	times = list()
 	x0 = list()
 	x1 = list()
@@ -133,13 +121,13 @@ def analyzeScale(fileName, names=None):
 	with open(fileName) as f:
 		posDir, negDir = f.readline().strip().split()
 		for line in f:
-			line = line.rstrip().split()
+			line: list = line.rstrip().split()
 			times.append(float(line[-1]))
-			score = int(line[1])
+			score: int = int(line[1])
 			# DylScale may do more ratings than are needed
 			# this ensures (if the user wants) that they aren't included
 			if not names or line[0] in names:
-				scores[line[0]] = score
+				scores[line[0]]: int = score
 
 	for name in sorted(scores.keys()):
 		if negDir in name:
@@ -149,34 +137,104 @@ def analyzeScale(fileName, names=None):
 	x1, x0 = np.array(x1), np.transpose(x0)
 	return times, x0, x1, scores
 
-def analyzeAFC(fileName):
+def analyzeAFC(log: str, results: str, n0: int, n1: int) -> tuple:
+	"""extracts the times out of the log file generated from DylAFC
+	extracts the x0 and x1 vectors and the ranks from the results file from DylComp"""
 	times = list()
-	with open(fileName) as f:
+	with open(log) as f:
 		for line in f:
-			line = line.strip().split()
+			line: list = line.strip().split()
 			times.append(float(line[-1]))
-	return times
+
+	data, D0, D1 = continuousScale(n0, n1)
+	comp = Comparator(data, rand=True)
+	comp.learn(results)
+	for arr in treeMergeSort(data[:], comp):
+		pass
+	indeciesAFC: list = [arr.index(i) for i in range(256)]
+	x0, x1 = genX0X1(arr, D1, D0)
+	x0: np.ndarray = np.array([indeciesAFC[i] for i in range(128)])
+	x1: np.ndarray = np.array([indeciesAFC[i] for i in range(128, 256)])
+	return times, x0, x1, indeciesAFC
+
+def analyzeReaderStudies(resultsFile, directory, n0):
+	scale: float = 10**-4
+	roc8s = list()
+	roc4s = list()
+	rocScales = list()
+	AUCss = list()
+	VARss = list()
+	PCss = list()
+	with open("results.json") as f:
+		results = json.load(f)
+	results = {"Reader A":("resGabi/scaleGabi.csv1565102893.2022426", "resGabi/log2.csv", "resGabi/rocs", "resGabi/compGabi.csv"), "Reader B":("resFrank/scaleFrank.csv1565098562.1623092", "resFrank/log2.csv", "resFrank/rocs", "resFrank/results.csv"), "Reader C":("resDylan/scaleDylan2.csv", "resDylan/log2.csv", "resDylan/rocs", "resDylan/compDylan.csv")}
+	readers = results.keys()
+	for reader, val in results.items():
+		AUCs = list()
+		VARs = list()
+		PCs = list()
+		c = 0
+		possibleC = 0
+		with open(val[3]) as f:
+			for comps, line in enumerate(f, start=-1):
+				line = line.split(',')
+				comps = comps - len(AUCs)
+				if len(line) > 5: # stats line
+					AUCs.append((comps, float(line[0])))
+					VARs.append((comps, float(line[1])))
+					PCs.append((comps, c / (possibleC)))
+					possibleC = 0
+					c = 0
+				elif comps > -1:
+					id0 = int(line[0])
+					id1 = int(line[1])
+					if (id0 < n0) ^ (id1 < n0):
+						possibleC += 1
+						if int(line[2]) == max(id0, id1):
+							c += 1
+
+		AUCss.append(AUCs)
+		VARss.append(VARs)
+		PCss.append(PCs)
+		scaleTimes, x0, x1, _ = analyzeScale(val[0])
+		scaleROC = ROC1.rocxy(x1, x0)
+		scaleVAR = ROC1.unbiasedAUCvar(x1, x0)
+		scaleAUC = ROC1.auc(x1, x0)
+		scaleTimes = list(filter(lambda x: x < 10, scaleTimes))
+		mergeTimes, *_ = analyzeAFC(val[1], val[3], 128, 128)
+		mergeTimes = list(filter(lambda x: x < 5, mergeTimes))
+		xmax = np.append(scaleTimes, mergeTimes).max()
+		kernal = stats.gaussian_kde(scaleTimes)
+		xVals = np.linspace(0, xmax, 1000)
+		#ax1.fill_between(xVals, kernal(xVals), label="scale", alpha=0.5)
+		kernal = stats.gaussian_kde(mergeTimes)
+		xVals = np.linspace(0, xmax, 1000)
+		with open(val[2], "rb") as f:
+			roc8, roc4 = pickle.load(f)
+		roc8s.append((roc8, reader, auc(list(zip(*roc8)))))
+		roc4s.append((roc4, reader, auc(list(zip(*roc4)))))
+		rocScales.append((scaleROC, reader, scaleAUC, scaleVAR))
+	#plt.axis('equal')
+	return AUCss, VARss, PCss, readers, rocScales, roc8s, roc4s
+
 
 if __name__ == "__main__":
-	test = 1
+	if len(argv) > 3:
+		test: int = -1
+	elif 'json' in argv[1]:
+		test: int = 2
+	else:
+		test: int = 1
 	if test == 1:
-		# first shows the plot of MSEs
-		# then shows the 5 plot dashboard for studies
-		length = 256
-		layers = 8
-		varEstimate, avgAUC, avgSMVAR, avgnpVARs, avgMSETrues, avgMSEEmperic, avgComps, avgHanleyMNeil, avgErrorBars, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters = analyze("resultsMergeExponential85", length, layers, bar=True)
-		plt.plot(avgComps, avgMSEEmperic, label='emperic')
-		plt.plot(avgComps, avgMSETrues, label='true')
-		plt.legend()
-		plt.show()
-		labels = [f'{np.median(list(filter(lambda x: x != 0, avgMinSeps[0]))):3.02f}']
+		# Shows the 5 plot dashboard for studies
+		length: int = 256
+		layers: int = 8
+		varEstimate, avgAUC, avgMSETrues, avgMSEEmpiric, avgComps, avgHanleyMNeil, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters = analyze("resultsMergeNormal85", length, layers, bar=True)
+		labels: list = [f'{np.median(list(filter(lambda x: x != 0, avgMinSeps[0]))):3.02f}']
 		for val in np.median(avgMinSeps, axis=0)[1:]:
 			labels.append(f'{val:3.02f}')
-		slopeFirst = (varEstimate[1]/avgHanleyMNeil[1]) - (varEstimate[0]/avgHanleyMNeil[0])
-		slopeTotal = slopeFirst / 3
-		hanleyMcNeilToVarEstimate = [avgHanleyMNeil[i] * (1 + i * slopeTotal) for i in range(layers)]
 		tickLabels = ['0'] + [str(int(n)) for n in avgComps]
-		xVals = avgComps
+		xVals: list = avgComps
 
 		fig = plt.figure()
 		ax1 = fig.add_subplot(2, 3, 1)
@@ -191,7 +249,8 @@ if __name__ == "__main__":
 		ax2.errorbar(xVals, varEstimate, yerr=stdVarEstimate, c='r', marker='.', ls=':', lw=2, label='$var_{estimate}$')
 		ax2.plot(xVals, avgHanleyMNeil, 'c.', ls='-', lw=2, label='HmN Variance')
 		for layer in range(1, layers):
-			estimate = avgEstimates[layer - 1]
+			# estimate is a list of where that layer estimated the HmN variances would be
+			estimate: list = avgEstimates[layer - 1]
 			for i, point in enumerate(estimate):
 				pass #uncomment next line and comment this one to draw text where the estimates were
 				#ax2.text(layer + 1, point, str(i), fontsize=12, horizontalalignment='center', verticalalignment='center')
@@ -199,10 +258,10 @@ if __name__ == "__main__":
 		ax2.set_title("Variance Estimate per Layer")
 
 		ax3 = fig.add_subplot(2, 3, 3)
-		info = [-1 for i in range(layers - 1)]
+		info: list = [-1 for i in range(layers - 1)]
 		for layer in range(layers - 1):
 			try:
-				info[layer] = ((1/varEstimate[layer + 1]) - (1/varEstimate[layer]))/(avgComps[layer + 1] - avgComps[layer])
+				info[layer]: float = ((1/varEstimate[layer + 1]) - (1/varEstimate[layer]))/(avgComps[layer + 1] - avgComps[layer])
 			except ZeroDivisionError:
 				print(varEstimate, avgComps)
 		ax3.plot(xVals[1:], info, marker='.')
@@ -219,7 +278,7 @@ if __name__ == "__main__":
 		plot = ax5.imshow(avgMinSeps,norm=LogNorm(), extent=[0, length, 0, length], aspect=0.5)
 		ax5.set_xticks([*range(length//(2*layers), length, int((layers / (layers - 1))*(length//layers)))])
 		start, end = ax5.get_xlim()
-		step = length / (layers - 1)
+		step: float = length / (layers - 1)
 		ax5.set_xticks(np.arange(start + (step / 2), end + (step / 2), step))
 		ax5.set_xticklabels(tickLabels[1:])
 		cbaxes = fig.add_axes([0.91, 0.13, 0.01, 0.31])
@@ -229,163 +288,136 @@ if __name__ == "__main__":
 		plt.subplots_adjust(wspace=0.45)
 		plt.show()
 	elif test == 2:
-		from DylComp import Comparator
-		from DylData import continuousScale
-		from DylSort import treeMergeSort
-		from DylMath import genX0X1, MSE
-		from multiprocessing import Pool
 
-		def bootstrapTau(arr):
-			ranks = arr[:,np.random.randint(len(arr[0]), size=len(arr[0]))]
+		def bootstrapTau(arr: list):
+			"""function for permuting the columns of the array with replacement"""
+			ranks: np.ndarray = arr[:,np.random.randint(len(arr[0]), size=len(arr[0]))]
 			return stats.kendalltau(ranks[0], ranks[1])[0]
 
-		def eachreader(x):
-			rA1=x[0][128:(2*128)]
-			rA0=x[0][0:128]
-			rB1=x[1][128:(2*128)]
-			rB0=x[1][0:128]
-			sA=ROC1.successmatrix(rA1,rA0)
-			sB=ROC1.successmatrix(rB1,rB0)
-			return ROC1.unbiasedMeanMatrixVar(sB-sA)
-
-		def permutation(arr, D0, D1):
-			indecies = np.random.randint(2, size=len(arr[0]))
-			scales = arr[indecies, range(len(arr[0]))]
-			afcs = arr[1 - indecies, range(len(arr[0]))]
+		def permutation(arr: list, D0: list, D1: list):
+			"""permutation test for MSEs"""
+			indecies: np.ndarray = np.random.randint(2, size=len(arr[0]))
+			scales: np.ndarray = arr[indecies, range(len(arr[0]))]
+			afcs: np.ndarray = arr[1 - indecies, range(len(arr[0]))]
 			x0 = [scales[i] + 1 for i in range(128)]
 			x1 = [scales[i] + 1 for i in range(128, 256)]
-			scaleROC = ROC1.rocxy(x1, x0)
+			scaleROC: dict = ROC1.rocxy(x1, x0)
 			x0 = [afcs[i] + 1 for i in range(128)]
 			x1 = [afcs[i] + 1 for i in range(128, 256)]
-			afcROC = ROC1.rocxy(x1, x0)
+			afcROC: dict = ROC1.rocxy(x1, x0)
 			return MSE(None, None, scaleROC, afcROC)[1]
 
-		data, D0, D1 = continuousScale(128, 128)
-		results = {	"Reader A":("resGabi/scaleGabi.csv1565102893.2022426", "resGabi/log2.csv", "resGabi/rocs", "resGabi/compGabi.csv"),
-					"Reader B":("resFrank/scaleFrank.csv1565098562.1623092", "resFrank/log2.csv", "resFrank/rocs", "resFrank/results.csv"),
-					"Reader C":("resDylan/scaleDylan2.csv", "resDylan/log2.csv", "resDylan/rocs", "resultsBackup/resultsDylan.csv")}
-		with open("names.txt") as f:
-			names = f.read().split()
-		ids = list()
-		for i, name in enumerate(sorted(names)):
-			names[i] = ''.join(filter(lambda x: not x in "',][ ", name))
-			ids.append(names[i])
-		fig, (scatterAxes, timeAxes) = plt.subplots(ncols=3, nrows=2)
-		#masterRanks = np.zeros((len(results.keys()), 2, 256))
-		print("reader   \tscale mean\tscale std\tmerge mean\tmerge std")
-		print('-'*90)
-		for i, (reader, files) in enumerate(results.items()):
-			comp = Comparator(data, rand=True)
-			comp.learn(files[3])
-			for arr, sortstats in treeMergeSort(data[:], comp, statParams=[(D0, D1)], retStats=True):
-				pass
-			indeciesAFC = [arr.index(i) for i in range(256)]
-			x0, x1 = genX0X1(arr, D1, D0)
-			x0 = np.array([indeciesAFC[i] for i in range(128)])
-			x1 = np.array([indeciesAFC[i] for i in range(128, 256)])
-			#print(x0)
-			afcSMData = ROC1.successmatrix(x1, x0)
-			afcROC = ROC1.rocxy(x1, x0)
-			sortstats[0] = ROC1.auc(x1, x0)
-			scaleTimes, x0, x1, scoresScale = analyzeScale(files[0], names=names)
-			#print(x0,x1)
-			scaleSMData = ROC1.successmatrix(x1, x0)
+		n0: int = 128
+		n1: int = 128
 
-			mergeTimes = analyzeAFC(files[1])
-			scaleTimes = list(filter(lambda x: x < 10, scaleTimes))
-			mergeTimes = list(filter(lambda x: x < 5, mergeTimes))
-			xmax = np.append(scaleTimes, mergeTimes).max()
-			kernal = stats.gaussian_kde(scaleTimes)
-			xVals = np.linspace(0, xmax, 1000)
-			timeAxes[i].fill_between(xVals, kernal(xVals), label="scale", alpha=0.5)
+		with open("results.json") as f:
+			results: dict = json.load(f)
+		with open("names.txt") as f:
+			names: list = f.read().split()
+		if max((len(files) for files in results.values())) == 4:
+			fig, (scatterAxes, timeAxes, tauAxes) = plt.subplots(ncols=3, nrows=3)
+		else:
+			fig, (timeAxes) = plt.subplots(ncols=3, nrows=1)
+		fontSize: int = 8
+		plt.rcParams["font.size"] = fontSize
+		line = "reader\t(scaleTimes)\tstd(scaleTimes)\tmean(mergeTimes)\tstd(mergeTimes)\ttau\tstd(taus)"
+		print(line)
+		print('-' * int(len(line) * 1.2))
+		for i, (reader, files) in enumerate(results.items()):
+
+			afcTime, afcX0, afcX1, afcRanks = analyzeAFC(files[0], files[2], n0, n1)
+			mergeTimes: list = list(filter(lambda x: x < 5, afcTime))
+
+			if len(files) == 4:
+				scaleTimes, x0, x1, scoresScale = analyzeScale(files[3], names=names)
+				scaleSMData: np.ndarray = ROC1.successmatrix(x1, x0)
+				scaleTimes: list = list(filter(lambda x: x < 10, scaleTimes))
+
+			if len(files) == 4:
+				xmax: float = np.append(scaleTimes, mergeTimes).max()
+				kernal = stats.gaussian_kde(scaleTimes)
+				xVals: np.ndarray = np.linspace(0, xmax, 1000)
+				timeAxes[i].fill_between(xVals, kernal(xVals), label="scale", alpha=0.5)
+			else:
+				xmax = max(mergeTimes)
+
 			kernal = stats.gaussian_kde(mergeTimes)
-			xVals = np.linspace(0, xmax, 1000)
+			xVals: np.ndarray = np.linspace(0, xmax, 1000)
 			timeAxes[i].fill_between(xVals, kernal(xVals), label="merge", alpha=0.5)
 
 			timeAxes[i].legend()
 			timeAxes[i].set_ylim(bottom=0)
 			timeAxes[i].set_xlim(left=0, right=xmax)
-			#timeAxes[i].set_xscale("log")
-			timeAxes[i].set_ylabel("percentage")
-			timeAxes[i].set_xlabel("time")
+			timeAxes[i].set_ylabel("Percentage")
+			timeAxes[i].set_xlabel("Time")
+			timeAxes[i].set_title("Times")
+			if len(files) == 4:
+				ranks: np.ndarray = np.zeros((2, n0 + n1))
+				for x, name in enumerate(sorted(names)):
+					ranks[0, x] = scoresScale[name]
+					ranks[1, x] = afcRanks[x]
+				ranks[0] = stats.rankdata(ranks[0])
+				ranks[1] = stats.rankdata(ranks[1])
+				scaleROC: dict = ROC1.rocxy(x1, x0)
 
-			ranks = np.zeros((2, 256))
-			#print(*enumerate(sorted(names)) )
-			for x, name in enumerate(sorted(names)):
-				ranks[0, x] = scoresScale[name]
-				ranks[1, x] = indeciesAFC[x]
-			ranks[0] = stats.rankdata(ranks[0])
-			ranks[1] = stats.rankdata(ranks[1])
-			#for x, name in enumerate(sorted(names)):
-			#	timeAxes[i].scatter(scoresScale[name], ranks[0, x], c='b', s=x/256)
-			#timeAxes[i].set_xlabel("score")
-			#timeAxes[i].set_ylabel("rank")
-			#timeAxes[i].set_aspect('equal', 'box')
+				x0 = ranks[0][0:n0]
+				x1 = ranks[0][n0:n0 + n1]
+				scaleSM = ROC1.successmatrix(x1, x0)
+				scaleAUC = ROC1.auc(x1, x0)
+				
+				afcSM = ROC1.successmatrix(afcX1, afcX0)
+				afcAUC = ROC1.auc(afcX1, afcX0)
+				afcROC = ROC1.rocxy(x1, x0)
 
-			scaleROC = ROC1.rocxy(x1, x0)
+				mse: float = MSE(None, None, scaleROC, afcROC)[1]
 
-			x0 = ranks[0][0:128]
-			x1 = ranks[0][128:256]
-			#print(x0,x1)
-			scaleSM = ROC1.successmatrix(x1, x0)
-			scaleAUC = ROC1.auc(x1, x0)
-			x0 = ranks[1][0:128]
-			x1 = ranks[1][128:256]
-			#print(x0)
-			afcSM = ROC1.successmatrix(x1, x0)
-			afcAUC = ROC1.auc(x1, x0)
+				scatterAxes[i].plot([0, n0 + n1], [0, n0 + n1], 'r:')
+				for x in range(n0):
+					scatterAxes[i].scatter(ranks[0][x], ranks[1][x], c="b", marker="^", s=2)
+				for x in range(n0, n0 + n1):
+					scatterAxes[i].scatter(ranks[0][x], ranks[1][x], c="g", marker="o", s=2)
+				#scatterAxes[i].text(20, (n0 + n1)*0.9, reader[-1])
+				scatterAxes[i].set_aspect('equal', 'box')
+				tau: float = stats.kendalltau(ranks[0], ranks[1])[0]
+				scatterAxes[i].set_xticks([1, (n0 + n1) // 2, n0 + n1])
+				scatterAxes[i].set_yticks([1, (n0 + n1) // 2, n0 + n1])
+				scatterAxes[i].set_xticklabels([str(x) for x in [1, (n0 + n1) // 2, n0 + n1]], fontsize=fontSize)
+				scatterAxes[i].set_yticklabels([str(x) for x in [1, (n0 + n1) // 2, n0 + n1]], fontsize=fontSize)
+				scatterAxes[i].set_title(reader)
+				scatterAxes[i].set_xlabel("Image Ranks from Rating Data", fontsize=fontSize)
+				scatterAxes[i].set_ylabel("Image Ranks from 2AFC Merge", fontsize=fontSize)
 
-			mse = MSE(None, None, scaleROC, afcROC)[1]
+				with Pool(8, initializer=np.random.seed) as p:
+						taus = p.map(bootstrapTau, (ranks for _ in range(1_000)))
+						mses = p.starmap(permutation, ((ranks, list(range(n0)), list(range(n0, n1))) for _ in range(1_000)))
 
-			scatterAxes[i].plot([0, 256], [0, 256], 'r:')
-			for x in range(256):
-				scatterAxes[i].scatter(ranks[0][x], ranks[1][x], c='b', s=1)
-			scatterAxes[i].set_aspect('equal', 'box')
-			tau = stats.kendalltau(ranks[0], ranks[1])[0]
-			scatterAxes[i].set_title(reader)
-			scatterAxes[i].set_xlabel("scale")
-			scatterAxes[i].set_ylabel("AFC")
+				xmax: float = max(taus)
+				kernal = stats.gaussian_kde(taus)
+				xVals: np.ndarray = np.linspace(0, xmax, 1000)
+				tauAxes[i].set_title("Kendall's Tau")
+				tauAxes[i].fill_between(xVals, kernal(xVals))
+				tauAxes[i].set_ylim(bottom=0)
 
-			with Pool(8, initializer=np.random.seed) as p:
-				taus = p.map(bootstrapTau, (ranks for _ in range(1_000)))
-				mses = p.starmap(permutation, ((ranks, D0, D1) for _ in range(1)))
-			#tauAxes[i].hist(taus, alpha=0.5, color='red', density=True)
-			#xmax = max(taus)
-			#kernal = stats.gaussian_kde(taus)
-			#xVals = np.linspace(0, xmax, 1000)
+				p = np.mean([mse < permutted for permutted in mses])
 
-			#mseAxes[i].hist(mses, alpha=0.5, color='red', density=True)
-			#print(mses)
-			p = np.mean([mse < permutted for permutted in mses])
-			#xmax = max(mses)
-			#kernal = stats.gaussian_kde(mses)
-			#xVals = np.linspace(0, xmax, 1000)
-
-			dSM = afcSM - scaleSM
-			varDSM = ROC1.unbiasedMeanMatrixVar(dSM)
-			dAUC = np.mean(afcSM) - np.mean(scaleSM)
-			stdDSM = np.sqrt(varDSM)
-			z = np.abs(dAUC / stdDSM) # how many standard deviations away it is
-			wald = 2 * (1 - stats.norm.cdf(z))
-			#print(dAUC, varDSM)
-			scatterAxes[i].set_title(f"$\\tau_k={tau:0.3f}\\pm{np.std(taus):0.3f}$")
-			print(f"{reader} & ${np.mean(scaleTimes):0.3f}\\pm{np.std(scaleTimes):0.3f}$ & ${np.mean(mergeTimes):0.3f}\\pm{np.std(mergeTimes):0.3f}$\t{np.std(taus):0.7f}")
-			#print(reader, wald, sep='\t')
-			#tauAxes[i].imshow(scaleSM - scaleSMData)
-			#tauAxes[i].set_title(np.mean(scaleSM - scaleSMData))
-			#mseAxes[i].imshow(afcSM - afcSMData)
-			#mseAxes[i].set_title(np.mean(afcSM - afcSMData))
-
-			#masterRanks[i] = ranks
-
-		figManager = plt.get_current_fig_manager()
-		figManager.window.showMaximized()
-		plt.subplots_adjust(top=0.957,
-							bottom=0.066,
-							left=0.039,
-							right=0.991,
-							hspace=0.161,
-							wspace=0.136)
-		plt.show()
-		#for ranks in masterRanks:
-			#print(eachreader(ranks))
+				dSM = afcSM - scaleSM
+				varDSM: float = ROC1.unbiasedMeanMatrixVar(dSM)
+				dAUC: float = np.mean(afcSM) - np.mean(scaleSM)
+				stdDSM: float = np.sqrt(varDSM)
+				z: float = np.abs(dAUC / stdDSM) # how many standard deviations away it is
+				wald: float = 2 * (1 - stats.norm.cdf(z))
+			else:
+				scaleTimes: list = [0]
+				taus: list = [0]
+				tau: int = 0
+			
+			print(f"{reader} {np.mean(scaleTimes):0.3f}\t\t{np.std(scaleTimes):0.3f}\t\t{np.mean(mergeTimes):0.3f}\t\t\t{np.std(mergeTimes):0.3f}\t\t{tau:0.3f}\t{np.std(taus):0.3f}")
+		fig.set_size_inches(12, 8)
+		if len(argv) == 3:
+			plt.savefig(argv[2], bbox_inches = 'tight', pad_inches = 0)
+		else:
+			plt.show()
+	else:
+		print("Usage:")
+		print(f"{__file__} [json results file] [optional output directory]")
+		print(f"{__file__} [simulation results file]")

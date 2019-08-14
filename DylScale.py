@@ -4,60 +4,64 @@ from tkinter.constants import *
 from tkinter import *
 from PIL import ImageTk, Image, ImageDraw
 from time import time
+from numpy.random import shuffle
 class Rating:
-	def __init__(self, posDir, negDir, n, outputFile, label):
-		self.decision = -1
-		self.ready = True
-		self.posDir = posDir
-		self.negDir = negDir
-		self.counter = 0
-		self.percent = -1
-		self.n = int(n)
-		self.f = open(outputFile + str(time()), "w")
+	"""A class for displaying an image and recording the ratins and timings of the reader.
+	Label parameter is the label where the image is going to be drawn.
+	User must assign the instantiated rating class a canvas for drawing a bar where the reader clicked."""
+	def __init__(self, posDir: str, negDir: str, n: int, outputFile: str, label: Label):
+		self.decision: int = -1
+		self.posDir: str = posDir
+		self.negDir: str = negDir
+		self.counter: int = 0
+		self.percent: int = -1
+		self.n: int = int(n)
+		self.f = open(outputFile + str(time() + ".csv"), "w")
 		self.f.write(posDir + ' ' + negDir + '\n')
 		# get pics
-		#posNames = [self.posDir + img for img in os.listdir(self.posDir)][:self.n // 2]
-		#negNames = [self.negDir + img for img in os.listdir(self.negDir)][:self.n // 2 + self.n % 2]
-		self.n0 = 2#len(negNames)
-		self.n1 = 2#len(posNames)
-		#names = negNames + posNames
+		posNames: list = [self.posDir + img for img in sorted(os.listdir(self.posDir))][:self.n // 2]
+		negNames: list = [self.negDir + img for img in sorted(os.listdir(self.negDir))][:self.n // 2 + self.n % 2]
+		self.n0: int = len(negNames)
+		self.n1: int = len(posNames)
+		names: list = negNames + posNames
 		#print(len(names))
-		names = ["/nashome/images/testImages2/targetAbsentImages/SImage097987.jpeg",
-				"/nashome/images/testImages2/targetAbsentImages/SImage488310.jpeg",
-				"/nashome/images/testImages2/targetPresentImages/SImage056304.jpeg",
-				"/nashome/images/testImages2/targetPresentImages/SImage623312.jpeg"]
-		self.images = [Image.open(name) for name in names]
+		self.images: list = [Image.open(name) for name in names]
 		for img in self.images:
 			img.thumbnail((IMGWIDTH, IMGHEIGHT))
-		self.images = [ImageTk.PhotoImage(img) for img in self.images]
+		self.images: list = [ImageTk.PhotoImage(img) for img in self.images]
 		for i, image in enumerate(self.images):
 			setattr(image, "filename", names[i])
 		shuffle(self.images)
 		self.label = label
 		print()
-	def next(self, event=None):
+
+	def next(self, event: Event=None):
 		if self.percent != -1:
 			if hasattr(self, "frame"):
-				self.frame.delete("bar")
+				self.canvas.delete("bar")
 				self.f.write(f"{self.images[self.counter].filename} {self.percent} {time() - self.t1}\n")
-				self.t1 = time()
-				self.percent = -1
+				self.t1: float = time()
+				self.percent: int = -1
 			if self.counter < self.n - 1:
 				self.counter += 1
 				print(f"\r{int(100 * self.counter / self.n)}%", end='')
-				self.label.configure(image = self.images[self.counter])
+				self.label.configure(image=self.images[self.counter])
 				self.label.image = self.images[self.counter]
-			elif hasattr(self, "frame"):
+			elif hasattr(self, "canvas"):
 				self.f.close()
-				self.frame.master.destroy()
+				self.canvas.master.destroy()
 				print()
-	def drawBar(self, event):
-		if not hasattr(self, "frame"):
-			raise Exception("Need to set Rating.frame")
-		self.percent = round(((IMGHEIGHT - event.y) / IMGHEIGHT) * 100)
-		self.frame.delete("bar")
-		self.frame.create_rectangle(0, event.y, 100, event.y + 2, fill="blue", tags=("bar"))
+
+	def drawBar(self, event: Event):
+		if not hasattr(self, "canvas"):
+			raise Exception("Need to set Rating.canvas")
+		self.percent: int = round(((IMGHEIGHT - event.y) / IMGHEIGHT) * 100)
+		self.canvas.delete("bar")
+		self.canvas.create_rectangle(0, event.y, 100, event.y + 2, fill="blue", tags=("bar"))
+
 def hex2rgb(str_rgb):
+	"""A function that takes hex values and converts them to rgb"""
+	#https://github.com/vaab/colour/blob/master/colour.py
 	try:
 		rgb = str_rgb[1:]
 		if len(rgb) == 6:
@@ -70,6 +74,8 @@ def hex2rgb(str_rgb):
 		raise ValueError("Invalid value %r provided for rgb color."% str_rgb)
 	return tuple(int(v, 16) for v in (r, g, b))
 class GradientFrame(Canvas):
+	"""A canvas with a gradient drawn on it."""
+	#https://stackoverflow.com/questions/11892521/tkinter-custom-window
 	def __init__(self, master, from_color, to_color, width=None, height=None, orient=HORIZONTAL, steps=None, **kwargs):
 		Canvas.__init__(self, master, **kwargs)
 		if steps is None:
@@ -117,6 +123,7 @@ class GradientFrame(Canvas):
 				draw.rectangle((x0, 0, x1, img_height), fill=(int(r),int(g),int(b)))
 		self._gradient_photoimage = ImageTk.PhotoImage(image)
 		self.create_image(0, 0, anchor=NW, image=self._gradient_photoimage)
+		
 if len(argv) == 2:
 	import ROC1
 	import matplotlib.pyplot as plt
@@ -152,10 +159,9 @@ if len(argv) == 2:
 	plt.show()
 elif len(argv) != 5:
 	print(f"Usage: \n\tpython3 {__file__} [signal present directory] [signal absent directory] [n] [output file] \n\tpython3 {__file__} [results file]")
-	exit(0)
 else:
-	IMGWIDTH = 600
-	IMGHEIGHT = 600
+	IMGWIDTH: int = 600
+	IMGHEIGHT: int = 600
 	root = Tk()
 	#root.geometry("800x800")
 	title = Label(root, text="Choose the percent chance of there being a signal")
@@ -164,15 +170,15 @@ else:
 	rating = Rating(*argv[1:], label)
 	label.configure(image=rating.images[0])
 	label.grid(row=1, column=0)
-	text0 = Label(root, text="0")
-	text0.grid(row=1, column=1, sticky=SE)
-	text50 = Label(root, text="50")
-	text50.grid(row=1, column=1, sticky=E)
-	text100 = Label(root, text="100")
-	text100.grid(row=1, column=1, sticky=NE)
+	ticks = Frame(root)
+	ticks.grid(row=1, column=1)
+	for tickmark in range(0, 110, 10):
+		text = Label(ticks, text=str(tickmark))
+		row: int = 10-(tickmark//10)
+		text.grid(row=row, column=0, sticky=E, pady=18)
 	gradient = GradientFrame(root, from_color="#000000", to_color="#FFFFFF", height=IMGHEIGHT, width=100, orient=HORIZONTAL)
 	gradient.grid(row=1, column=2)
-	rating.frame = gradient
+	rating.canvas = gradient
 	gradient.bind("<Button-1>", rating.drawBar)
 	button = Button(text="next", command=rating.next)
 	button.grid(row=2, column=2)

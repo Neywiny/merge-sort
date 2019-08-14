@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>DylMath</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/nashome/merge-sort/DylMath.py">/nashome/merge-sort/DylMath.py</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/dylan/Documents/merge-sort/DylMath.py">/home/dylan/Documents/merge-sort/DylMath.py</a></font></td></tr></table>
     <p></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -18,9 +18,9 @@
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ROC1.html">ROC1</a><br>
-</td><td width="25%" valign=top><a href="math.html">math</a><br>
 </td><td width="25%" valign=top><a href="matplotlib.html">matplotlib</a><br>
 </td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
@@ -28,19 +28,38 @@
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-auc"><strong>auc</strong></a>(results:tuple) -&gt; float</dt></dl>
- <dl><dt><a name="-aucSM"><strong>aucSM</strong></a>(sm) -&gt; float</dt></dl>
- <dl><dt><a name="-genROC"><strong>genROC</strong></a>(predicted:tuple, D0:tuple=None, D1:tuple=None) -&gt; tuple</dt></dl>
- <dl><dt><a name="-graphROC"><strong>graphROC</strong></a>(predicted:tuple, D0=None, D1=None)</dt></dl>
- <dl><dt><a name="-graphROCs"><strong>graphROCs</strong></a>(arrays:list, withPatches=False, withLine=True)</dt></dl>
- <dl><dt><a name="-pc"><strong>pc</strong></a>(arr:list) -&gt; float</dt></dl>
- <dl><dt><a name="-random"><strong>random</strong></a>(...)<font color="#909090"><font face="helvetica, arial"> method of <a href="random.html#Random">random.Random</a> instance</font></font></dt><dd><tt><a href="#-random">random</a>()&nbsp;-&gt;&nbsp;x&nbsp;in&nbsp;the&nbsp;interval&nbsp;[0,&nbsp;1).</tt></dd></dl>
- <dl><dt><a name="-se"><strong>se</strong></a>(inp:list, n=None) -&gt; float</dt><dd><tt><a href="#-se">se</a>(inp)&nbsp;-&gt;&nbsp;standard&nbsp;error&nbsp;of&nbsp;the&nbsp;input<br>
-inp&nbsp;can&nbsp;be&nbsp;a&nbsp;list&nbsp;or&nbsp;the&nbsp;stdev&nbsp;of&nbsp;the&nbsp;list,&nbsp;in&nbsp;which&nbsp;case<br>
-n&nbsp;needs&nbsp;to&nbsp;be&nbsp;provided</tt></dd></dl>
- <dl><dt><a name="-stdev"><strong>stdev</strong></a>(inp:list) -&gt; float</dt><dd><tt>std(inp)&nbsp;-&gt;&nbsp;standard&nbsp;deviation&nbsp;of&nbsp;the&nbsp;input<br>
-inp&nbsp;can&nbsp;be&nbsp;a&nbsp;list&nbsp;or&nbsp;the&nbsp;variance&nbsp;of&nbsp;that&nbsp;list</tt></dd></dl>
- <dl><dt><a name="-successMatrix"><strong>successMatrix</strong></a>(predicted:list, D0:list=None, D1:list=None)</dt></dl>
- <dl><dt><a name="-var"><strong>var</strong></a>(arr:list, npc=None) -&gt; float</dt><dd><tt><a href="#-var">var</a>(arr)&nbsp;-&gt;&nbsp;binomial&nbsp;variance&nbsp;of&nbsp;the&nbsp;array</tt></dd></dl>
-</td></tr></table>
+<td width="100%"><dl><dt><a name="-MSE"><strong>MSE</strong></a>(sep:float, dist:str, ROC:list, rocEmpiric:list=None) -&gt; (&lt;class 'float'&gt;, &lt;class 'float'&gt;, &lt;class 'float'&gt;)</dt><dd><tt>Returns&nbsp;the&nbsp;MSE&nbsp;of&nbsp;the&nbsp;given&nbsp;ROC&nbsp;with&nbsp;respect&nbsp;to:<br>
+If&nbsp;sep&nbsp;and&nbsp;dist&nbsp;are&nbsp;not&nbsp;None:&nbsp;the&nbsp;true&nbsp;ROC&nbsp;from&nbsp;sep&nbsp;and&nbsp;dist<br>
+If&nbsp;rocEmpiric&nbsp;is&nbsp;not&nbsp;None:&nbsp;the&nbsp;MSE&nbsp;between&nbsp;the&nbsp;Empiric&nbsp;and&nbsp;ROC<br>
+If&nbsp;sep&nbsp;and&nbsp;dist&nbsp;are&nbsp;None,&nbsp;the&nbsp;first&nbsp;value&nbsp;returned&nbsp;is&nbsp;always&nbsp;0<br>
+The&nbsp;last&nbsp;value&nbsp;returned&nbsp;is&nbsp;always&nbsp;the&nbsp;AUC&nbsp;of&nbsp;the&nbsp;ROC</tt></dd></dl>
+ <dl><dt><a name="-auc"><strong>auc</strong></a>(results:tuple, D0:list=None, D1:list=None) -&gt; float</dt><dd><tt>Takes&nbsp;an&nbsp;ROC&nbsp;curve&nbsp;from&nbsp;genROC&nbsp;and&nbsp;returns&nbsp;the&nbsp;AUC.<br>
+If&nbsp;results&nbsp;is&nbsp;a&nbsp;prediction&nbsp;not&nbsp;an&nbsp;ROC&nbsp;curve,&nbsp;generates&nbsp;the&nbsp;ROC&nbsp;curve.</tt></dd></dl>
+ <dl><dt><a name="-avROC"><strong>avROC</strong></a>(rocs:list) -&gt; tuple</dt><dd><tt>Averages&nbsp;ROC&nbsp;curves.&nbsp;Rocs&nbsp;parameter&nbsp;are&nbsp;ROC&nbsp;curves&nbsp;from&nbsp;genROC.</tt></dd></dl>
+ <dl><dt><a name="-calcNLayers"><strong>calcNLayers</strong></a>(arr:list) -&gt; int</dt><dd><tt>Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;layers&nbsp;that&nbsp;would&nbsp;be&nbsp;needed&nbsp;to&nbsp;sort.<br>
+If&nbsp;arr&nbsp;is&nbsp;the&nbsp;a&nbsp;tuple&nbsp;or&nbsp;list,&nbsp;uses&nbsp;the&nbsp;length.<br>
+If&nbsp;arr&nbsp;is&nbsp;already&nbsp;the&nbsp;length,&nbsp;uses&nbsp;that.</tt></dd></dl>
+ <dl><dt><a name="-genROC"><strong>genROC</strong></a>(predicted:tuple, D1:list=None, D0:list=None) -&gt; list</dt><dd><tt>Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;collections&nbsp;of&nbsp;x,y&nbsp;coordinates&nbsp;in&nbsp;order&nbsp;of&nbsp;the&nbsp;threshold</tt></dd></dl>
+ <dl><dt><a name="-genSep"><strong>genSep</strong></a>(dist:str, auc:float) -&gt; float</dt><dd><tt>Returns&nbsp;the&nbsp;sep&nbsp;parameter&nbsp;needed&nbsp;for&nbsp;the&nbsp;target&nbsp;AUC&nbsp;for&nbsp;the&nbsp;given&nbsp;distribution.</tt></dd></dl>
+ <dl><dt><a name="-genX0X1"><strong>genX0X1</strong></a>(predicted:tuple, D1:tuple=None, D0:tuple=None) -&gt; (&lt;class 'list'&gt;, &lt;class 'list'&gt;)</dt><dd><tt>Generates&nbsp;x0&nbsp;and&nbsp;x1&nbsp;vectors&nbsp;out&nbsp;of&nbsp;the&nbsp;given&nbsp;parameters.<br>
+D1&nbsp;and&nbsp;D0&nbsp;should&nbsp;never&nbsp;be&nbsp;smaller&nbsp;than&nbsp;the&nbsp;predicted&nbsp;array,&nbsp;but&nbsp;are&nbsp;often&nbsp;bigger.</tt></dd></dl>
+ <dl><dt><a name="-graphROC"><strong>graphROC</strong></a>(predicted:tuple, D0:list=None, D1:list=None)</dt><dd><tt>Generates&nbsp;and&nbsp;graphs&nbsp;a&nbsp;single&nbsp;ROC&nbsp;curve&nbsp;and&nbsp;displays&nbsp;the&nbsp;results.</tt></dd></dl>
+ <dl><dt><a name="-graphROCs"><strong>graphROCs</strong></a>(arrays:list, withPatches:bool=False, withLine:bool=True, D0:list=None, D1:list=None)</dt><dd><tt>Graphs&nbsp;a&nbsp;collection&nbsp;of&nbsp;array&nbsp;predictions.&nbsp;Takes&nbsp;the&nbsp;arrays&nbsp;as&nbsp;they&nbsp;would&nbsp;come&nbsp;out&nbsp;of&nbsp;DylSort&nbsp;sorts.<br>
+If&nbsp;withPatches,&nbsp;puts&nbsp;a&nbsp;color&nbsp;coded&nbsp;success&nbsp;matrix&nbsp;behind&nbsp;the&nbsp;line.<br>
+If&nbsp;withLine,&nbsp;graphs&nbsp;the&nbsp;line.<br>
+Returns&nbsp;the&nbsp;plt&nbsp;handle,&nbsp;does&nbsp;not&nbsp;display&nbsp;the&nbsp;results.</tt></dd></dl>
+ <dl><dt><a name="-hanleyMcNeil"><strong>hanleyMcNeil</strong></a>(auc:float, n0:int, n1:int) -&gt; float</dt><dd><tt>The&nbsp;very&nbsp;good&nbsp;power-law&nbsp;variance&nbsp;estimate&nbsp;from&nbsp;Hanley/McNeil</tt></dd></dl>
+ <dl><dt><a name="-paramToParams"><strong>paramToParams</strong></a>(predicted:list, D0:list=None, D1:list=None) -&gt; (&lt;class 'list'&gt;, &lt;class 'list'&gt;, &lt;class 'list'&gt;)</dt><dd><tt>Takes&nbsp;one&nbsp;parameter&nbsp;and&nbsp;splits&nbsp;it&nbsp;into&nbsp;three&nbsp;if&nbsp;predicted&nbsp;is&nbsp;a&nbsp;2d&nbsp;list</tt></dd></dl>
+ <dl><dt><a name="-successMatrix"><strong>successMatrix</strong></a>(predicted:list, D0:list, D1:list)</dt><dd><tt>Creates&nbsp;the&nbsp;success&nbsp;matrix&nbsp;for&nbsp;the&nbsp;predicted&nbsp;ordering.<br>
+Checks&nbsp;to&nbsp;make&nbsp;sure&nbsp;it&nbsp;got&nbsp;every&nbsp;entry&nbsp;filled.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__annotations__</strong> = {'font': &lt;class 'dict'&gt;}<br>
+<strong>font</strong> = {'size': 56}<br>
+<strong>norm</strong> = &lt;scipy.stats._continuous_distns.norm_gen object&gt;</td></tr></table>
 </body></html>
