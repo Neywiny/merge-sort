@@ -1,4 +1,7 @@
 # merge-sort
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5d9988147a884a1fbe4a6704aca3ac1d)](https://app.codacy.com/app/Neywiny/merge-sort?utm_source=github.com&utm_medium=referral&utm_content=Neywiny/merge-sort&utm_campaign=Badge_Grade_Dashboard)
+
 ## Basic Usage 
 ```python main.py <iterations>```
 
