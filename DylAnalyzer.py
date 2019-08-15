@@ -15,7 +15,7 @@ from DylData import continuousScale
 from DylSort import treeMergeSort
 from DylMath import genX0X1, MSE, auc
 
-def analyze(fileName: str, length: int, layers: int, justOne: bool=False, bar: bool=False) -> tuple:
+def analyzeMergeSims(fileName: str, length: int, layers: int, justOne: bool=False, bar: bool=False) -> tuple:
 	""" analyze a merge sort results file.
 	If justOne is True, only does the first simulation
 	If bar is True, shows a tqdm progress bar"""
@@ -110,7 +110,39 @@ def analyze(fileName: str, length: int, layers: int, justOne: bool=False, bar: b
 
 	return varEstimate, avgAUC, avgMSETrues, avgMSEEmpiric, avgComps, avgHanleyMNeil, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters
 
-def analyzeScale(fileName:str, names:list=None) -> tuple:
+def analyzeEloSims(filename: str, passes) -> list:
+	"""Analyze an ELO simulation.
+	Returns AUC, true Var, bad Var, the lsit of bad vars, mse True, mse Emperic and PC"""
+	aucs = [list() for _ in range(passes)]
+	masVars = [list() for _ in range(passes)]
+	mseTruths = np.zeros((passes,), dtype=float)
+	MSEEmpirics = np.zeros((passes,), dtype=float)
+	pcs = np.zeros((passes,), dtype=float)
+	iters = -1
+	with open(filename, "rb") as f:
+		unpickler = pickle.Unpickler(f)
+		while True:
+			try: # because Unpickler can't just raise a StopIterationError...
+				iteration = unpickler.load()
+				iters += 1
+			except EOFError:
+				break
+			for N, cnt, ncmp, var, auc, mseTruth, mseEmpiric, pc in iteration:
+				idx = ncmp // N - 1
+				aucs[idx].append(auc)
+				masVars[idx].append(var)
+				pcs[idx] += pc
+				mseTruths[idx] += mseTruth
+				MSEEmpirics[idx] += mseEmpiric
+	masAvgAUC = np.mean(aucs, axis=1)
+	masVarAUC = np.var(aucs, ddof=1, axis=1)
+	masAvgVAR = np.mean(masVars, axis=1)
+	masAvgMSETruth = mseTruths / iters
+	masAvgMSEEmpiric = MSEEmpirics / iters
+	avgPC = pcs / iters
+	return masAvgAUC, masVarAUC, masAvgVAR, masVars, masAvgMSETruth, masAvgMSEEmpiric, avgPC
+
+def analyzeScaleStudy(fileName:str, names:list=None) -> tuple:
 	"""Analyzes a scale study.
 	If names parameter given, filters for only those names.
 	Names can be any type of iterable."""
@@ -137,7 +169,7 @@ def analyzeScale(fileName:str, names:list=None) -> tuple:
 	x1, x0 = np.array(x1), np.transpose(x0)
 	return times, x0, x1, scores
 
-def analyzeAFC(log: str, results: str, n0: int, n1: int) -> tuple:
+def analyzeAFCStudies(log: str, results: str, n0: int, n1: int) -> tuple:
 	"""extracts the times out of the log file generated from DylAFC
 	extracts the x0 and x1 vectors and the ranks from the results file from DylComp"""
 	times = list()
@@ -196,12 +228,12 @@ def analyzeReaderStudies(resultsFile, directory, n0):
 		AUCss.append(AUCs)
 		VARss.append(VARs)
 		PCss.append(PCs)
-		scaleTimes, x0, x1, _ = analyzeScale(val[0])
+		scaleTimes, x0, x1, _ = analyzeScaleStudy(val[0])
 		scaleROC = ROC1.rocxy(x1, x0)
 		scaleVAR = ROC1.unbiasedAUCvar(x1, x0)
 		scaleAUC = ROC1.auc(x1, x0)
 		scaleTimes = list(filter(lambda x: x < 10, scaleTimes))
-		mergeTimes, *_ = analyzeAFC(val[1], val[3], 128, 128)
+		mergeTimes, *_ = analyzeAFCStudies(val[1], val[3], 128, 128)
 		mergeTimes = list(filter(lambda x: x < 5, mergeTimes))
 		xmax = np.append(scaleTimes, mergeTimes).max()
 		kernal = stats.gaussian_kde(scaleTimes)
@@ -229,7 +261,7 @@ if __name__ == "__main__":
 		# Shows the 5 plot dashboard for studies
 		length: int = 256
 		layers: int = 8
-		varEstimate, avgAUC, avgMSETrues, avgMSEEmpiric, avgComps, avgHanleyMNeil, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters = analyze("resultsMergeNormal85", length, layers, bar=True)
+		varEstimate, avgAUC, avgMSETrues, avgMSEEmpiric, avgComps, avgHanleyMNeil, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters = analyzeMergeSims("resultsMergeNormal85", length, layers, bar=True)
 		labels: list = [f'{np.median(list(filter(lambda x: x != 0, avgMinSeps[0]))):3.02f}']
 		for val in np.median(avgMinSeps, axis=0)[1:]:
 			labels.append(f'{val:3.02f}')
@@ -325,11 +357,11 @@ if __name__ == "__main__":
 		print('-' * int(len(line) * 1.2))
 		for i, (reader, files) in enumerate(results.items()):
 
-			afcTime, afcX0, afcX1, afcRanks = analyzeAFC(files[0], files[2], n0, n1)
+			afcTime, afcX0, afcX1, afcRanks = analyzeAFCStudies(files[0], files[2], n0, n1)
 			mergeTimes: list = list(filter(lambda x: x < 5, afcTime))
 
 			if len(files) == 4:
-				scaleTimes, x0, x1, scoresScale = analyzeScale(files[3], names=names)
+				scaleTimes, x0, x1, scoresScale = analyzeScaleStudy(files[3], names=names)
 				scaleSMData: np.ndarray = ROC1.successmatrix(x1, x0)
 				scaleTimes: list = list(filter(lambda x: x < 10, scaleTimes))
 

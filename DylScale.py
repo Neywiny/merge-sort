@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import os
 from sys import argv
 from tkinter.constants import *
 from tkinter import *
@@ -9,18 +10,19 @@ class Rating:
 	"""A class for displaying an image and recording the ratins and timings of the reader.
 	Label parameter is the label where the image is going to be drawn.
 	User must assign the instantiated rating class a canvas for drawing a bar where the reader clicked."""
-	def __init__(self, posDir: str, negDir: str, n: int, outputFile: str, label: Label):
+	def __init__(self, posDir: str, negDir: str, n: int, outputFile: str, offset: str, label: Label):
 		self.decision: int = -1
 		self.posDir: str = posDir
 		self.negDir: str = negDir
 		self.counter: int = 0
 		self.percent: int = -1
+		self.offset: int = int(offset)
 		self.n: int = int(n)
-		self.f = open(outputFile + str(time() + ".csv"), "w")
+		self.f = open(outputFile + str(time()) + ".csv", "w")
 		self.f.write(posDir + ' ' + negDir + '\n')
 		# get pics
-		posNames: list = [self.posDir + img for img in sorted(os.listdir(self.posDir))][:self.n // 2]
-		negNames: list = [self.negDir + img for img in sorted(os.listdir(self.negDir))][:self.n // 2 + self.n % 2]
+		posNames: list = [self.posDir + img for img in sorted(os.listdir(self.posDir))][self.offset:self.offset + (self.n // 2)]
+		negNames: list = [self.negDir + img for img in sorted(os.listdir(self.negDir))][self.offset:self.offset + (self.n // 2 + self.n % 2)]
 		self.n0: int = len(negNames)
 		self.n1: int = len(posNames)
 		names: list = negNames + posNames
@@ -157,8 +159,8 @@ if len(argv) == 2:
 	ax2.plot(times)
 	ax2.set_title(f"Avg time {np.mean(times):0.2f}s")
 	plt.show()
-elif len(argv) != 5:
-	print(f"Usage: \n\tpython3 {__file__} [signal present directory] [signal absent directory] [n] [output file] \n\tpython3 {__file__} [results file]")
+elif len(argv) < 5:
+	print(f"Usage: \n\tpython3 {__file__} [signal present directory] [signal absent directory] [n] [output file] [offset (optional)]\n\tpython3 {__file__} [results file]")
 else:
 	IMGWIDTH: int = 600
 	IMGHEIGHT: int = 600
@@ -167,6 +169,8 @@ else:
 	title = Label(root, text="Choose the percent chance of there being a signal")
 	title.grid(row=0, column=0)
 	label = Label(root)
+	if len(argv) < 6:
+		argv.append("0")
 	rating = Rating(*argv[1:], label)
 	label.configure(image=rating.images[0])
 	label.grid(row=1, column=0)

@@ -24,7 +24,7 @@ The format for a result is:
 ```python
 (auc, varEstimate, hanleyMcNeil, estimates, mseTrue, mseEmpiric, compLen, minSeps, pc) = resultss[layer index]
 ```
-
+where
 *   auc is the total accuracy 
 *   varEstimate is the variance estimate
 *   hanleyMcNeil is the current Hanley-McNeil variance estimate
@@ -49,23 +49,23 @@ The format for a result is:
 ```python
 (N, cnt, ncmp, var, auc, mseTruth, mseEmpiric, pc) = resultss[layer index]
 ```
-
-*	N is n0
-*	cnt is the number of comparisons done on images from different distributions
-*	ncmp is th etotal number of comparisons
-*	var is the success matrix variance estimate (it's bad)
-*	auc is the total accuracy 
-*	mseTruth is the MSE between the current ROC curve and the true ROC curve for the given distribution
-*	mseEmpiric is the same as above just with that simulation's data set
-*	pc is the percent of corrent comparisons from images of different distributions
+where
+*    N is n0 (basically just for record keeping)
+*    cnt is the number of comparisons done on images from different distributions
+*    ncmp is th etotal number of comparisons
+*    var is the success matrix variance estimate (it's bad)
+*    auc is the total accuracy 
+*    mseTruth is the MSE between the current ROC curve and the true ROC curve for the given distribution
+*    mseEmpiric is the same as above just with that simulation's data set
+*    pc is the percent of corrent comparisons from images of different distributions
 
 ## Doing a Reader Study
 
 ### Scale Rating System
 
-Run ```DylScale.py <signal present directory> <signal absent directory> <n> <output file>```
+Run ```DylScale.py <signal present directory> <signal absent directory> <n> <output file> <offset (defualts to 0)>```. This will output the results to the output filename with the start time in Unix time and ".csv" after. This is because the sale ratings are all independant from each other so if you want to do half at one time and half at a later time you can, just change the offset parameter and append the new file to the old one.
 
-For a quick analysis, you can run ```DylScale.py <input file>``` where the input file was the output file from the previous command
+For a quick analysis, you can run ```DylScale.py <input file>``` where the input file was the output file from the previous command.
 
 ### AFC System
 
@@ -87,6 +87,31 @@ Results for reader study analysis are referenced with a json file. Each key shou
 2.  The roc file from DylComp
 3.  The log file from DylComp
 4.  The log from DylScale (optional)
+
+Example:
+```json
+{
+	"Reader A":[
+		"resA/log.csv", 
+		"resA/rocs", 
+		"resA/compA.csv",
+		"resA/scaleA123456.123.csv"
+	],
+	"Reader B":[ 
+		"resA/log.csv", 
+		"resA/rocs", 
+		"resA/compB.csv",
+		"resA/scaleA456789.012.csv"
+	],
+	"Reader C":[
+		"resC/log.csv", 
+		"resC/rocs", 
+		"resC/compC.csv",
+		"resC/scaleC345678.901.csv"
+	]
+}
+
+```
 
 If there is no log file from DylScale, the analysis will not be able to show the results from the scale study.
 

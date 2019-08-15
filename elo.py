@@ -4,7 +4,6 @@ from ROC1 import *
 from warnings import filterwarnings
 from DylMath import MSE, genSep
 from tqdm import tqdm, trange
-from pickle import dumps
 from struct import unpack
 from sys import argv
 
@@ -12,8 +11,8 @@ filterwarnings('ignore')
 
 def simulation_ELO_targetAUC(args: list, rounds: int=14):
 	"""
-	Function for the simulation of ELO rating given an AUC of 0.8 (most of it, hard-coded),
-	the input to the function is N (the number of samples on the rating study).
+	Args is of the form (dist, auc, n0, n1). 
+	Rounds is how many rounds of (n0 + n1)/2 comparisons it will so.
 
 	@Author: Francesc Massanes (fmassane@iit.edu)
 	@Version: 0.1 (really beta)
@@ -173,13 +172,13 @@ if __name__ == '__main__':
 			im.save("both.png")
 	elif test == 3:
 		from DylComp import Comparator
-		from DylSort import treeMergeSort, genD0D1
+		from DylSort import treeMergeSort
 		from DylData import continuousScale
 		from DylMath import genROC, avROC
 		import matplotlib.pyplot as plt
 		data, D0, D1 = continuousScale(128, 128)
 		comp = Comparator(data, rand=True, level=0, seed=20)
-		results = [res for res in simulation_ELO_targetAUC()]
+		results = [res for res in simulation_ELO_targetAUC(('normal', 0.9953, 128, 128))]
 		mergeResults = list()
 		for groups in treeMergeSort(data, comp, combGroups=False):
 			rocs = list()

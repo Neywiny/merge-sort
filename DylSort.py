@@ -1,7 +1,7 @@
 import numpy as np
 from sys import argv
 from scipy.stats import norm
-from DylMath import *
+from DylMath import runStats
 from DylMerger import MultiMerger
 from tqdm import tqdm
 def genD0D1(d0d1: list, arr: list) -> tuple:
@@ -24,62 +24,6 @@ def validate(arr: list):
 		if arr.count(v) > 1:
 			raise EnvironmentError(f"duplicated {v}")
 
-def runStats(groups: list, params: list, comp=None) -> list:
-	"""Runs stats on the groups provided.
-	Params must be: ((d0d1), dist, targetAUC, n, currLayer, len(mergers))"""
-
-	aucs, varOfSM, hanleyMcNeils, estimates = list(), list(), list(), list()
-	d0d1, dist, targetAUC, n, *_ = params
-	rocs: list = list()
-	for group in groups:
-		D0, D1 = genD0D1(d0d1, group)
-		if D0 and D1:
-			rocs.append(genROC(group, D0, D1))
-			sm: np.ndarray = successMatrix(group, D0, D1)
-			auc: float = np.mean(sm)
-			if auc == auc:
-				aucs.append(auc)
-			hanleyMcNeils.append((len(D0), len(D1)))
-			smVAR: float = unbiasedMeanMatrixVar(sm)
-			if smVAR == smVAR and len(D0) > 3 and len(D1) > 3: # if not NaN
-				varOfSM.append(smVAR)
-	rocs: list = list(filter(lambda roc: np.min(np.isfinite(roc)), rocs))
-	varOfAverageAUC = np.var(aucs, ddof=1) / len(aucs)
-	aucs: np.ndarray = np.array(aucs)
-	avgAUC: float = np.mean(aucs)
-	estimateNs: list = [list()]
-	for ns in hanleyMcNeils:
-		estimateNs[0].append(ns)
-	# while there are groups to 'merge'
-	while len(estimateNs[-1]) != 1:
-		# get the previous layer and sort by N0 + N1
-		oldNs: list = sorted(estimateNs[-1], key=sum)
-		# roughly the same code as mergers creation
-		estimateNs.append(list())
-		while oldNs:
-			i: int = 0
-			toMerge: list = list()
-			segments: int = min(n, len(oldNs) - i)
-			for _ in range(segments):
-				toMerge.append(oldNs.pop(0))
-			estimateNs[-1].append([sum((x[0] for x in toMerge)), sum((x[1] for x in toMerge))])
-		estimateNs[-1].sort(key=sum)
-		estimates.append(hanleyMcNeil(avgAUC, estimateNs[-1][-1][0], estimateNs[-1][-1][1]) / len(estimateNs[-1]))
-	for i, (N0, N1) in enumerate(hanleyMcNeils):
-		hanleyMcNeils[i]: float = hanleyMcNeil(avgAUC, N0, N1)
-	if len(varOfSM) == 0:
-		varEstimate: float = float(varOfAverageAUC)
-	else:
-		varEstimate: float = (sum(varOfSM) / (len(varOfSM)**2))
-
-	avgROC: tuple = avROC(rocs)
-	empiricROC: tuple = comp.empiricROC()
-	sep: float = genSep(dist, float(targetAUC)) # float in case it's a string
-
-	stats: list = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, estimates, *MSE(sep, dist, avgROC, empiricROC)[:2]]
-
-	return stats
-
 def mergeSort(arr: list, statParams: list=None, n: int=2, combGroups: bool=True, sortGroups: bool=False) -> list:
 	"""mergeSort(arr: list)
 	statParams must be the format ((D0, D1), dist, target AUC)
@@ -98,9 +42,7 @@ def mergeSort(arr: list, statParams: list=None, n: int=2, combGroups: bool=True,
 			# last group, odd one out
 			# get n arrays
 			# feed the MultiMergers with them
-			arrays: list = list()
-			for iSegment in range(n):
-				arrays.append(groups.pop(0))
+			arrays: list = [groups.pop(0) for _ in range(n)]
 			mergers.append(MultiMerger(arrays, comp, i, 0))
 			i += 1
 		#while we have active mergers
