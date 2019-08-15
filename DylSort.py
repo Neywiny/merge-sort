@@ -1,19 +1,7 @@
 import numpy as np
 from sys import argv
-from scipy.stats import norm
 from DylMath import runStats
 from DylMerger import MultiMerger
-from tqdm import tqdm
-def genD0D1(d0d1: list, arr: list) -> tuple:
-	"""Generates filtered D0 and D1 vectors.
-	d0d1 is (D0, D1) together as a tuple/list."""
-	D0, D1 = list(), list()
-	for item in arr:
-		if item in d0d1[0]:
-			D0.append(item)
-		elif item in d0d1[1]:
-			D1.append(item)
-	return D0, D1
 
 def validate(arr: list):
 	"""Throws errors if the array to be validated is invalid.
@@ -151,6 +139,8 @@ if __name__ == "__main__":
 			print(f"{__file__} 1 <directory to save file into>")
 		else:
 			from DylComp import Comparator
+			from DylData import continuousScale
+			import matplotlib.pyplot as plt
 			plt.rcParams["font.size"]: int = 10
 			data, D0, D1 = continuousScale(32, 32)
 			comp: Comparator = Comparator(data, rand=True)
@@ -246,7 +236,6 @@ if __name__ == "__main__":
 	elif test == 4:
 		from DylComp import Comparator
 		from DylData import continuousScale
-		from tqdm import trange
 		data, D0, D1 = continuousScale(135, 87)
 		comp: Comparator = Comparator(data, rand=True)
 		comp.genRand(len(D0), len(D1), 7.72, 'exponential')

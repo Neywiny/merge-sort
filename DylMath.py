@@ -93,14 +93,19 @@ def genX0X1(predicted: tuple, D1: tuple=None, D0: tuple=None) -> (list, list):
 	"""Generates x0 and x1 vectors out of the given parameters.
 	D1 and D0 should never be smaller than the predicted array, but are often bigger."""
 	predicted, D0, D1 = paramToParams(predicted, D0, D1)
-	x0: list = list()
-	x1: list = list()
-	for i, val in enumerate(predicted):
-		if val in D1:
-			x1.append(i)
-		elif val in D0:
-			x0.append(i)
+	x0, x1 = genD0D1((D0, D1), predicted)
 	return np.array(x0), np.array(x1)
+
+def genD0D1(d0d1: list, arr: list) -> tuple:
+	"""Generates filtered D0 and D1 vectors.
+	d0d1 is (D0, D1) together as a tuple/list."""
+	D0, D1 = list(), list()
+	for item in arr:
+		if item in d0d1[0]:
+			D0.append(item)
+		elif item in d0d1[1]:
+			D1.append(item)
+	return D0, D1
 
 def genROC(predicted: tuple, D1: list=None, D0: list=None) -> list:
 	"""Returns a list of collections of x,y coordinates in order of the threshold"""
@@ -219,9 +224,7 @@ def successMatrix(predicted: list, D0: list, D1: list):
 		raise EnvironmentError("failed to create success matrix")
 	return arr
 
-
-
-def runStats(groups: list, params: list) -> list:
+def runStats(groups: list, params: list, comp) -> list:
 	"""Runs stats on the groups provided.
 	Params parameter must be: ((d0d1), dist, targetAUC, n, currLayer, len(mergers))"""
 

@@ -4,14 +4,13 @@ from ROC1 import *
 from warnings import filterwarnings
 from DylMath import MSE, genSep
 from tqdm import tqdm, trange
-from struct import unpack
 from sys import argv
 
 filterwarnings('ignore')
 
 def simulation_ELO_targetAUC(args: list, rounds: int=14):
 	"""
-	Args is of the form (dist, auc, n0, n1). 
+	Args is of the form (dist, auc, n0, n1).
 	Rounds is how many rounds of (n0 + n1)/2 comparisons it will so.
 
 	@Author: Francesc Massanes (fmassane@iit.edu)

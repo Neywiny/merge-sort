@@ -127,7 +127,7 @@ def analyzeEloSims(filename: str, passes) -> list:
 				iters += 1
 			except EOFError:
 				break
-			for N, cnt, ncmp, var, auc, mseTruth, mseEmpiric, pc in iteration:
+			for N, _, ncmp, var, auc, mseTruth, mseEmpiric, pc in iteration:
 				idx = ncmp // N - 1
 				aucs[idx].append(auc)
 				masVars[idx].append(var)
@@ -190,7 +190,6 @@ def analyzeAFCStudies(log: str, results: str, n0: int, n1: int) -> tuple:
 	return times, x0, x1, indeciesAFC
 
 def analyzeReaderStudies(resultsFile, directory, n0):
-	scale: float = 10**-4
 	roc8s = list()
 	roc4s = list()
 	rocScales = list()
@@ -235,12 +234,6 @@ def analyzeReaderStudies(resultsFile, directory, n0):
 		scaleTimes = list(filter(lambda x: x < 10, scaleTimes))
 		mergeTimes, *_ = analyzeAFCStudies(val[1], val[3], 128, 128)
 		mergeTimes = list(filter(lambda x: x < 5, mergeTimes))
-		xmax = np.append(scaleTimes, mergeTimes).max()
-		kernal = stats.gaussian_kde(scaleTimes)
-		xVals = np.linspace(0, xmax, 1000)
-		#ax1.fill_between(xVals, kernal(xVals), label="scale", alpha=0.5)
-		kernal = stats.gaussian_kde(mergeTimes)
-		xVals = np.linspace(0, xmax, 1000)
 		with open(val[2], "rb") as f:
 			roc8, roc4 = pickle.load(f)
 		roc8s.append((roc8, reader, auc(list(zip(*roc8)))))
@@ -253,7 +246,7 @@ def analyzeReaderStudies(resultsFile, directory, n0):
 if __name__ == "__main__":
 	if len(argv) > 3:
 		test: int = -1
-	elif 'json' in argv[1]:
+	elif len(argv) > 1 and 'json' in argv[1]:
 		test: int = 2
 	else:
 		test: int = 1
@@ -261,7 +254,7 @@ if __name__ == "__main__":
 		# Shows the 5 plot dashboard for studies
 		length: int = 256
 		layers: int = 8
-		varEstimate, avgAUC, avgMSETrues, avgMSEEmpiric, avgComps, avgHanleyMNeil, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters = analyzeMergeSims("resultsMergeNormal85", length, layers, bar=True)
+		varEstimate, avgAUC, avgMSETrues, avgMSEEmpiric, avgComps, avgHanleyMNeil, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters = analyzeMergeSims("resultsOld/resultsMergeNormal85", length, layers, bar=True)
 		labels: list = [f'{np.median(list(filter(lambda x: x != 0, avgMinSeps[0]))):3.02f}']
 		for val in np.median(avgMinSeps, axis=0)[1:]:
 			labels.append(f'{val:3.02f}')

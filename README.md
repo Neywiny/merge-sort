@@ -50,7 +50,7 @@ The format for a result is:
 (N, cnt, ncmp, var, auc, mseTruth, mseEmpiric, pc) = resultss[layer index]
 ```
 where
-*    N is n0 (basically just for record keeping)
+*   N is n0 (basically just for record keeping)
 *    cnt is the number of comparisons done on images from different distributions
 *    ncmp is th etotal number of comparisons
 *    var is the success matrix variance estimate (it's bad)
@@ -98,10 +98,10 @@ Example:
 		"resA/scaleA123456.123.csv"
 	],
 	"Reader B":[ 
-		"resA/log.csv", 
-		"resA/rocs", 
-		"resA/compB.csv",
-		"resA/scaleA456789.012.csv"
+		"resB/log.csv", 
+		"resB/rocs", 
+		"resB/compB.csv",
+		"resB/scaleB456789.012.csv"
 	],
 	"Reader C":[
 		"resC/log.csv", 
