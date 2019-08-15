@@ -10,7 +10,7 @@ from warnings import filterwarnings
 filterwarnings('ignore')
 from DylComp import Comparator
 from DylMath import genSep
-from DylSort import mergeSort, treeMergeSort
+from DylSort import treeMergeSort
 from DylData import continuousScale
 def sort(args) -> list:
 	"""Performs a sort based on the given args.

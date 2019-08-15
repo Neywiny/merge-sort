@@ -192,7 +192,7 @@ if __name__ == "__main__":
 			comp.genRand(len(D0), len(D1), 7.72, "exponential")
 			comps: list = list()
 			rocs: list = list()
-			overlapping: bool = argv[2] == "True"
+			overlapping: bool = argv[2] == "True" if len(argv) == 3 else True
 			for groups in treeMergeSort(data, comp, combGroups=False):
 				rocs.append(list())
 				comps.append(len(comp))
