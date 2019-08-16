@@ -1,9 +1,11 @@
 Merge Sort
 ==========
 
-|forthebadge made-with-python| |rtd-badge|
+|forthebadge made-with-python| 
 
-|Codacy Badge| |Python 3.6,3.7| |Maintenance| |Open Source Love png2|
+|Python 3.6,3.7| |rtd-badge| |Maintenance| 
+
+|Codacy Badge| |Open Source Love png2|
 
 .. figure:: https://github.com/Neywiny/merge-sort/blob/master/repository-pic.png
    :alt: alt text
@@ -199,9 +201,9 @@ Graphs and Where to Find Them
    :target: https://www.python.org/
 .. |Codacy Badge| image:: https://api.codacy.com/project/badge/Grade/96b3634f1abe48dc93b5ac19307bb394
    :target: https://www.codacy.com/app/Neywiny/merge-sort?utm_source=github.com&utm_medium=referral&utm_content=Neywiny/merge-sort&utm_campaign=Badge_Grade
-.. |Python 3.6,3.7| image:: https://img.shields.io/badge/python-3.6%20%7C%203.7-blue
+.. |Python 3.6,3.7| image:: https://img.shields.io/badge/python-3.6%20%7C%203.7-blue?style=for-the-badge&logo=python&logoColor=yellow
    :target: https://www.python.org/downloads/release/python-370/
-.. |Maintenance| image:: https://img.shields.io/badge/Maintained%3F-yes-green.svg
+.. |Maintenance| image:: https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge
    :target: https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity
 .. |Open Source Love png2| image:: https://badges.frapsoft.com/os/v2/open-source.png?v=103
    :target: https://github.com/ellerbrock/open-source-badges/
