@@ -93,12 +93,12 @@ class AFC:
 			self.img2.configure(image=self.images[pic2])
 		root.update()
 	def switchModes(self):
-		"""call this when switching modes to make sure the class is ready to start a mode"""
+		"""Call this when switching modes to make sure the class is ready to start a mode"""
 		self.ready: bool = True
 		self.decision: int = -1
 		self.imgIndex: int = 0
 	def run(self):
-		"""finite state machine based on the mode, the connection status, and whether the reader has decided an image or not.
+		"""Finite state machine based on the mode, the connection status, and whether the reader has decided an image or not.
 		This will call itself on its own, so just make sure to call this method once with <root>.after()"""
 		root.update()
 		if self.mode.get() == 'training':
@@ -188,13 +188,13 @@ class AFC:
 				self.ready: bool = True
 		root.after(16, self.run)
 	def pressed(self, event: Event):
-		"""call this when the user has pressed a keyboard button"""
+		"""Call this when the user has pressed a keyboard button"""
 		#print("event!")
 		self.counter: int = 0
 		if event.keycode == 113 or event.keycode == 114:
 			self.decision: int = event.keycode
 	def clicked(self, event: Event):
-		"""call this when the user has clicked the mouse"""
+		"""Call this when the user has clicked the mouse"""
 		self.counter: int = 0
 		if event.y > 100:
 			if event.x > WIDTH - IMGWIDTH:

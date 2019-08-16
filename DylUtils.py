@@ -1,8 +1,4 @@
-def writer(arr: list):
-	ret = ''
-	for val in arr:
-		ret += str(val) + ','
-	return ret[:-1]
+
 def bLen(*args):
 	"""bLen(*args) -> len(args)
 	a better version of len, which takes args because in python3 everything is a generator"""
@@ -15,6 +11,9 @@ ALPHABET = [chr(i) for i in range(65, 65+26)]
 A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z = ALPHABET
 
 def bettorbar(ax, *args, **kwargs):
+	"""A better error bar function.
+	Adds kwargs: elinestyle, ecolor
+	Attempts to set zorder to be the same for all lines"""
 	mplkwargs = kwargs.copy()
 	mplkwargs.pop('ecolor', None)
 	mplkwargs.pop('elinestyle', None)

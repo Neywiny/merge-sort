@@ -171,7 +171,7 @@ def analyzeScaleStudy(fileName:str, names:list=None) -> tuple:
 	return times, x0, x1, scores
 
 def analyzeAFCStudies(log: str, results: str, n0: int, n1: int) -> tuple:
-	"""extracts the times out of the log file generated from DylAFC
+	"""Extracts the times out of the log file generated from DylAFC
 	extracts the x0 and x1 vectors and the ranks from the results file from DylComp"""
 	times = list()
 	with open(log) as f:
@@ -242,6 +242,24 @@ def analyzeReaderStudies(resultsFile, directory, n0):
 		rocScales.append((scaleROC, reader, scaleAUC, scaleVAR))
 	#plt.axis('equal')
 	return AUCss, VARss, PCss, readers, rocScales, roc8s, roc4s
+
+def bootstrapTau(arr: list):
+	"""Cunction for permuting the columns of the array with replacement"""
+	ranks: np.ndarray = arr[:,np.random.randint(len(arr[0]), size=len(arr[0]))]
+	return stats.kendalltau(ranks[0], ranks[1])[0]
+
+def permutation(arr: list, D0: list, D1: list):
+	"""Permutation test for MSEs"""
+	indecies: np.ndarray = np.random.randint(2, size=len(arr[0]))
+	scales: np.ndarray = arr[indecies, range(len(arr[0]))]
+	afcs: np.ndarray = arr[1 - indecies, range(len(arr[0]))]
+	x0 = [scales[i] + 1 for i in range(128)]
+	x1 = [scales[i] + 1 for i in range(128, 256)]
+	scaleROC: dict = ROC1.rocxy(x1, x0)
+	x0 = [afcs[i] + 1 for i in range(128)]
+	x1 = [afcs[i] + 1 for i in range(128, 256)]
+	afcROC: dict = ROC1.rocxy(x1, x0)
+	return MSE(None, None, scaleROC, afcROC)[1]
 
 
 if __name__ == "__main__":
@@ -317,24 +335,6 @@ if __name__ == "__main__":
 		plt.subplots_adjust(wspace=0.45)
 		plt.show()
 	elif test == 2:
-
-		def bootstrapTau(arr: list):
-			"""function for permuting the columns of the array with replacement"""
-			ranks: np.ndarray = arr[:,np.random.randint(len(arr[0]), size=len(arr[0]))]
-			return stats.kendalltau(ranks[0], ranks[1])[0]
-
-		def permutation(arr: list, D0: list, D1: list):
-			"""permutation test for MSEs"""
-			indecies: np.ndarray = np.random.randint(2, size=len(arr[0]))
-			scales: np.ndarray = arr[indecies, range(len(arr[0]))]
-			afcs: np.ndarray = arr[1 - indecies, range(len(arr[0]))]
-			x0 = [scales[i] + 1 for i in range(128)]
-			x1 = [scales[i] + 1 for i in range(128, 256)]
-			scaleROC: dict = ROC1.rocxy(x1, x0)
-			x0 = [afcs[i] + 1 for i in range(128)]
-			x1 = [afcs[i] + 1 for i in range(128, 256)]
-			afcROC: dict = ROC1.rocxy(x1, x0)
-			return MSE(None, None, scaleROC, afcROC)[1]
 
 		n0: int = 128
 		n1: int = 128

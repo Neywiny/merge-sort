@@ -16,7 +16,7 @@ def validate(arr: list):
 			raise EnvironmentError(f"duplicated {v}")
 
 def mergeSort(arr: list, comp: Comparator, statParams: list=None, n: int=2, combGroups: bool=True, sortGroups: bool=False) -> list:
-	"""mergeSort(arr: list)
+	"""MergeSort(arr: list)
 	statParams must be the format ((D0, D1), dist, target AUC)
 	combGroups determins if the returned array is one list or each group as its own list.
 	sortGroups determins if groups will be sorted by size in the sort.
@@ -61,7 +61,7 @@ def mergeSort(arr: list, comp: Comparator, statParams: list=None, n: int=2, comb
 		else:
 			yield arr
 def treeMergeSort(arr: list, comp, statParams=None, n: int=2, combGroups: bool=True):
-	"""sorts an array with the provided comparator.
+	"""Sorts an array with the provided comparator.
 	statParams must be the format ((D0, D1), dist, target AUC) if it is provided.
 	If n is provided, does at most nAFC type comparisons (ex if n=4, may do most 4AFC, maybe some 3AFC, rest 2AFC)
 	combGroups determins if the returned array is one list or each group as its own list.

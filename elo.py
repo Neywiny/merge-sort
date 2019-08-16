@@ -119,7 +119,7 @@ if __name__ == '__main__':
 			fig.set_tight_layout(True)
 			pbar = tqdm(total=len(results))
 			def update(i):
-				"""update the frame"""
+				"""Update the frame"""
 				pbar.update()
 				label = f"timestep {i}"
 				ax.clear()
