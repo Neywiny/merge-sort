@@ -13,7 +13,7 @@ Merge Sort
 Documentation
 -------------
 
-`Link to documentation <https://neywiny.github.io/merge-sort/>`__
+`Link to documentation <https://merge-sort.readthedocs.io/>`__
 
 Reproducing many simulations
 ----------------------------
