@@ -1,7 +1,7 @@
 Merge Sort
 ==========
 
-|forthebadge made-with-python|
+|forthebadge made-with-python| |rtd-badge|
 
 |Codacy Badge| |Python 3.6,3.7| |Maintenance| |Open Source Love png2|
 
@@ -205,3 +205,5 @@ Graphs and Where to Find Them
    :target: https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity
 .. |Open Source Love png2| image:: https://badges.frapsoft.com/os/v2/open-source.png?v=103
    :target: https://github.com/ellerbrock/open-source-badges/
+.. |rtd-badge| image:: https://readthedocs.org/projects/merge-sort/badge/?version=latest&style=for-the-badge
+   :target: https://merge-sort.readthedocs.io/?badge=latest
