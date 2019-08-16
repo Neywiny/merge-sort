@@ -2,7 +2,7 @@
 import pickle
 import os
 import sys
-from numpy.random import seed
+import numpy as np
 from tqdm import tqdm
 from time import sleep
 from multiprocessing import Pool
@@ -59,7 +59,7 @@ def multiRunner(sorter, sorterName: str, distributions: list=None, aucs: list=No
 				ids = [(dist, AUC, 128, 128) for _ in range(iters)]
 			topBar = tqdm(total=iters, smoothing=0, bar_format="{percentage:3.0f}% {n_fmt}/{total_fmt} {remaining}, {rate_fmt}")
 			botBar = tqdm(total=iters, smoothing=0, bar_format="{bar}")
-			with Pool(initializer=seed) as p:
+			with Pool(initializer=np.random.seed) as p:
 				for result in p.imap_unordered(sorter, ids):
 					topBar.update()
 					botBar.update()

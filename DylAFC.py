@@ -1,10 +1,11 @@
+#!/usr/bin/python3.6
+import os
+import socket
+import time
+import numpy as np
 from sys import argv
 from tkinter import *
 from PIL import ImageTk, Image
-import os
-import socket
-from numpy.random import random, randint
-from time import sleep, time
 class AFC:
 	"""A Class for doing AFC studies. This one only does 2AFC. It is used for integrating with a tkinter interface as seen in DylAFC."""
 	def __init__(self, posDir: str, negDir: str, ansDir: str, ip: str, port: str, n0: int, n1: int, logFile: str):
@@ -37,7 +38,7 @@ class AFC:
 				s.connect((self.ip, int(self.port)))
 				break
 			except ConnectionRefusedError:
-				sleep(0.1)
+				time.sleep(0.1)
 		data: bytes = s.recv(10)
 		if data == b"I'm ready!":
 			s.send(b'\x02' + self.n0.to_bytes(4, 'little') + self.n1.to_bytes(4, 'little') + b'\x03')
@@ -103,14 +104,14 @@ class AFC:
 		if self.mode.get() == 'training':
 			if self.counter <= 0 and self.decision == -1: #put up new pictures
 				if self.ready:
-					if random() > 0.5:
-						self.imgID1: int = randint(0, self.n0 - 1)
-						self.imgID2: int = randint(self.n0, self.n1 + self.n0 - 1)
+					if np.random.random() > 0.5:
+						self.imgID1: int = np.random.randint(0, self.n0 - 1)
+						self.imgID2: int = np.random.randint(self.n0, self.n1 + self.n0 - 1)
 						self.showPics(self.imgID1, self.imgID2)
 						self.answer: str = 'right'
 					else:
-						self.imgID1: int = randint(self.n0, self.n1 + self.n0 - 1)
-						self.imgID2: int =  randint(0, self.n0 - 1)
+						self.imgID1: int = np.random.randint(self.n0, self.n1 + self.n0 - 1)
+						self.imgID2: int =  np.random.randint(0, self.n0 - 1)
 						self.showPics(self.imgID1, self.imgID2)
 						self.answer: str = 'left'
 					self.ready: bool = False
@@ -144,7 +145,7 @@ class AFC:
 							self.data: bytes = data
 							#print(img1, img2)
 							self.showPics(self.imgID1, self.imgID2)
-							self.t1: float = time()
+							self.t1: float = time.time()
 							root.update()
 							self.ready: bool = False
 				except ConnectionResetError:
@@ -161,7 +162,7 @@ class AFC:
 					payload: bytes = (0).to_bytes(4, 'little') + self.data[1:5]
 					des: int = self.imgID2
 				try:
-					self.f.write(f"{self.images[self.imgID1].filename} {self.images[self.imgID2].filename} {self.images[des].filename} {time() - self.t1}\n")
+					self.f.write(f"{self.images[self.imgID1].filename} {self.images[self.imgID2].filename} {self.images[des].filename} {time.time() - self.t1}\n")
 					self.s.send(b'\x02' + payload + b'\x03')
 				except ConnectionResetError:
 					print("Client Disconnected")

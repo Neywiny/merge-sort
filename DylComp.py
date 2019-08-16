@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+import pickle
 import numpy as np
 from scipy.stats import kendalltau
 from ROC1 import rocxy
@@ -6,8 +7,6 @@ np.seterr(all="ignore")
 from warnings import filterwarnings
 filterwarnings("ignore")
 import socket
-from numpy.random import random
-from pickle import dump
 class Comparator:
 	"""A class for comparing 2 values.
 	Controlled with the optimizaiton level and if you want random decisions or not
@@ -310,7 +309,7 @@ class NetComparator(Comparator):
 				print(data, self.desHist)
 				raise ConnectionError("shoulda gotten that")
 			self.record(arr)
-		flipped: bool = random() > 0.5
+		flipped: bool = np.random.random() > 0.5
 		if flipped:
 			payload: bytes = b'\x02' + arr[1].to_bytes(4, 'little') + arr[0].to_bytes(4, 'little') + b'\x03'
 		else:
@@ -431,4 +430,4 @@ if __name__ == "__main__":
 				plt.savefig("temp.svg")
 				replace("temp.svg", "figure.svg")
 		with open(argv[3], "wb") as f:
-			dump((avgROC, roc4), f)
+			pickle.dump((avgROC, roc4), f)

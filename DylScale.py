@@ -1,11 +1,11 @@
 #! /usr/bin/python3
 import os
+from numpy import random
 from sys import argv
 from tkinter.constants import *
 from tkinter import *
 from PIL import ImageTk, Image, ImageDraw
 from time import time
-from numpy.random import shuffle
 class Rating:
 	"""A class for displaying an image and recording the ratins and timings of the reader.
 	Label parameter is the label where the image is going to be drawn.
@@ -33,7 +33,7 @@ class Rating:
 		self.images: list = [ImageTk.PhotoImage(img) for img in self.images]
 		for i, image in enumerate(self.images):
 			setattr(image, "filename", names[i])
-		shuffle(self.images)
+		random.shuffle(self.images)
 		self.label = label
 		print()
 
@@ -159,7 +159,7 @@ if len(argv) == 2:
 	ax2.plot(times)
 	ax2.set_title(f"Avg time {np.mean(times):0.2f}s")
 	plt.show()
-elif len(argv) < 5:
+elif len(argv) != 5 and len(argv) != 6:
 	print(f"Usage: \n\tpython3 {__file__} [signal present directory] [signal absent directory] [n] [output file] [offset (optional)]\n\tpython3 {__file__} [results file]")
 else:
 	IMGWIDTH: int = 600
@@ -171,21 +171,26 @@ else:
 	label = Label(root)
 	if len(argv) < 6:
 		argv.append("0")
-	rating = Rating(*argv[1:], label)
-	label.configure(image=rating.images[0])
-	label.grid(row=1, column=0)
-	ticks = Frame(root)
-	ticks.grid(row=1, column=1)
-	for tickmark in range(0, 110, 10):
-		text = Label(ticks, text=str(tickmark))
-		row: int = 10-(tickmark//10)
-		text.grid(row=row, column=0, sticky=E, pady=18)
-	gradient = GradientFrame(root, from_color="#000000", to_color="#FFFFFF", height=IMGHEIGHT, width=100, orient=HORIZONTAL)
-	gradient.grid(row=1, column=2)
-	rating.canvas = gradient
-	gradient.bind("<Button-1>", rating.drawBar)
-	button = Button(text="next", command=rating.next)
-	button.grid(row=2, column=2)
-	root.bind("<Return>", rating.next)
-	rating.t1 = time()
-	root.mainloop()
+	try:
+		rating = Rating(*argv[1:], label)
+		label.configure(image=rating.images[0])
+		label.grid(row=1, column=0)
+		ticks = Frame(root)
+		ticks.grid(row=1, column=1)
+		for tickmark in range(0, 110, 10):
+			text = Label(ticks, text=str(tickmark))
+			row: int = 10-(tickmark//10)
+			text.grid(row=row, column=0, sticky=E, pady=18)
+		gradient = GradientFrame(root, from_color="#000000", to_color="#FFFFFF", height=IMGHEIGHT, width=100, orient=HORIZONTAL)
+		gradient.grid(row=1, column=2)
+		rating.canvas = gradient
+		gradient.bind("<Button-1>", rating.drawBar)
+		button = Button(text="next", command=rating.next)
+		button.grid(row=2, column=2)
+		root.bind("<Return>", rating.next)
+		rating.t1 = time()
+		root.mainloop()
+
+	except ValueError:
+		print("Invalid Arguments")
+		root.destroy()

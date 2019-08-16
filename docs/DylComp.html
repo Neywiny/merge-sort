@@ -18,8 +18,9 @@
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+</td><td width="25%" valign=top><a href="pickle.html">pickle</a><br>
 </td><td width="25%" valign=top><a href="socket.html">socket</a><br>
-</td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
 <td colspan=3 valign=bottom>&nbsp;<br>
@@ -186,72 +187,6 @@ Data descriptors inherited from <a href="DylComp.html#Comparator">Comparator</a>
 <dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
 </dl>
 </td></tr></table></td></tr></table><p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#eeaa77">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
-    
-<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-dump"><strong>dump</strong></a>(obj, file, protocol=None, *, fix_imports=True)</dt><dd><tt>Write&nbsp;a&nbsp;pickled&nbsp;representation&nbsp;of&nbsp;obj&nbsp;to&nbsp;the&nbsp;open&nbsp;file&nbsp;<a href="builtins.html#object">object</a>&nbsp;file.<br>
-&nbsp;<br>
-This&nbsp;is&nbsp;equivalent&nbsp;to&nbsp;``Pickler(file,&nbsp;protocol).<a href="#-dump">dump</a>(obj)``,&nbsp;but&nbsp;may<br>
-be&nbsp;more&nbsp;efficient.<br>
-&nbsp;<br>
-The&nbsp;optional&nbsp;*protocol*&nbsp;argument&nbsp;tells&nbsp;the&nbsp;pickler&nbsp;to&nbsp;use&nbsp;the&nbsp;given<br>
-protocol&nbsp;supported&nbsp;protocols&nbsp;are&nbsp;0,&nbsp;1,&nbsp;2,&nbsp;3&nbsp;and&nbsp;4.&nbsp;&nbsp;The&nbsp;default<br>
-protocol&nbsp;is&nbsp;3;&nbsp;a&nbsp;backward-incompatible&nbsp;protocol&nbsp;designed&nbsp;for&nbsp;Python&nbsp;3.<br>
-&nbsp;<br>
-Specifying&nbsp;a&nbsp;negative&nbsp;protocol&nbsp;version&nbsp;selects&nbsp;the&nbsp;highest&nbsp;protocol<br>
-version&nbsp;supported.&nbsp;&nbsp;The&nbsp;higher&nbsp;the&nbsp;protocol&nbsp;used,&nbsp;the&nbsp;more&nbsp;recent&nbsp;the<br>
-version&nbsp;of&nbsp;Python&nbsp;needed&nbsp;to&nbsp;read&nbsp;the&nbsp;pickle&nbsp;produced.<br>
-&nbsp;<br>
-The&nbsp;*file*&nbsp;argument&nbsp;must&nbsp;have&nbsp;a&nbsp;write()&nbsp;method&nbsp;that&nbsp;accepts&nbsp;a&nbsp;single<br>
-bytes&nbsp;argument.&nbsp;&nbsp;It&nbsp;can&nbsp;thus&nbsp;be&nbsp;a&nbsp;file&nbsp;<a href="builtins.html#object">object</a>&nbsp;opened&nbsp;for&nbsp;binary<br>
-writing,&nbsp;an&nbsp;io.BytesIO&nbsp;instance,&nbsp;or&nbsp;any&nbsp;other&nbsp;custom&nbsp;<a href="builtins.html#object">object</a>&nbsp;that&nbsp;meets<br>
-this&nbsp;interface.<br>
-&nbsp;<br>
-If&nbsp;*fix_imports*&nbsp;is&nbsp;True&nbsp;and&nbsp;protocol&nbsp;is&nbsp;less&nbsp;than&nbsp;3,&nbsp;pickle&nbsp;will&nbsp;try<br>
-to&nbsp;map&nbsp;the&nbsp;new&nbsp;Python&nbsp;3&nbsp;names&nbsp;to&nbsp;the&nbsp;old&nbsp;module&nbsp;names&nbsp;used&nbsp;in&nbsp;Python<br>
-2,&nbsp;so&nbsp;that&nbsp;the&nbsp;pickle&nbsp;data&nbsp;stream&nbsp;is&nbsp;readable&nbsp;with&nbsp;Python&nbsp;2.</tt></dd></dl>
- <dl><dt><a name="-random"><strong>random</strong></a> = random_sample(...)<font color="#909090"><font face="helvetica, arial"> method of <a href="numpy.random.mtrand.html#RandomState">mtrand.RandomState</a> instance</font></font></dt><dd><tt>random_sample(size=None)<br>
-&nbsp;<br>
-Return&nbsp;random&nbsp;floats&nbsp;in&nbsp;the&nbsp;half-open&nbsp;interval&nbsp;[0.0,&nbsp;1.0).<br>
-&nbsp;<br>
-Results&nbsp;are&nbsp;from&nbsp;the&nbsp;"continuous&nbsp;uniform"&nbsp;distribution&nbsp;over&nbsp;the<br>
-stated&nbsp;interval.&nbsp;&nbsp;To&nbsp;sample&nbsp;:math:`Unif[a,&nbsp;b),&nbsp;b&nbsp;&gt;&nbsp;a`&nbsp;multiply<br>
-the&nbsp;output&nbsp;of&nbsp;`random_sample`&nbsp;by&nbsp;`(b-a)`&nbsp;and&nbsp;add&nbsp;`a`::<br>
-&nbsp;<br>
-&nbsp;&nbsp;(b&nbsp;-&nbsp;a)&nbsp;*&nbsp;random_sample()&nbsp;+&nbsp;a<br>
-&nbsp;<br>
-Parameters<br>
-----------<br>
-size&nbsp;:&nbsp;int&nbsp;or&nbsp;tuple&nbsp;of&nbsp;ints,&nbsp;optional<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Output&nbsp;shape.&nbsp;&nbsp;If&nbsp;the&nbsp;given&nbsp;shape&nbsp;is,&nbsp;e.g.,&nbsp;``(m,&nbsp;n,&nbsp;k)``,&nbsp;then<br>
-&nbsp;&nbsp;&nbsp;&nbsp;``m&nbsp;*&nbsp;n&nbsp;*&nbsp;k``&nbsp;samples&nbsp;are&nbsp;drawn.&nbsp;&nbsp;Default&nbsp;is&nbsp;None,&nbsp;in&nbsp;which&nbsp;case&nbsp;a<br>
-&nbsp;&nbsp;&nbsp;&nbsp;single&nbsp;value&nbsp;is&nbsp;returned.<br>
-&nbsp;<br>
-Returns<br>
--------<br>
-out&nbsp;:&nbsp;float&nbsp;or&nbsp;ndarray&nbsp;of&nbsp;floats<br>
-&nbsp;&nbsp;&nbsp;&nbsp;Array&nbsp;of&nbsp;random&nbsp;floats&nbsp;of&nbsp;shape&nbsp;`size`&nbsp;(unless&nbsp;``size=None``,&nbsp;in&nbsp;which<br>
-&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;a&nbsp;single&nbsp;float&nbsp;is&nbsp;returned).<br>
-&nbsp;<br>
-Examples<br>
---------<br>
-&gt;&gt;&gt;&nbsp;np.random.random_sample()<br>
-0.47108547995356098<br>
-&gt;&gt;&gt;&nbsp;type(np.random.random_sample())<br>
-&lt;type&nbsp;'float'&gt;<br>
-&gt;&gt;&gt;&nbsp;np.random.random_sample((5,))<br>
-array([&nbsp;0.30220482,&nbsp;&nbsp;0.86820401,&nbsp;&nbsp;0.1654503&nbsp;,&nbsp;&nbsp;0.11659149,&nbsp;&nbsp;0.54323428])<br>
-&nbsp;<br>
-Three-by-two&nbsp;array&nbsp;of&nbsp;random&nbsp;numbers&nbsp;from&nbsp;[-5,&nbsp;0):<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;5&nbsp;*&nbsp;np.random.random_sample((3,&nbsp;2))&nbsp;-&nbsp;5<br>
-array([[-3.99149989,&nbsp;-0.52338984],<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[-2.99091858,&nbsp;-0.79479508],<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;[-1.23204345,&nbsp;-1.75224494]])</tt></dd></dl>
-</td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">
 <td colspan=3 valign=bottom>&nbsp;<br>

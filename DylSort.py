@@ -1,3 +1,4 @@
+#!/usr/bin/python3.6
 import numpy as np
 from sys import argv
 from DylMath import runStats, graphROCs
@@ -266,7 +267,6 @@ if __name__ == "__main__":
 		length: int = int(2**power*(2/3))
 		power += 1
 		yStep: float = length / power
-		print(yStep)
 		fig, axes = plt.subplots(ncols=2, nrows=1)
 		for ax in axes:
 			if ax == axes[0]:

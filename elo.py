@@ -1,3 +1,4 @@
+#!/usr/bin/python3.6
 import numpy as np
 from numpy import matlib as mb
 from ROC1 import *

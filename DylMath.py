@@ -1,3 +1,4 @@
+#!/usr/bin/python3.6
 import ROC1
 import numpy as np
 np.set_printoptions(threshold=np.inf)

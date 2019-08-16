@@ -1,3 +1,4 @@
+#!/usr/bin/python3.6
 class MultiMerger:
 	def __init__(self, groups: list, comp, start=0, stop=0, toggle:bool=True):
 		groups: list = list(filter(lambda x: len(x) > 0, groups))

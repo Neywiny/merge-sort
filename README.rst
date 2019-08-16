@@ -193,7 +193,7 @@ Graphs and Where to Find Them
    ``python3 DylSort.py 5``
 -  Average ROC for each layer as a merge simulation progresses ->
    ``python3 DylSort.py 3 <overlapping (defualt True)>``
--  ROC curves for merge sort vs elo -> ``python3 Elo.py``
+-  ROC curves for merge sort vs elo -> ``python3 elo.py``
 
 .. |forthebadge made-with-python| image:: http://ForTheBadge.com/images/badges/made-with-python.svg
    :target: https://www.python.org/

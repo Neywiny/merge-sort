@@ -1,3 +1,4 @@
+#!/usr/bin/python3.6
 import numpy as np
 np.seterr(all="ignore")
 def continuousScale(*args):
