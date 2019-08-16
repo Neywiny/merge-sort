@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>DylAnalyzer</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/dylan/Documents/merge-sort/DylAnalyzer.py">/home/dylan/Documents/merge-sort/DylAnalyzer.py</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/nashome/merge-sort/DylAnalyzer.py">/nashome/merge-sort/DylAnalyzer.py</a></font></td></tr></table>
     <p></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -31,13 +31,15 @@
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-analyze"><strong>analyze</strong></a>(fileName:str, length:int, layers:int, justOne:bool=False, bar:bool=False) -&gt; tuple</dt><dd><tt>analyze&nbsp;a&nbsp;merge&nbsp;sort&nbsp;results&nbsp;file.<br>
+<td width="100%"><dl><dt><a name="-analyzeAFCStudies"><strong>analyzeAFCStudies</strong></a>(log:str, results:str, n0:int, n1:int) -&gt; tuple</dt><dd><tt>extracts&nbsp;the&nbsp;times&nbsp;out&nbsp;of&nbsp;the&nbsp;log&nbsp;file&nbsp;generated&nbsp;from&nbsp;DylAFC<br>
+extracts&nbsp;the&nbsp;x0&nbsp;and&nbsp;x1&nbsp;vectors&nbsp;and&nbsp;the&nbsp;ranks&nbsp;from&nbsp;the&nbsp;results&nbsp;file&nbsp;from&nbsp;DylComp</tt></dd></dl>
+ <dl><dt><a name="-analyzeEloSims"><strong>analyzeEloSims</strong></a>(filename:str, passes) -&gt; list</dt><dd><tt>Analyze&nbsp;an&nbsp;ELO&nbsp;simulation.<br>
+Returns&nbsp;AUC,&nbsp;true&nbsp;Var,&nbsp;bad&nbsp;Var,&nbsp;the&nbsp;lsit&nbsp;of&nbsp;bad&nbsp;vars,&nbsp;mse&nbsp;True,&nbsp;mse&nbsp;Emperic&nbsp;and&nbsp;PC</tt></dd></dl>
+ <dl><dt><a name="-analyzeMergeSims"><strong>analyzeMergeSims</strong></a>(fileName:str, length:int, layers:int, justOne:bool=False, bar:bool=False) -&gt; tuple</dt><dd><tt>analyze&nbsp;a&nbsp;merge&nbsp;sort&nbsp;results&nbsp;file.<br>
 If&nbsp;justOne&nbsp;is&nbsp;True,&nbsp;only&nbsp;does&nbsp;the&nbsp;first&nbsp;simulation<br>
 If&nbsp;bar&nbsp;is&nbsp;True,&nbsp;shows&nbsp;a&nbsp;tqdm&nbsp;progress&nbsp;bar</tt></dd></dl>
- <dl><dt><a name="-analyzeAFC"><strong>analyzeAFC</strong></a>(log:str, results:str, n0:int, n1:int) -&gt; tuple</dt><dd><tt>extracts&nbsp;the&nbsp;times&nbsp;out&nbsp;of&nbsp;the&nbsp;log&nbsp;file&nbsp;generated&nbsp;from&nbsp;DylAFC<br>
-extracts&nbsp;the&nbsp;x0&nbsp;and&nbsp;x1&nbsp;vectors&nbsp;and&nbsp;the&nbsp;ranks&nbsp;from&nbsp;the&nbsp;results&nbsp;file&nbsp;from&nbsp;DylComp</tt></dd></dl>
  <dl><dt><a name="-analyzeReaderStudies"><strong>analyzeReaderStudies</strong></a>(resultsFile, directory, n0)</dt></dl>
- <dl><dt><a name="-analyzeScale"><strong>analyzeScale</strong></a>(fileName:str, names:list=None) -&gt; tuple</dt><dd><tt>Analyzes&nbsp;a&nbsp;scale&nbsp;study.<br>
+ <dl><dt><a name="-analyzeScaleStudy"><strong>analyzeScaleStudy</strong></a>(fileName:str, names:list=None) -&gt; tuple</dt><dd><tt>Analyzes&nbsp;a&nbsp;scale&nbsp;study.<br>
 If&nbsp;names&nbsp;parameter&nbsp;given,&nbsp;filters&nbsp;for&nbsp;only&nbsp;those&nbsp;names.<br>
 Names&nbsp;can&nbsp;be&nbsp;any&nbsp;type&nbsp;of&nbsp;iterable.</tt></dd></dl>
  <dl><dt><a name="-getsizeof"><strong>getsizeof</strong></a>(...)</dt><dd><tt><a href="#-getsizeof">getsizeof</a>(object,&nbsp;default)&nbsp;-&gt;&nbsp;int<br>

@@ -8,7 +8,7 @@
 <td valign=bottom>&nbsp;<br>
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>DylMath</strong></big></big></font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/dylan/Documents/merge-sort/DylMath.py">/home/dylan/Documents/merge-sort/DylMath.py</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/nashome/merge-sort/DylMath.py">/nashome/merge-sort/DylMath.py</a></font></td></tr></table>
     <p></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -34,11 +34,14 @@ If&nbsp;rocEmpiric&nbsp;is&nbsp;not&nbsp;None:&nbsp;the&nbsp;MSE&nbsp;between&nb
 If&nbsp;sep&nbsp;and&nbsp;dist&nbsp;are&nbsp;None,&nbsp;the&nbsp;first&nbsp;value&nbsp;returned&nbsp;is&nbsp;always&nbsp;0<br>
 The&nbsp;last&nbsp;value&nbsp;returned&nbsp;is&nbsp;always&nbsp;the&nbsp;AUC&nbsp;of&nbsp;the&nbsp;ROC</tt></dd></dl>
  <dl><dt><a name="-auc"><strong>auc</strong></a>(results:tuple, D0:list=None, D1:list=None) -&gt; float</dt><dd><tt>Takes&nbsp;an&nbsp;ROC&nbsp;curve&nbsp;from&nbsp;genROC&nbsp;and&nbsp;returns&nbsp;the&nbsp;AUC.<br>
-If&nbsp;results&nbsp;is&nbsp;a&nbsp;prediction&nbsp;not&nbsp;an&nbsp;ROC&nbsp;curve,&nbsp;generates&nbsp;the&nbsp;ROC&nbsp;curve.</tt></dd></dl>
+If&nbsp;results&nbsp;is&nbsp;a&nbsp;prediction&nbsp;not&nbsp;an&nbsp;ROC&nbsp;curve,&nbsp;generates&nbsp;the&nbsp;ROC&nbsp;curve.<br>
+If&nbsp;results&nbsp;is&nbsp;already&nbsp;an&nbsp;ROC&nbsp;curve,&nbsp;D0&nbsp;and&nbsp;D1&nbsp;are&nbsp;not&nbsp;required.</tt></dd></dl>
  <dl><dt><a name="-avROC"><strong>avROC</strong></a>(rocs:list) -&gt; tuple</dt><dd><tt>Averages&nbsp;ROC&nbsp;curves.&nbsp;Rocs&nbsp;parameter&nbsp;are&nbsp;ROC&nbsp;curves&nbsp;from&nbsp;genROC.</tt></dd></dl>
  <dl><dt><a name="-calcNLayers"><strong>calcNLayers</strong></a>(arr:list) -&gt; int</dt><dd><tt>Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;layers&nbsp;that&nbsp;would&nbsp;be&nbsp;needed&nbsp;to&nbsp;sort.<br>
 If&nbsp;arr&nbsp;is&nbsp;the&nbsp;a&nbsp;tuple&nbsp;or&nbsp;list,&nbsp;uses&nbsp;the&nbsp;length.<br>
 If&nbsp;arr&nbsp;is&nbsp;already&nbsp;the&nbsp;length,&nbsp;uses&nbsp;that.</tt></dd></dl>
+ <dl><dt><a name="-genD0D1"><strong>genD0D1</strong></a>(d0d1:list, arr:list) -&gt; tuple</dt><dd><tt>Generates&nbsp;filtered&nbsp;D0&nbsp;and&nbsp;D1&nbsp;vectors.<br>
+d0d1&nbsp;is&nbsp;(D0,&nbsp;D1)&nbsp;together&nbsp;as&nbsp;a&nbsp;tuple/list.</tt></dd></dl>
  <dl><dt><a name="-genROC"><strong>genROC</strong></a>(predicted:tuple, D1:list=None, D0:list=None) -&gt; list</dt><dd><tt>Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;collections&nbsp;of&nbsp;x,y&nbsp;coordinates&nbsp;in&nbsp;order&nbsp;of&nbsp;the&nbsp;threshold</tt></dd></dl>
  <dl><dt><a name="-genSep"><strong>genSep</strong></a>(dist:str, auc:float) -&gt; float</dt><dd><tt>Returns&nbsp;the&nbsp;sep&nbsp;parameter&nbsp;needed&nbsp;for&nbsp;the&nbsp;target&nbsp;AUC&nbsp;for&nbsp;the&nbsp;given&nbsp;distribution.</tt></dd></dl>
  <dl><dt><a name="-genX0X1"><strong>genX0X1</strong></a>(predicted:tuple, D1:tuple=None, D0:tuple=None) -&gt; (&lt;class 'list'&gt;, &lt;class 'list'&gt;)</dt><dd><tt>Generates&nbsp;x0&nbsp;and&nbsp;x1&nbsp;vectors&nbsp;out&nbsp;of&nbsp;the&nbsp;given&nbsp;parameters.<br>
@@ -50,6 +53,8 @@ If&nbsp;withLine,&nbsp;graphs&nbsp;the&nbsp;line.<br>
 Returns&nbsp;the&nbsp;plt&nbsp;handle,&nbsp;does&nbsp;not&nbsp;display&nbsp;the&nbsp;results.</tt></dd></dl>
  <dl><dt><a name="-hanleyMcNeil"><strong>hanleyMcNeil</strong></a>(auc:float, n0:int, n1:int) -&gt; float</dt><dd><tt>The&nbsp;very&nbsp;good&nbsp;power-law&nbsp;variance&nbsp;estimate&nbsp;from&nbsp;Hanley/McNeil</tt></dd></dl>
  <dl><dt><a name="-paramToParams"><strong>paramToParams</strong></a>(predicted:list, D0:list=None, D1:list=None) -&gt; (&lt;class 'list'&gt;, &lt;class 'list'&gt;, &lt;class 'list'&gt;)</dt><dd><tt>Takes&nbsp;one&nbsp;parameter&nbsp;and&nbsp;splits&nbsp;it&nbsp;into&nbsp;three&nbsp;if&nbsp;predicted&nbsp;is&nbsp;a&nbsp;2d&nbsp;list</tt></dd></dl>
+ <dl><dt><a name="-runStats"><strong>runStats</strong></a>(groups:list, params:list, comp) -&gt; list</dt><dd><tt>Runs&nbsp;stats&nbsp;on&nbsp;the&nbsp;groups&nbsp;provided.<br>
+Params&nbsp;parameter&nbsp;must&nbsp;be:&nbsp;((d0d1),&nbsp;dist,&nbsp;targetAUC,&nbsp;n,&nbsp;currLayer,&nbsp;len(mergers))</tt></dd></dl>
  <dl><dt><a name="-successMatrix"><strong>successMatrix</strong></a>(predicted:list, D0:list, D1:list)</dt><dd><tt>Creates&nbsp;the&nbsp;success&nbsp;matrix&nbsp;for&nbsp;the&nbsp;predicted&nbsp;ordering.<br>
 Checks&nbsp;to&nbsp;make&nbsp;sure&nbsp;it&nbsp;got&nbsp;every&nbsp;entry&nbsp;filled.</tt></dd></dl>
 </td></tr></table><p>

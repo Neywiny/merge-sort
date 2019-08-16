@@ -141,13 +141,8 @@ To analyze the results, run `python3 DylAnalyzer.py <json file> <optional output
 ## Graphs and Where to Find Them
 
 -   Graph of the green/red success matrix ROC curve -> `python3 DylSort.py 1 <n0> <n1> <directory to save file into (optional)>`
-
 -   Dashboard of a merge sort simulation file -> `python3 DylAnalyzer.py 1 <filename>`
-
 -   Reader study p vals and time analysis -> `python3 DylAnalyzer.py 2 <results json filename> <names.txt filename (in case it was moved or renamed; required)> <graph output filename (optional)>`
-
 -   Canonical bottom up merge sort vs tree based merge sort -> `python3 DylSort.py 5`
-
 -   Average ROC for each layer as a merge simulation progresses -> `python3 DylSort.py 3 <overlapping (defualt True)>`
-
 -   ROC curves for merge sort vs elo -> `python3 Elo.py`

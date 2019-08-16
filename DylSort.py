@@ -154,7 +154,7 @@ if __name__ == "__main__":
 			ax.set_title("")
 			plt.title("")
 			plt.gcf().suptitle("")
-			if len(argv) > 4: 
+			if len(argv) > 4:
 				plt.savefig(argv[4] + "/patches.pdf", bbox_inches = 'tight', pad_inches = 0)
 			else:
 				plt.show()

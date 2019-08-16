@@ -244,17 +244,13 @@ def analyzeReaderStudies(resultsFile, directory, n0):
 
 
 if __name__ == "__main__":
-	if len(argv) > 1:
+	if len(argv) > 1 and (argv[1] == '2' or argv[1] == '1'):
 		if argv[1] == '2':
 			test: int = 2
 		elif argv[1] == '1':
 			test: int = 1
-		else:
-			test: int = -1
 	else:
-		argv.append("1")
-		argv.append("resultsMerge85") # default value
-		test: int = 1
+		test = -1
 	if test == 1:
 		# Shows the 5 plot dashboard for studies
 		length: int = 256
