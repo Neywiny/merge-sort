@@ -1,50 +1,146 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html><head><title>Python: module DylSort</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-</head><body bgcolor="#f0f0f8">
 
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
-<tr bgcolor="#7799ee">
-<td valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>DylSort</strong></big></big></font></td
-><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/nashome/merge-sort/DylSort.py">/nashome/merge-sort/DylSort.py</a></font></td></tr></table>
-    <p></p>
-<p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#aa55cc">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>DylSort module &#8212; merge sort 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DylUtils module" href="DylUtils.html" />
+    <link rel="prev" title="DylScale module" href="DylScale.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-DylSort">
+<span id="dylsort-module"></span><h1>DylSort module<a class="headerlink" href="#module-DylSort" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="DylSort.mergeSort">
+<code class="sig-prename descclassname">DylSort.</code><code class="sig-name descname">mergeSort</code><span class="sig-paren">(</span><em class="sig-param">arr: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylSort.html#mergeSort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylSort.mergeSort" title="Permalink to this definition">¶</a></dt>
+<dd><p>statParams must be the format ((D0, D1), dist, target AUC)
+combGroups determins if the returned array is one list or each group as its own list.
+sortGroups determins if groups will be sorted by size in the sort.
+yields the arr after each pass through
+also yields the stats if given statParams</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylSort.treeMergeSort">
+<code class="sig-prename descclassname">DylSort.</code><code class="sig-name descname">treeMergeSort</code><span class="sig-paren">(</span><em class="sig-param">arr: list</em>, <em class="sig-param">comp</em>, <em class="sig-param">statParams=None</em>, <em class="sig-param">n: int = 2</em>, <em class="sig-param">combGroups: bool = True</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylSort.html#treeMergeSort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylSort.treeMergeSort" title="Permalink to this definition">¶</a></dt>
+<dd><p>sorts an array with the provided comparator.
+statParams must be the format ((D0, D1), dist, target AUC) if it is provided.
+If n is provided, does at most nAFC type comparisons (ex if n=4, may do most 4AFC, maybe some 3AFC, rest 2AFC)
+combGroups determins if the returned array is one list or each group as its own list.
+Yields the current layer and the statistics if statParams is not None.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylSort.validate">
+<code class="sig-prename descclassname">DylSort.</code><code class="sig-name descname">validate</code><span class="sig-paren">(</span><em class="sig-param">arr: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylSort.html#validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylSort.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Throws errors if the array to be validated is invalid.
+Invalid is if there is a -1 in the array or if there are duplicates.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">merge sort</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="DylAFC.html">DylAFC module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylAnalyzer.html">DylAnalyzer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylComp.html">DylComp module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylData.html">DylData module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylMath.html">DylMath module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylMerger.html">DylMerger module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylScale.html">DylScale module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DylSort module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylUtils.html">DylUtils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ROC1.html">ROC1 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="elo.html">elo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="main.html">main module</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="DylScale.html" title="previous chapter">DylScale module</a></li>
+      <li>Next: <a href="DylUtils.html" title="next chapter">DylUtils module</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Dylan Shekter, Frank Samuelson,.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/DylSort.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
     
-<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
-</td><td width="25%" valign=top></td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#eeaa77">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+
     
-<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-mergeSort"><strong>mergeSort</strong></a>(arr:list, comp:DylComp.Comparator, statParams:list=None, n:int=2, combGroups:bool=True, sortGroups:bool=False) -&gt; list</dt><dd><tt><a href="#-mergeSort">mergeSort</a>(arr:&nbsp;list)<br>
-statParams&nbsp;must&nbsp;be&nbsp;the&nbsp;format&nbsp;((D0,&nbsp;D1),&nbsp;dist,&nbsp;target&nbsp;AUC)<br>
-combGroups&nbsp;determins&nbsp;if&nbsp;the&nbsp;returned&nbsp;array&nbsp;is&nbsp;one&nbsp;list&nbsp;or&nbsp;each&nbsp;group&nbsp;as&nbsp;its&nbsp;own&nbsp;list.<br>
-sortGroups&nbsp;determins&nbsp;if&nbsp;groups&nbsp;will&nbsp;be&nbsp;sorted&nbsp;by&nbsp;size&nbsp;in&nbsp;the&nbsp;sort.<br>
-yields&nbsp;the&nbsp;arr&nbsp;after&nbsp;each&nbsp;pass&nbsp;through<br>
-also&nbsp;yields&nbsp;the&nbsp;stats&nbsp;if&nbsp;given&nbsp;statParams</tt></dd></dl>
- <dl><dt><a name="-treeMergeSort"><strong>treeMergeSort</strong></a>(arr:list, comp, statParams=None, n:int=2, combGroups:bool=True)</dt><dd><tt>sorts&nbsp;an&nbsp;array&nbsp;with&nbsp;the&nbsp;provided&nbsp;comparator.<br>
-statParams&nbsp;must&nbsp;be&nbsp;the&nbsp;format&nbsp;((D0,&nbsp;D1),&nbsp;dist,&nbsp;target&nbsp;AUC)&nbsp;if&nbsp;it&nbsp;is&nbsp;provided.<br>
-If&nbsp;n&nbsp;is&nbsp;provided,&nbsp;does&nbsp;at&nbsp;most&nbsp;nAFC&nbsp;type&nbsp;comparisons&nbsp;(ex&nbsp;if&nbsp;n=4,&nbsp;may&nbsp;do&nbsp;most&nbsp;4AFC,&nbsp;maybe&nbsp;some&nbsp;3AFC,&nbsp;rest&nbsp;2AFC)<br>
-combGroups&nbsp;determins&nbsp;if&nbsp;the&nbsp;returned&nbsp;array&nbsp;is&nbsp;one&nbsp;list&nbsp;or&nbsp;each&nbsp;group&nbsp;as&nbsp;its&nbsp;own&nbsp;list.<br>
-Yields&nbsp;the&nbsp;current&nbsp;layer&nbsp;and&nbsp;the&nbsp;statistics&nbsp;if&nbsp;statParams&nbsp;is&nbsp;not&nbsp;None.</tt></dd></dl>
- <dl><dt><a name="-validate"><strong>validate</strong></a>(arr:list)</dt><dd><tt>Throws&nbsp;errors&nbsp;if&nbsp;the&nbsp;array&nbsp;to&nbsp;be&nbsp;validated&nbsp;is&nbsp;invalid.<br>
-Invalid&nbsp;is&nbsp;if&nbsp;there&nbsp;is&nbsp;a&nbsp;-1&nbsp;in&nbsp;the&nbsp;array&nbsp;or&nbsp;if&nbsp;there&nbsp;are&nbsp;duplicates.</tt></dd></dl>
-</td></tr></table><p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#55aa55">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
-    
-<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><strong>__annotations__</strong> = {}<br>
-<strong>argv</strong> = ['/usr/lib/python3.6/pydoc.py', '-w', './']</td></tr></table>
-</body></html>
+  </body>
+</html>

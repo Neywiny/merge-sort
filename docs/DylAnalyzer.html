@@ -1,55 +1,154 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html><head><title>Python: module DylAnalyzer</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-</head><body bgcolor="#f0f0f8">
 
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
-<tr bgcolor="#7799ee">
-<td valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>DylAnalyzer</strong></big></big></font></td
-><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/nashome/merge-sort/DylAnalyzer.py">/nashome/merge-sort/DylAnalyzer.py</a></font></td></tr></table>
-    <p></p>
-<p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#aa55cc">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>DylAnalyzer module &#8212; merge sort 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DylComp module" href="DylComp.html" />
+    <link rel="prev" title="DylAFC module" href="DylAFC.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-DylAnalyzer">
+<span id="dylanalyzer-module"></span><h1>DylAnalyzer module<a class="headerlink" href="#module-DylAnalyzer" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="DylAnalyzer.analyzeAFCStudies">
+<code class="sig-prename descclassname">DylAnalyzer.</code><code class="sig-name descname">analyzeAFCStudies</code><span class="sig-paren">(</span><em class="sig-param">log: str</em>, <em class="sig-param">results: str</em>, <em class="sig-param">n0: int</em>, <em class="sig-param">n1: int</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/DylAnalyzer.html#analyzeAFCStudies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylAnalyzer.analyzeAFCStudies" title="Permalink to this definition">¶</a></dt>
+<dd><p>extracts the times out of the log file generated from DylAFC
+extracts the x0 and x1 vectors and the ranks from the results file from DylComp</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylAnalyzer.analyzeEloSims">
+<code class="sig-prename descclassname">DylAnalyzer.</code><code class="sig-name descname">analyzeEloSims</code><span class="sig-paren">(</span><em class="sig-param">filename: str</em>, <em class="sig-param">passes</em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/DylAnalyzer.html#analyzeEloSims"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylAnalyzer.analyzeEloSims" title="Permalink to this definition">¶</a></dt>
+<dd><p>Analyze an ELO simulation.
+Returns AUC, true Var, bad Var, the lsit of bad vars, mse True, mse Emperic and PC</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylAnalyzer.analyzeMergeSims">
+<code class="sig-prename descclassname">DylAnalyzer.</code><code class="sig-name descname">analyzeMergeSims</code><span class="sig-paren">(</span><em class="sig-param">fileName: str</em>, <em class="sig-param">length: int</em>, <em class="sig-param">layers: int</em>, <em class="sig-param">justOne: bool = False</em>, <em class="sig-param">bar: bool = False</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/DylAnalyzer.html#analyzeMergeSims"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylAnalyzer.analyzeMergeSims" title="Permalink to this definition">¶</a></dt>
+<dd><p>analyze a merge sort results file.
+If justOne is True, only does the first simulation
+If bar is True, shows a tqdm progress bar</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylAnalyzer.analyzeReaderStudies">
+<code class="sig-prename descclassname">DylAnalyzer.</code><code class="sig-name descname">analyzeReaderStudies</code><span class="sig-paren">(</span><em class="sig-param">resultsFile</em>, <em class="sig-param">directory</em>, <em class="sig-param">n0</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylAnalyzer.html#analyzeReaderStudies"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylAnalyzer.analyzeReaderStudies" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="DylAnalyzer.analyzeScaleStudy">
+<code class="sig-prename descclassname">DylAnalyzer.</code><code class="sig-name descname">analyzeScaleStudy</code><span class="sig-paren">(</span><em class="sig-param">fileName: str</em>, <em class="sig-param">names: list = None</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/DylAnalyzer.html#analyzeScaleStudy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylAnalyzer.analyzeScaleStudy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Analyzes a scale study.
+If names parameter given, filters for only those names.
+Names can be any type of iterable.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">merge sort</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="DylAFC.html">DylAFC module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DylAnalyzer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylComp.html">DylComp module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylData.html">DylData module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylMath.html">DylMath module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylMerger.html">DylMerger module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylScale.html">DylScale module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylSort.html">DylSort module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylUtils.html">DylUtils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ROC1.html">ROC1 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="elo.html">elo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="main.html">main module</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="DylAFC.html" title="previous chapter">DylAFC module</a></li>
+      <li>Next: <a href="DylComp.html" title="next chapter">DylComp module</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Dylan Shekter, Frank Samuelson,.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/DylAnalyzer.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
     
-<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ROC1.html">ROC1</a><br>
-<a href="json.html">json</a><br>
-<a href="numpy.html">numpy</a><br>
-</td><td width="25%" valign=top><a href="os.html">os</a><br>
-<a href="pickle.html">pickle</a><br>
-<a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
-</td><td width="25%" valign=top><a href="scipy.stats.html">scipy.stats</a><br>
-<a href="sys.html">sys</a><br>
-<a href="tqdm.html">tqdm</a><br>
-</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#eeaa77">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+
     
-<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-analyzeAFCStudies"><strong>analyzeAFCStudies</strong></a>(log:str, results:str, n0:int, n1:int) -&gt; tuple</dt><dd><tt>extracts&nbsp;the&nbsp;times&nbsp;out&nbsp;of&nbsp;the&nbsp;log&nbsp;file&nbsp;generated&nbsp;from&nbsp;DylAFC<br>
-extracts&nbsp;the&nbsp;x0&nbsp;and&nbsp;x1&nbsp;vectors&nbsp;and&nbsp;the&nbsp;ranks&nbsp;from&nbsp;the&nbsp;results&nbsp;file&nbsp;from&nbsp;DylComp</tt></dd></dl>
- <dl><dt><a name="-analyzeEloSims"><strong>analyzeEloSims</strong></a>(filename:str, passes) -&gt; list</dt><dd><tt>Analyze&nbsp;an&nbsp;ELO&nbsp;simulation.<br>
-Returns&nbsp;AUC,&nbsp;true&nbsp;Var,&nbsp;bad&nbsp;Var,&nbsp;the&nbsp;lsit&nbsp;of&nbsp;bad&nbsp;vars,&nbsp;mse&nbsp;True,&nbsp;mse&nbsp;Emperic&nbsp;and&nbsp;PC</tt></dd></dl>
- <dl><dt><a name="-analyzeMergeSims"><strong>analyzeMergeSims</strong></a>(fileName:str, length:int, layers:int, justOne:bool=False, bar:bool=False) -&gt; tuple</dt><dd><tt>analyze&nbsp;a&nbsp;merge&nbsp;sort&nbsp;results&nbsp;file.<br>
-If&nbsp;justOne&nbsp;is&nbsp;True,&nbsp;only&nbsp;does&nbsp;the&nbsp;first&nbsp;simulation<br>
-If&nbsp;bar&nbsp;is&nbsp;True,&nbsp;shows&nbsp;a&nbsp;tqdm&nbsp;progress&nbsp;bar</tt></dd></dl>
- <dl><dt><a name="-analyzeReaderStudies"><strong>analyzeReaderStudies</strong></a>(resultsFile, directory, n0)</dt></dl>
- <dl><dt><a name="-analyzeScaleStudy"><strong>analyzeScaleStudy</strong></a>(fileName:str, names:list=None) -&gt; tuple</dt><dd><tt>Analyzes&nbsp;a&nbsp;scale&nbsp;study.<br>
-If&nbsp;names&nbsp;parameter&nbsp;given,&nbsp;filters&nbsp;for&nbsp;only&nbsp;those&nbsp;names.<br>
-Names&nbsp;can&nbsp;be&nbsp;any&nbsp;type&nbsp;of&nbsp;iterable.</tt></dd></dl>
-</td></tr></table><p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#55aa55">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
-    
-<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><strong>__annotations__</strong> = {}</td></tr></table>
-</body></html>
+  </body>
+</html>

@@ -1,44 +1,135 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html><head><title>Python: module main</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-</head><body bgcolor="#f0f0f8">
 
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
-<tr bgcolor="#7799ee">
-<td valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>main</strong></big></big></font></td
-><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/nashome/merge-sort/main.py">/nashome/merge-sort/main.py</a></font></td></tr></table>
-    <p></p>
-<p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#aa55cc">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>main module &#8212; merge sort 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="elo module" href="elo.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-main">
+<span id="main-module"></span><h1>main module<a class="headerlink" href="#module-main" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="main.multiRunner">
+<code class="sig-prename descclassname">main.</code><code class="sig-name descname">multiRunner</code><span class="sig-paren">(</span><em class="sig-param">sorter</em>, <em class="sig-param">sorterName: str</em>, <em class="sig-param">distributions: list = None</em>, <em class="sig-param">aucs: list = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/main.html#multiRunner"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#main.multiRunner" title="Permalink to this definition">¶</a></dt>
+<dd><p>calls the given sorter for either the provided distributions and aucs or the command line arguments:
+command line args as: distributions and aucs each separated by commas no spaces, separated by a space
+sorter must take: one argument that equals (unique threadID, distribution, auc, n0, n1)
+sorter must return: a list of results to be pickled and appended to the file</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="main.sort">
+<code class="sig-prename descclassname">main.</code><code class="sig-name descname">sort</code><span class="sig-paren">(</span><em class="sig-param">args</em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/main.html#sort"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#main.sort" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a sort based on the given args.
+Args is of the format (dist, auc, n0, n1) and is one tuple/list.
+Throws an error if the array did not sort correctly.
+Returns the results.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">merge sort</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="DylAFC.html">DylAFC module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylAnalyzer.html">DylAnalyzer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylComp.html">DylComp module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylData.html">DylData module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylMath.html">DylMath module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylMerger.html">DylMerger module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylScale.html">DylScale module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylSort.html">DylSort module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylUtils.html">DylUtils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ROC1.html">ROC1 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="elo.html">elo module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">main module</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="elo.html" title="previous chapter">elo module</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Dylan Shekter, Frank Samuelson,.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/main.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
     
-<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
-</td><td width="25%" valign=top><a href="os.html">os</a><br>
-</td><td width="25%" valign=top><a href="pickle.html">pickle</a><br>
-</td><td width="25%" valign=top><a href="sys.html">sys</a><br>
-</td></tr></table></td></tr></table><p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#eeaa77">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+
     
-<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-multiRunner"><strong>multiRunner</strong></a>(sorter, sorterName:str, distributions:list=None, aucs:list=None)</dt><dd><tt>calls&nbsp;the&nbsp;given&nbsp;sorter&nbsp;for&nbsp;either&nbsp;the&nbsp;provided&nbsp;distributions&nbsp;and&nbsp;aucs&nbsp;or&nbsp;the&nbsp;command&nbsp;line&nbsp;arguments:<br>
-command&nbsp;line&nbsp;args&nbsp;as:&nbsp;distributions&nbsp;and&nbsp;aucs&nbsp;each&nbsp;separated&nbsp;by&nbsp;commas&nbsp;no&nbsp;spaces,&nbsp;separated&nbsp;by&nbsp;a&nbsp;space<br>
-sorter&nbsp;must&nbsp;take:&nbsp;one&nbsp;argument&nbsp;that&nbsp;equals&nbsp;(unique&nbsp;threadID,&nbsp;distribution,&nbsp;auc,&nbsp;n0,&nbsp;n1)<br>
-sorter&nbsp;must&nbsp;return:&nbsp;a&nbsp;list&nbsp;of&nbsp;results&nbsp;to&nbsp;be&nbsp;pickled&nbsp;and&nbsp;appended&nbsp;to&nbsp;the&nbsp;file</tt></dd></dl>
- <dl><dt><a name="-sleep"><strong>sleep</strong></a>(...)</dt><dd><tt><a href="#-sleep">sleep</a>(seconds)<br>
-&nbsp;<br>
-Delay&nbsp;execution&nbsp;for&nbsp;a&nbsp;given&nbsp;number&nbsp;of&nbsp;seconds.&nbsp;&nbsp;The&nbsp;argument&nbsp;may&nbsp;be<br>
-a&nbsp;floating&nbsp;point&nbsp;number&nbsp;for&nbsp;subsecond&nbsp;precision.</tt></dd></dl>
- <dl><dt><a name="-sort"><strong>sort</strong></a>(args) -&gt; list</dt><dd><tt>Performs&nbsp;a&nbsp;sort&nbsp;based&nbsp;on&nbsp;the&nbsp;given&nbsp;args.<br>
-Args&nbsp;is&nbsp;of&nbsp;the&nbsp;format&nbsp;(dist,&nbsp;auc,&nbsp;n0,&nbsp;n1)&nbsp;and&nbsp;is&nbsp;one&nbsp;tuple/list.<br>
-Throws&nbsp;an&nbsp;error&nbsp;if&nbsp;the&nbsp;array&nbsp;did&nbsp;not&nbsp;sort&nbsp;correctly.<br>
-Returns&nbsp;the&nbsp;results.</tt></dd></dl>
-</td></tr></table>
-</body></html>
+  </body>
+</html>

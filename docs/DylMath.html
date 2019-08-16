@@ -1,70 +1,218 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html><head><title>Python: module DylMath</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-</head><body bgcolor="#f0f0f8">
 
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
-<tr bgcolor="#7799ee">
-<td valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>DylMath</strong></big></big></font></td
-><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/nashome/merge-sort/DylMath.py">/nashome/merge-sort/DylMath.py</a></font></td></tr></table>
-    <p></p>
-<p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#aa55cc">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>DylMath module &#8212; merge sort 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DylMerger module" href="DylMerger.html" />
+    <link rel="prev" title="DylData module" href="DylData.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-DylMath">
+<span id="dylmath-module"></span><h1>DylMath module<a class="headerlink" href="#module-DylMath" title="Permalink to this headline">¶</a></h1>
+<dl class="function">
+<dt id="DylMath.MSE">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">MSE</code><span class="sig-paren">(</span><em class="sig-param">sep: float</em>, <em class="sig-param">dist: str</em>, <em class="sig-param">ROC: list</em>, <em class="sig-param">rocEmpiric: list = None) -&gt; (&lt;class 'float'&gt;</em>, <em class="sig-param">&lt;class 'float'&gt;</em>, <em class="sig-param">&lt;class 'float'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylMath.html#MSE"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.MSE" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the MSE of the given ROC with respect to:
+If sep and dist are not None: the true ROC from sep and dist
+If rocEmpiric is not None: the MSE between the Empiric and ROC
+If sep and dist are None, the first value returned is always 0
+The last value returned is always the AUC of the ROC</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.auc">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">auc</code><span class="sig-paren">(</span><em class="sig-param">results: tuple</em>, <em class="sig-param">D0: list = None</em>, <em class="sig-param">D1: list = None</em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/DylMath.html#auc"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.auc" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes an ROC curve from genROC and returns the AUC.
+If results is a prediction not an ROC curve, generates the ROC curve.
+If results is already an ROC curve, D0 and D1 are not required.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.avROC">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">avROC</code><span class="sig-paren">(</span><em class="sig-param">rocs: list</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/DylMath.html#avROC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.avROC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Averages ROC curves. Rocs parameter are ROC curves from genROC.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.calcNLayers">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">calcNLayers</code><span class="sig-paren">(</span><em class="sig-param">arr: list</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/DylMath.html#calcNLayers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.calcNLayers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of layers that would be needed to sort.
+If arr is the a tuple or list, uses the length.
+If arr is already the length, uses that.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.genD0D1">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">genD0D1</code><span class="sig-paren">(</span><em class="sig-param">d0d1: list</em>, <em class="sig-param">arr: list</em><span class="sig-paren">)</span> &#x2192; tuple<a class="reference internal" href="_modules/DylMath.html#genD0D1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.genD0D1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates filtered D0 and D1 vectors.
+d0d1 is (D0, D1) together as a tuple/list.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.genROC">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">genROC</code><span class="sig-paren">(</span><em class="sig-param">predicted: tuple</em>, <em class="sig-param">D1: list = None</em>, <em class="sig-param">D0: list = None</em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/DylMath.html#genROC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.genROC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of collections of x,y coordinates in order of the threshold</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.genSep">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">genSep</code><span class="sig-paren">(</span><em class="sig-param">dist: str</em>, <em class="sig-param">auc: float</em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/DylMath.html#genSep"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.genSep" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the sep parameter needed for the target AUC for the given distribution.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.genX0X1">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">genX0X1</code><span class="sig-paren">(</span><em class="sig-param">predicted: tuple</em>, <em class="sig-param">D1: tuple = None</em>, <em class="sig-param">D0: tuple = None) -&gt; (&lt;class 'list'&gt;</em>, <em class="sig-param">&lt;class 'list'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylMath.html#genX0X1"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.genX0X1" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates x0 and x1 vectors out of the given parameters.
+D1 and D0 should never be smaller than the predicted array, but are often bigger.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.graphROC">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">graphROC</code><span class="sig-paren">(</span><em class="sig-param">predicted: tuple</em>, <em class="sig-param">D0: list = None</em>, <em class="sig-param">D1: list = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylMath.html#graphROC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.graphROC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates and graphs a single ROC curve and displays the results.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.graphROCs">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">graphROCs</code><span class="sig-paren">(</span><em class="sig-param">arrays: list</em>, <em class="sig-param">withPatches: bool = False</em>, <em class="sig-param">withLine: bool = True</em>, <em class="sig-param">D0: list = None</em>, <em class="sig-param">D1: list = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylMath.html#graphROCs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.graphROCs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Graphs a collection of array predictions. Takes the arrays as they would come out of DylSort sorts.
+If withPatches, puts a color coded success matrix behind the line.
+If withLine, graphs the line.
+Returns the plt handle, does not display the results.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.hanleyMcNeil">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">hanleyMcNeil</code><span class="sig-paren">(</span><em class="sig-param">auc: float</em>, <em class="sig-param">n0: int</em>, <em class="sig-param">n1: int</em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/DylMath.html#hanleyMcNeil"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.hanleyMcNeil" title="Permalink to this definition">¶</a></dt>
+<dd><p>The very good power-law variance estimate from Hanley/McNeil</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.paramToParams">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">paramToParams</code><span class="sig-paren">(</span><em class="sig-param">predicted: list</em>, <em class="sig-param">D0: list = None</em>, <em class="sig-param">D1: list = None) -&gt; (&lt;class 'list'&gt;</em>, <em class="sig-param">&lt;class 'list'&gt;</em>, <em class="sig-param">&lt;class 'list'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylMath.html#paramToParams"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.paramToParams" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes one parameter and splits it into three if predicted is a 2d list</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.runStats">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">runStats</code><span class="sig-paren">(</span><em class="sig-param">groups: list</em>, <em class="sig-param">params: list</em>, <em class="sig-param">comp</em><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/DylMath.html#runStats"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.runStats" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs stats on the groups provided.
+Params parameter must be: ((d0d1), dist, targetAUC, n, currLayer, len(mergers))</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="DylMath.successMatrix">
+<code class="sig-prename descclassname">DylMath.</code><code class="sig-name descname">successMatrix</code><span class="sig-paren">(</span><em class="sig-param">predicted: list</em>, <em class="sig-param">D0: list</em>, <em class="sig-param">D1: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylMath.html#successMatrix"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylMath.successMatrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the success matrix for the predicted ordering.
+Checks to make sure it got every entry filled.</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">merge sort</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="DylAFC.html">DylAFC module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylAnalyzer.html">DylAnalyzer module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylComp.html">DylComp module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylData.html">DylData module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DylMath module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylMerger.html">DylMerger module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylScale.html">DylScale module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylSort.html">DylSort module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylUtils.html">DylUtils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ROC1.html">ROC1 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="elo.html">elo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="main.html">main module</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="DylData.html" title="previous chapter">DylData module</a></li>
+      <li>Next: <a href="DylMerger.html" title="next chapter">DylMerger module</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Dylan Shekter, Frank Samuelson,.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/DylMath.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
     
-<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="ROC1.html">ROC1</a><br>
-</td><td width="25%" valign=top><a href="matplotlib.html">matplotlib</a><br>
-</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
-</td><td width="25%" valign=top><a href="matplotlib.pyplot.html">matplotlib.pyplot</a><br>
-</td></tr></table></td></tr></table><p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#eeaa77">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+
     
-<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-MSE"><strong>MSE</strong></a>(sep:float, dist:str, ROC:list, rocEmpiric:list=None) -&gt; (&lt;class 'float'&gt;, &lt;class 'float'&gt;, &lt;class 'float'&gt;)</dt><dd><tt>Returns&nbsp;the&nbsp;MSE&nbsp;of&nbsp;the&nbsp;given&nbsp;ROC&nbsp;with&nbsp;respect&nbsp;to:<br>
-If&nbsp;sep&nbsp;and&nbsp;dist&nbsp;are&nbsp;not&nbsp;None:&nbsp;the&nbsp;true&nbsp;ROC&nbsp;from&nbsp;sep&nbsp;and&nbsp;dist<br>
-If&nbsp;rocEmpiric&nbsp;is&nbsp;not&nbsp;None:&nbsp;the&nbsp;MSE&nbsp;between&nbsp;the&nbsp;Empiric&nbsp;and&nbsp;ROC<br>
-If&nbsp;sep&nbsp;and&nbsp;dist&nbsp;are&nbsp;None,&nbsp;the&nbsp;first&nbsp;value&nbsp;returned&nbsp;is&nbsp;always&nbsp;0<br>
-The&nbsp;last&nbsp;value&nbsp;returned&nbsp;is&nbsp;always&nbsp;the&nbsp;AUC&nbsp;of&nbsp;the&nbsp;ROC</tt></dd></dl>
- <dl><dt><a name="-auc"><strong>auc</strong></a>(results:tuple, D0:list=None, D1:list=None) -&gt; float</dt><dd><tt>Takes&nbsp;an&nbsp;ROC&nbsp;curve&nbsp;from&nbsp;genROC&nbsp;and&nbsp;returns&nbsp;the&nbsp;AUC.<br>
-If&nbsp;results&nbsp;is&nbsp;a&nbsp;prediction&nbsp;not&nbsp;an&nbsp;ROC&nbsp;curve,&nbsp;generates&nbsp;the&nbsp;ROC&nbsp;curve.<br>
-If&nbsp;results&nbsp;is&nbsp;already&nbsp;an&nbsp;ROC&nbsp;curve,&nbsp;D0&nbsp;and&nbsp;D1&nbsp;are&nbsp;not&nbsp;required.</tt></dd></dl>
- <dl><dt><a name="-avROC"><strong>avROC</strong></a>(rocs:list) -&gt; tuple</dt><dd><tt>Averages&nbsp;ROC&nbsp;curves.&nbsp;Rocs&nbsp;parameter&nbsp;are&nbsp;ROC&nbsp;curves&nbsp;from&nbsp;genROC.</tt></dd></dl>
- <dl><dt><a name="-calcNLayers"><strong>calcNLayers</strong></a>(arr:list) -&gt; int</dt><dd><tt>Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;layers&nbsp;that&nbsp;would&nbsp;be&nbsp;needed&nbsp;to&nbsp;sort.<br>
-If&nbsp;arr&nbsp;is&nbsp;the&nbsp;a&nbsp;tuple&nbsp;or&nbsp;list,&nbsp;uses&nbsp;the&nbsp;length.<br>
-If&nbsp;arr&nbsp;is&nbsp;already&nbsp;the&nbsp;length,&nbsp;uses&nbsp;that.</tt></dd></dl>
- <dl><dt><a name="-genD0D1"><strong>genD0D1</strong></a>(d0d1:list, arr:list) -&gt; tuple</dt><dd><tt>Generates&nbsp;filtered&nbsp;D0&nbsp;and&nbsp;D1&nbsp;vectors.<br>
-d0d1&nbsp;is&nbsp;(D0,&nbsp;D1)&nbsp;together&nbsp;as&nbsp;a&nbsp;tuple/list.</tt></dd></dl>
- <dl><dt><a name="-genROC"><strong>genROC</strong></a>(predicted:tuple, D1:list=None, D0:list=None) -&gt; list</dt><dd><tt>Returns&nbsp;a&nbsp;list&nbsp;of&nbsp;collections&nbsp;of&nbsp;x,y&nbsp;coordinates&nbsp;in&nbsp;order&nbsp;of&nbsp;the&nbsp;threshold</tt></dd></dl>
- <dl><dt><a name="-genSep"><strong>genSep</strong></a>(dist:str, auc:float) -&gt; float</dt><dd><tt>Returns&nbsp;the&nbsp;sep&nbsp;parameter&nbsp;needed&nbsp;for&nbsp;the&nbsp;target&nbsp;AUC&nbsp;for&nbsp;the&nbsp;given&nbsp;distribution.</tt></dd></dl>
- <dl><dt><a name="-genX0X1"><strong>genX0X1</strong></a>(predicted:tuple, D1:tuple=None, D0:tuple=None) -&gt; (&lt;class 'list'&gt;, &lt;class 'list'&gt;)</dt><dd><tt>Generates&nbsp;x0&nbsp;and&nbsp;x1&nbsp;vectors&nbsp;out&nbsp;of&nbsp;the&nbsp;given&nbsp;parameters.<br>
-D1&nbsp;and&nbsp;D0&nbsp;should&nbsp;never&nbsp;be&nbsp;smaller&nbsp;than&nbsp;the&nbsp;predicted&nbsp;array,&nbsp;but&nbsp;are&nbsp;often&nbsp;bigger.</tt></dd></dl>
- <dl><dt><a name="-graphROC"><strong>graphROC</strong></a>(predicted:tuple, D0:list=None, D1:list=None)</dt><dd><tt>Generates&nbsp;and&nbsp;graphs&nbsp;a&nbsp;single&nbsp;ROC&nbsp;curve&nbsp;and&nbsp;displays&nbsp;the&nbsp;results.</tt></dd></dl>
- <dl><dt><a name="-graphROCs"><strong>graphROCs</strong></a>(arrays:list, withPatches:bool=False, withLine:bool=True, D0:list=None, D1:list=None)</dt><dd><tt>Graphs&nbsp;a&nbsp;collection&nbsp;of&nbsp;array&nbsp;predictions.&nbsp;Takes&nbsp;the&nbsp;arrays&nbsp;as&nbsp;they&nbsp;would&nbsp;come&nbsp;out&nbsp;of&nbsp;DylSort&nbsp;sorts.<br>
-If&nbsp;withPatches,&nbsp;puts&nbsp;a&nbsp;color&nbsp;coded&nbsp;success&nbsp;matrix&nbsp;behind&nbsp;the&nbsp;line.<br>
-If&nbsp;withLine,&nbsp;graphs&nbsp;the&nbsp;line.<br>
-Returns&nbsp;the&nbsp;plt&nbsp;handle,&nbsp;does&nbsp;not&nbsp;display&nbsp;the&nbsp;results.</tt></dd></dl>
- <dl><dt><a name="-hanleyMcNeil"><strong>hanleyMcNeil</strong></a>(auc:float, n0:int, n1:int) -&gt; float</dt><dd><tt>The&nbsp;very&nbsp;good&nbsp;power-law&nbsp;variance&nbsp;estimate&nbsp;from&nbsp;Hanley/McNeil</tt></dd></dl>
- <dl><dt><a name="-paramToParams"><strong>paramToParams</strong></a>(predicted:list, D0:list=None, D1:list=None) -&gt; (&lt;class 'list'&gt;, &lt;class 'list'&gt;, &lt;class 'list'&gt;)</dt><dd><tt>Takes&nbsp;one&nbsp;parameter&nbsp;and&nbsp;splits&nbsp;it&nbsp;into&nbsp;three&nbsp;if&nbsp;predicted&nbsp;is&nbsp;a&nbsp;2d&nbsp;list</tt></dd></dl>
- <dl><dt><a name="-runStats"><strong>runStats</strong></a>(groups:list, params:list, comp) -&gt; list</dt><dd><tt>Runs&nbsp;stats&nbsp;on&nbsp;the&nbsp;groups&nbsp;provided.<br>
-Params&nbsp;parameter&nbsp;must&nbsp;be:&nbsp;((d0d1),&nbsp;dist,&nbsp;targetAUC,&nbsp;n,&nbsp;currLayer,&nbsp;len(mergers))</tt></dd></dl>
- <dl><dt><a name="-successMatrix"><strong>successMatrix</strong></a>(predicted:list, D0:list, D1:list)</dt><dd><tt>Creates&nbsp;the&nbsp;success&nbsp;matrix&nbsp;for&nbsp;the&nbsp;predicted&nbsp;ordering.<br>
-Checks&nbsp;to&nbsp;make&nbsp;sure&nbsp;it&nbsp;got&nbsp;every&nbsp;entry&nbsp;filled.</tt></dd></dl>
-</td></tr></table><p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#55aa55">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
-    
-<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><strong>__annotations__</strong> = {'font': &lt;class 'dict'&gt;}<br>
-<strong>font</strong> = {'size': 56}<br>
-<strong>norm</strong> = &lt;scipy.stats._continuous_distns.norm_gen object&gt;</td></tr></table>
-</body></html>
+  </body>
+</html>

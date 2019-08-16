@@ -1,197 +1,249 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html><head><title>Python: module DylComp</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-</head><body bgcolor="#f0f0f8">
 
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
-<tr bgcolor="#7799ee">
-<td valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>DylComp</strong></big></big></font></td
-><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/nashome/merge-sort/DylComp.py">/nashome/merge-sort/DylComp.py</a></font></td></tr></table>
-    <p></p>
-<p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#aa55cc">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>DylComp module &#8212; merge sort 1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="DylData module" href="DylData.html" />
+    <link rel="prev" title="DylAnalyzer module" href="DylAnalyzer.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="module-DylComp">
+<span id="dylcomp-module"></span><h1>DylComp module<a class="headerlink" href="#module-DylComp" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="DylComp.Comparator">
+<em class="property">class </em><code class="sig-prename descclassname">DylComp.</code><code class="sig-name descname">Comparator</code><span class="sig-paren">(</span><em class="sig-param">objects: list = None</em>, <em class="sig-param">level: int = 3</em>, <em class="sig-param">rand: bool = False</em>, <em class="sig-param">seed: int = None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#Comparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A class for comparing 2 values.
+Controlled with the optimizaiton level and if you want random decisions or not
+Either provide objects in init or call .genLookup before you do any comparing
+Optimization levels: will not optimize, store result, do abc association, do recursive association
+Rand: defaults to False. If True will create data from random distributions with seed parameter</p>
+<dl class="method">
+<dt id="DylComp.Comparator.clearHistory">
+<code class="sig-name descname">clearHistory</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#Comparator.clearHistory"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.clearHistory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Clears the history statistics of comparisons</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.empiricROC">
+<code class="sig-name descname">empiricROC</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/DylComp.html#Comparator.empiricROC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.empiricROC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates and stores the empiric ROC if it needs to.
+Returns the stored ROC curve.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.genLookup">
+<code class="sig-name descname">genLookup</code><span class="sig-paren">(</span><em class="sig-param">objects: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#Comparator.genLookup"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.genLookup" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the lookup table for each object provided</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.genRand">
+<code class="sig-name descname">genRand</code><span class="sig-paren">(</span><em class="sig-param">n0: int</em>, <em class="sig-param">n1: int</em>, <em class="sig-param">sep: float</em>, <em class="sig-param">dist: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#Comparator.genRand"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.genRand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates the random data. If a seed has not previously been provided, it will be assigned here.
+This new seeding may not work on Windows, so Windows users should assign the seed on their own.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.genSeps">
+<code class="sig-name descname">genSeps</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; list<a class="reference internal" href="_modules/DylComp.html#Comparator.genSeps"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.genSeps" title="Permalink to this definition">¶</a></dt>
+<dd><p>Goes throguh the stored records and returns a list of the minimum separations.
+If there is no minimum separation (the image has not been seen more than once), uses 2*(n0+n1) as a palceholder</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.getLatentScore">
+<code class="sig-name descname">getLatentScore</code><span class="sig-paren">(</span><em class="sig-param">imgID: int</em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/DylComp.html#Comparator.getLatentScore"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.getLatentScore" title="Permalink to this definition">¶</a></dt>
+<dd><p>gets the latent score of a given imgID or array of imgIDs.
+If only one index is provided, also returns if the image is from the disease negative distribution.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.kendalltau">
+<code class="sig-name descname">kendalltau</code><span class="sig-paren">(</span><em class="sig-param">predicted: list</em><span class="sig-paren">)</span> &#x2192; float<a class="reference internal" href="_modules/DylComp.html#Comparator.kendalltau"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.kendalltau" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the kendalltau statistic between the predicted image ID ordering and the true ordering of the image IDs with respect to latent score.
+This method filters image IDs by what’s in predicted, so only the ids in predicted are used.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.learn">
+<code class="sig-name descname">learn</code><span class="sig-paren">(</span><em class="sig-param">arr: list</em>, <em class="sig-param">img: int = None</em>, <em class="sig-param">maxi: bool = False</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#Comparator.learn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.learn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Learn the order of the array provided, assuming the current optimization level allows it
+if img is provided, learns the arr w.r.t. the img and if it is max or min. arr can also be
+a filename, in whichcase it will read the file to learn</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.max">
+<code class="sig-name descname">max</code><span class="sig-paren">(</span><em class="sig-param">arr</em>, <em class="sig-param">tryingAgain=False) -&gt; (&lt;class 'int'&gt;</em>, <em class="sig-param">&lt;class 'int'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#Comparator.max"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the maximum of the array with respect to the latent scores.
+tryingAgain should always be False unless a network comparator is used.
+Returns the undex of the maximum ID and the maximum ID.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.min">
+<code class="sig-name descname">min</code><span class="sig-paren">(</span><em class="sig-param">arr) -&gt; (&lt;class 'int'&gt;</em>, <em class="sig-param">&lt;class 'int'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#Comparator.min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the minimum of the array with respect to the latent scores.
+Returns the undex of the minimum ID and the minimum ID.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.optimize">
+<em class="property">static </em><code class="sig-name descname">optimize</code><span class="sig-paren">(</span><em class="sig-param">objects: list</em>, <em class="sig-param">lookup: dict</em>, <em class="sig-param">res: bool</em>, <em class="sig-param">a</em>, <em class="sig-param">b</em><span class="sig-paren">)</span> &#x2192; int<a class="reference internal" href="_modules/DylComp.html#Comparator.optimize"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.optimize" title="Permalink to this definition">¶</a></dt>
+<dd><p>Recursive optimization algorithm for adding a node to a fully connected graph.
+Returns the number of optimizations it did.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.record">
+<code class="sig-name descname">record</code><span class="sig-paren">(</span><em class="sig-param">vals: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#Comparator.record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Record that these values were seen.
+This is automatically called by min and max.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.resetPC">
+<code class="sig-name descname">resetPC</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#Comparator.resetPC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.resetPC" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resets the pc statistics. Call this once per layer if you only want that layer’s PC</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.Comparator.updatePC">
+<code class="sig-name descname">updatePC</code><span class="sig-paren">(</span><em class="sig-param">arr: list</em>, <em class="sig-param">guess</em>, <em class="sig-param">answer</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#Comparator.updatePC"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.Comparator.updatePC" title="Permalink to this definition">¶</a></dt>
+<dd><p>If the ids in arr are from different distibutions, adds 1 to the pc denominator.
+If the guess was the answer, adds 1 to the pc numerator.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="DylComp.NetComparator">
+<em class="property">class </em><code class="sig-prename descclassname">DylComp.</code><code class="sig-name descname">NetComparator</code><span class="sig-paren">(</span><em class="sig-param">ip: str</em>, <em class="sig-param">port: int</em>, <em class="sig-param">recorder=None</em>, <em class="sig-param">objects: list = None</em>, <em class="sig-param">level: int = 3</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#NetComparator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.NetComparator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#DylComp.Comparator" title="DylComp.Comparator"><code class="xref py py-class docutils literal notranslate"><span class="pre">DylComp.Comparator</span></code></a></p>
+<p>A class for doing comparisons over a network.</p>
+<dl class="method">
+<dt id="DylComp.NetComparator.max">
+<code class="sig-name descname">max</code><span class="sig-paren">(</span><em class="sig-param">arr: list</em>, <em class="sig-param">tryingAgain=False) -&gt; (&lt;class 'int'&gt;</em>, <em class="sig-param">&lt;class 'int'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#NetComparator.max"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.NetComparator.max" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the maximum of the array with respect to the latent scores.
+tryingAgain is only used for if there was a hiccup in the network.
+Returns the undex of the maximum ID and the maximum ID.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="DylComp.NetComparator.min">
+<code class="sig-name descname">min</code><span class="sig-paren">(</span><em class="sig-param">arr: list) -&gt; (&lt;class 'int'&gt;</em>, <em class="sig-param">&lt;class 'int'&gt;</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/DylComp.html#NetComparator.min"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#DylComp.NetComparator.min" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the minimum of the array with respect to the latent scores as the opposite of the maximum.
+Returns the undex of the minimum ID and the minimum ID.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">merge sort</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="DylAFC.html">DylAFC module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylAnalyzer.html">DylAnalyzer module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">DylComp module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylData.html">DylData module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylMath.html">DylMath module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylMerger.html">DylMerger module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylScale.html">DylScale module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylSort.html">DylSort module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="DylUtils.html">DylUtils module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ROC1.html">ROC1 module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="elo.html">elo module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="main.html">main module</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="DylAnalyzer.html" title="previous chapter">DylAnalyzer module</a></li>
+      <li>Next: <a href="DylData.html" title="next chapter">DylData module</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, Dylan Shekter, Frank Samuelson,.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 2.1.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/DylComp.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
     
-<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
-</td><td width="25%" valign=top><a href="pickle.html">pickle</a><br>
-</td><td width="25%" valign=top><a href="socket.html">socket</a><br>
-</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#ee77aa">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+
     
-<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl>
-<dt><font face="helvetica, arial"><a href="builtins.html#object">builtins.object</a>
-</font></dt><dd>
-<dl>
-<dt><font face="helvetica, arial"><a href="DylComp.html#Comparator">Comparator</a>
-</font></dt><dd>
-<dl>
-<dt><font face="helvetica, arial"><a href="DylComp.html#NetComparator">NetComparator</a>
-</font></dt></dl>
-</dd>
-</dl>
-</dd>
-</dl>
- <p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#ffc8d8">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#000000" face="helvetica, arial"><a name="Comparator">class <strong>Comparator</strong></a>(<a href="builtins.html#object">builtins.object</a>)</font></td></tr>
-    
-<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
-<td colspan=2><tt>A&nbsp;class&nbsp;for&nbsp;comparing&nbsp;2&nbsp;values.<br>
-Controlled&nbsp;with&nbsp;the&nbsp;optimizaiton&nbsp;level&nbsp;and&nbsp;if&nbsp;you&nbsp;want&nbsp;random&nbsp;decisions&nbsp;or&nbsp;not<br>
-Either&nbsp;provide&nbsp;objects&nbsp;in&nbsp;init&nbsp;or&nbsp;call&nbsp;.genLookup&nbsp;before&nbsp;you&nbsp;do&nbsp;any&nbsp;comparing<br>
-Optimization&nbsp;levels:&nbsp;will&nbsp;not&nbsp;optimize,&nbsp;store&nbsp;result,&nbsp;do&nbsp;abc&nbsp;association,&nbsp;do&nbsp;recursive&nbsp;association<br>
-Rand:&nbsp;defaults&nbsp;to&nbsp;False.&nbsp;If&nbsp;True&nbsp;will&nbsp;create&nbsp;data&nbsp;from&nbsp;random&nbsp;distributions&nbsp;with&nbsp;seed&nbsp;parameter<br>&nbsp;</tt></td></tr>
-<tr><td>&nbsp;</td>
-<td width="100%">Methods defined here:<br>
-<dl><dt><a name="Comparator-__init__"><strong>__init__</strong></a>(self, objects:list=None, level:int=3, rand:bool=False, seed:int=None)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
-
-<dl><dt><a name="Comparator-__len__"><strong>__len__</strong></a>(self) -&gt; int</dt><dd><tt>Returns&nbsp;either&nbsp;the&nbsp;number&nbsp;of&nbsp;comparisons&nbsp;done</tt></dd></dl>
-
-<dl><dt><a name="Comparator-clearHistory"><strong>clearHistory</strong></a>(self)</dt><dd><tt>Clears&nbsp;the&nbsp;history&nbsp;statistics&nbsp;of&nbsp;comparisons</tt></dd></dl>
-
-<dl><dt><a name="Comparator-empiricROC"><strong>empiricROC</strong></a>(self) -&gt; dict</dt><dd><tt>Generates&nbsp;and&nbsp;stores&nbsp;the&nbsp;empiric&nbsp;ROC&nbsp;if&nbsp;it&nbsp;needs&nbsp;to.<br>
-Returns&nbsp;the&nbsp;stored&nbsp;ROC&nbsp;curve.</tt></dd></dl>
-
-<dl><dt><a name="Comparator-genLookup"><strong>genLookup</strong></a>(self, objects:list)</dt><dd><tt>Generate&nbsp;the&nbsp;lookup&nbsp;table&nbsp;for&nbsp;each&nbsp;<a href="builtins.html#object">object</a>&nbsp;provided</tt></dd></dl>
-
-<dl><dt><a name="Comparator-genRand"><strong>genRand</strong></a>(self, n0:int, n1:int, sep:float, dist:str)</dt><dd><tt>Generates&nbsp;the&nbsp;random&nbsp;data.&nbsp;If&nbsp;a&nbsp;seed&nbsp;has&nbsp;not&nbsp;previously&nbsp;been&nbsp;provided,&nbsp;it&nbsp;will&nbsp;be&nbsp;assigned&nbsp;here.<br>
-This&nbsp;new&nbsp;seeding&nbsp;may&nbsp;not&nbsp;work&nbsp;on&nbsp;Windows,&nbsp;so&nbsp;Windows&nbsp;users&nbsp;should&nbsp;assign&nbsp;the&nbsp;seed&nbsp;on&nbsp;their&nbsp;own.</tt></dd></dl>
-
-<dl><dt><a name="Comparator-genSeps"><strong>genSeps</strong></a>(self) -&gt; list</dt><dd><tt>Goes&nbsp;throguh&nbsp;the&nbsp;stored&nbsp;records&nbsp;and&nbsp;returns&nbsp;a&nbsp;list&nbsp;of&nbsp;the&nbsp;minimum&nbsp;separations.<br>
-If&nbsp;there&nbsp;is&nbsp;no&nbsp;minimum&nbsp;separation&nbsp;(the&nbsp;image&nbsp;has&nbsp;not&nbsp;been&nbsp;seen&nbsp;more&nbsp;than&nbsp;once),&nbsp;uses&nbsp;2*(n0+n1)&nbsp;as&nbsp;a&nbsp;palceholder</tt></dd></dl>
-
-<dl><dt><a name="Comparator-getLatentScore"><strong>getLatentScore</strong></a>(self, imgID:int) -&gt; float</dt><dd><tt>gets&nbsp;the&nbsp;latent&nbsp;score&nbsp;of&nbsp;a&nbsp;given&nbsp;imgID&nbsp;or&nbsp;array&nbsp;of&nbsp;imgIDs.<br>
-If&nbsp;only&nbsp;one&nbsp;index&nbsp;is&nbsp;provided,&nbsp;also&nbsp;returns&nbsp;if&nbsp;the&nbsp;image&nbsp;is&nbsp;from&nbsp;the&nbsp;disease&nbsp;negative&nbsp;distribution.</tt></dd></dl>
-
-<dl><dt><a name="Comparator-kendalltau"><strong>kendalltau</strong></a>(self, predicted:list) -&gt; float</dt><dd><tt>Returns&nbsp;the&nbsp;kendalltau&nbsp;statistic&nbsp;between&nbsp;the&nbsp;predicted&nbsp;image&nbsp;ID&nbsp;ordering&nbsp;and&nbsp;the&nbsp;true&nbsp;ordering&nbsp;of&nbsp;the&nbsp;image&nbsp;IDs&nbsp;with&nbsp;respect&nbsp;to&nbsp;latent&nbsp;score.<br>
-This&nbsp;method&nbsp;filters&nbsp;image&nbsp;IDs&nbsp;by&nbsp;what's&nbsp;in&nbsp;predicted,&nbsp;so&nbsp;only&nbsp;the&nbsp;ids&nbsp;in&nbsp;predicted&nbsp;are&nbsp;used.</tt></dd></dl>
-
-<dl><dt><a name="Comparator-learn"><strong>learn</strong></a>(self, arr:list, img:int=None, maxi:bool=False)</dt><dd><tt>Learn&nbsp;the&nbsp;order&nbsp;of&nbsp;the&nbsp;array&nbsp;provided,&nbsp;assuming&nbsp;the&nbsp;current&nbsp;optimization&nbsp;level&nbsp;allows&nbsp;it<br>
-if&nbsp;img&nbsp;is&nbsp;provided,&nbsp;learns&nbsp;the&nbsp;arr&nbsp;w.r.t.&nbsp;the&nbsp;img&nbsp;and&nbsp;if&nbsp;it&nbsp;is&nbsp;max&nbsp;or&nbsp;min.&nbsp;arr&nbsp;can&nbsp;also&nbsp;be<br>
-a&nbsp;filename,&nbsp;in&nbsp;whichcase&nbsp;it&nbsp;will&nbsp;read&nbsp;the&nbsp;file&nbsp;to&nbsp;learn</tt></dd></dl>
-
-<dl><dt><a name="Comparator-max"><strong>max</strong></a>(self, arr, tryingAgain=False) -&gt; (&lt;class 'int'&gt;, &lt;class 'int'&gt;)</dt><dd><tt>Gets&nbsp;the&nbsp;maximum&nbsp;of&nbsp;the&nbsp;array&nbsp;with&nbsp;respect&nbsp;to&nbsp;the&nbsp;latent&nbsp;scores.<br>
-tryingAgain&nbsp;should&nbsp;always&nbsp;be&nbsp;False&nbsp;unless&nbsp;a&nbsp;network&nbsp;comparator&nbsp;is&nbsp;used.<br>
-Returns&nbsp;the&nbsp;undex&nbsp;of&nbsp;the&nbsp;maximum&nbsp;ID&nbsp;and&nbsp;the&nbsp;maximum&nbsp;ID.</tt></dd></dl>
-
-<dl><dt><a name="Comparator-min"><strong>min</strong></a>(self, arr) -&gt; (&lt;class 'int'&gt;, &lt;class 'int'&gt;)</dt><dd><tt>Gets&nbsp;the&nbsp;minimum&nbsp;of&nbsp;the&nbsp;array&nbsp;with&nbsp;respect&nbsp;to&nbsp;the&nbsp;latent&nbsp;scores.<br>
-Returns&nbsp;the&nbsp;undex&nbsp;of&nbsp;the&nbsp;minimum&nbsp;ID&nbsp;and&nbsp;the&nbsp;minimum&nbsp;ID.</tt></dd></dl>
-
-<dl><dt><a name="Comparator-record"><strong>record</strong></a>(self, vals:list)</dt><dd><tt>Record&nbsp;that&nbsp;these&nbsp;values&nbsp;were&nbsp;seen.<br>
-This&nbsp;is&nbsp;automatically&nbsp;called&nbsp;by&nbsp;min&nbsp;and&nbsp;max.</tt></dd></dl>
-
-<dl><dt><a name="Comparator-resetPC"><strong>resetPC</strong></a>(self)</dt><dd><tt>Resets&nbsp;the&nbsp;pc&nbsp;statistics.&nbsp;Call&nbsp;this&nbsp;once&nbsp;per&nbsp;layer&nbsp;if&nbsp;you&nbsp;only&nbsp;want&nbsp;that&nbsp;layer's&nbsp;PC</tt></dd></dl>
-
-<dl><dt><a name="Comparator-updatePC"><strong>updatePC</strong></a>(self, arr:list, guess, answer)</dt><dd><tt>If&nbsp;the&nbsp;ids&nbsp;in&nbsp;arr&nbsp;are&nbsp;from&nbsp;different&nbsp;distibutions,&nbsp;adds&nbsp;1&nbsp;to&nbsp;the&nbsp;pc&nbsp;denominator.<br>
-If&nbsp;the&nbsp;guess&nbsp;was&nbsp;the&nbsp;answer,&nbsp;adds&nbsp;1&nbsp;to&nbsp;the&nbsp;pc&nbsp;numerator.</tt></dd></dl>
-
-<hr>
-Static methods defined here:<br>
-<dl><dt><a name="Comparator-optimize"><strong>optimize</strong></a>(objects:list, lookup:dict, res:bool, a, b) -&gt; int</dt><dd><tt>Recursive&nbsp;optimization&nbsp;algorithm&nbsp;for&nbsp;adding&nbsp;a&nbsp;node&nbsp;to&nbsp;a&nbsp;fully&nbsp;connected&nbsp;graph.<br>
-Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;optimizations&nbsp;it&nbsp;did.</tt></dd></dl>
-
-<hr>
-Data descriptors defined here:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
-</dl>
-</td></tr></table> <p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#ffc8d8">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#000000" face="helvetica, arial"><a name="NetComparator">class <strong>NetComparator</strong></a>(<a href="DylComp.html#Comparator">Comparator</a>)</font></td></tr>
-    
-<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
-<td colspan=2><tt>A&nbsp;class&nbsp;for&nbsp;doing&nbsp;comparisons&nbsp;over&nbsp;a&nbsp;network.<br>&nbsp;</tt></td></tr>
-<tr><td>&nbsp;</td>
-<td width="100%"><dl><dt>Method resolution order:</dt>
-<dd><a href="DylComp.html#NetComparator">NetComparator</a></dd>
-<dd><a href="DylComp.html#Comparator">Comparator</a></dd>
-<dd><a href="builtins.html#object">builtins.object</a></dd>
-</dl>
-<hr>
-Methods defined here:<br>
-<dl><dt><a name="NetComparator-__enter__"><strong>__enter__</strong></a>(self)</dt></dl>
-
-<dl><dt><a name="NetComparator-__exit__"><strong>__exit__</strong></a>(self, *args)</dt></dl>
-
-<dl><dt><a name="NetComparator-__init__"><strong>__init__</strong></a>(self, ip:str, port:int, recorder=None, objects:list=None, level:int=3)</dt><dd><tt>Initialize&nbsp;self.&nbsp;&nbsp;See&nbsp;help(type(self))&nbsp;for&nbsp;accurate&nbsp;signature.</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-max"><strong>max</strong></a>(self, arr:list, tryingAgain=False) -&gt; (&lt;class 'int'&gt;, &lt;class 'int'&gt;)</dt><dd><tt>Gets&nbsp;the&nbsp;maximum&nbsp;of&nbsp;the&nbsp;array&nbsp;with&nbsp;respect&nbsp;to&nbsp;the&nbsp;latent&nbsp;scores.<br>
-tryingAgain&nbsp;is&nbsp;only&nbsp;used&nbsp;for&nbsp;if&nbsp;there&nbsp;was&nbsp;a&nbsp;hiccup&nbsp;in&nbsp;the&nbsp;network.<br>
-Returns&nbsp;the&nbsp;undex&nbsp;of&nbsp;the&nbsp;maximum&nbsp;ID&nbsp;and&nbsp;the&nbsp;maximum&nbsp;ID.</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-min"><strong>min</strong></a>(self, arr:list) -&gt; (&lt;class 'int'&gt;, &lt;class 'int'&gt;)</dt><dd><tt>Gets&nbsp;the&nbsp;minimum&nbsp;of&nbsp;the&nbsp;array&nbsp;with&nbsp;respect&nbsp;to&nbsp;the&nbsp;latent&nbsp;scores&nbsp;as&nbsp;the&nbsp;opposite&nbsp;of&nbsp;the&nbsp;maximum.<br>
-Returns&nbsp;the&nbsp;undex&nbsp;of&nbsp;the&nbsp;minimum&nbsp;ID&nbsp;and&nbsp;the&nbsp;minimum&nbsp;ID.</tt></dd></dl>
-
-<hr>
-Methods inherited from <a href="DylComp.html#Comparator">Comparator</a>:<br>
-<dl><dt><a name="NetComparator-__len__"><strong>__len__</strong></a>(self) -&gt; int</dt><dd><tt>Returns&nbsp;either&nbsp;the&nbsp;number&nbsp;of&nbsp;comparisons&nbsp;done</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-clearHistory"><strong>clearHistory</strong></a>(self)</dt><dd><tt>Clears&nbsp;the&nbsp;history&nbsp;statistics&nbsp;of&nbsp;comparisons</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-empiricROC"><strong>empiricROC</strong></a>(self) -&gt; dict</dt><dd><tt>Generates&nbsp;and&nbsp;stores&nbsp;the&nbsp;empiric&nbsp;ROC&nbsp;if&nbsp;it&nbsp;needs&nbsp;to.<br>
-Returns&nbsp;the&nbsp;stored&nbsp;ROC&nbsp;curve.</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-genLookup"><strong>genLookup</strong></a>(self, objects:list)</dt><dd><tt>Generate&nbsp;the&nbsp;lookup&nbsp;table&nbsp;for&nbsp;each&nbsp;<a href="builtins.html#object">object</a>&nbsp;provided</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-genRand"><strong>genRand</strong></a>(self, n0:int, n1:int, sep:float, dist:str)</dt><dd><tt>Generates&nbsp;the&nbsp;random&nbsp;data.&nbsp;If&nbsp;a&nbsp;seed&nbsp;has&nbsp;not&nbsp;previously&nbsp;been&nbsp;provided,&nbsp;it&nbsp;will&nbsp;be&nbsp;assigned&nbsp;here.<br>
-This&nbsp;new&nbsp;seeding&nbsp;may&nbsp;not&nbsp;work&nbsp;on&nbsp;Windows,&nbsp;so&nbsp;Windows&nbsp;users&nbsp;should&nbsp;assign&nbsp;the&nbsp;seed&nbsp;on&nbsp;their&nbsp;own.</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-genSeps"><strong>genSeps</strong></a>(self) -&gt; list</dt><dd><tt>Goes&nbsp;throguh&nbsp;the&nbsp;stored&nbsp;records&nbsp;and&nbsp;returns&nbsp;a&nbsp;list&nbsp;of&nbsp;the&nbsp;minimum&nbsp;separations.<br>
-If&nbsp;there&nbsp;is&nbsp;no&nbsp;minimum&nbsp;separation&nbsp;(the&nbsp;image&nbsp;has&nbsp;not&nbsp;been&nbsp;seen&nbsp;more&nbsp;than&nbsp;once),&nbsp;uses&nbsp;2*(n0+n1)&nbsp;as&nbsp;a&nbsp;palceholder</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-getLatentScore"><strong>getLatentScore</strong></a>(self, imgID:int) -&gt; float</dt><dd><tt>gets&nbsp;the&nbsp;latent&nbsp;score&nbsp;of&nbsp;a&nbsp;given&nbsp;imgID&nbsp;or&nbsp;array&nbsp;of&nbsp;imgIDs.<br>
-If&nbsp;only&nbsp;one&nbsp;index&nbsp;is&nbsp;provided,&nbsp;also&nbsp;returns&nbsp;if&nbsp;the&nbsp;image&nbsp;is&nbsp;from&nbsp;the&nbsp;disease&nbsp;negative&nbsp;distribution.</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-kendalltau"><strong>kendalltau</strong></a>(self, predicted:list) -&gt; float</dt><dd><tt>Returns&nbsp;the&nbsp;kendalltau&nbsp;statistic&nbsp;between&nbsp;the&nbsp;predicted&nbsp;image&nbsp;ID&nbsp;ordering&nbsp;and&nbsp;the&nbsp;true&nbsp;ordering&nbsp;of&nbsp;the&nbsp;image&nbsp;IDs&nbsp;with&nbsp;respect&nbsp;to&nbsp;latent&nbsp;score.<br>
-This&nbsp;method&nbsp;filters&nbsp;image&nbsp;IDs&nbsp;by&nbsp;what's&nbsp;in&nbsp;predicted,&nbsp;so&nbsp;only&nbsp;the&nbsp;ids&nbsp;in&nbsp;predicted&nbsp;are&nbsp;used.</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-learn"><strong>learn</strong></a>(self, arr:list, img:int=None, maxi:bool=False)</dt><dd><tt>Learn&nbsp;the&nbsp;order&nbsp;of&nbsp;the&nbsp;array&nbsp;provided,&nbsp;assuming&nbsp;the&nbsp;current&nbsp;optimization&nbsp;level&nbsp;allows&nbsp;it<br>
-if&nbsp;img&nbsp;is&nbsp;provided,&nbsp;learns&nbsp;the&nbsp;arr&nbsp;w.r.t.&nbsp;the&nbsp;img&nbsp;and&nbsp;if&nbsp;it&nbsp;is&nbsp;max&nbsp;or&nbsp;min.&nbsp;arr&nbsp;can&nbsp;also&nbsp;be<br>
-a&nbsp;filename,&nbsp;in&nbsp;whichcase&nbsp;it&nbsp;will&nbsp;read&nbsp;the&nbsp;file&nbsp;to&nbsp;learn</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-record"><strong>record</strong></a>(self, vals:list)</dt><dd><tt>Record&nbsp;that&nbsp;these&nbsp;values&nbsp;were&nbsp;seen.<br>
-This&nbsp;is&nbsp;automatically&nbsp;called&nbsp;by&nbsp;min&nbsp;and&nbsp;max.</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-resetPC"><strong>resetPC</strong></a>(self)</dt><dd><tt>Resets&nbsp;the&nbsp;pc&nbsp;statistics.&nbsp;Call&nbsp;this&nbsp;once&nbsp;per&nbsp;layer&nbsp;if&nbsp;you&nbsp;only&nbsp;want&nbsp;that&nbsp;layer's&nbsp;PC</tt></dd></dl>
-
-<dl><dt><a name="NetComparator-updatePC"><strong>updatePC</strong></a>(self, arr:list, guess, answer)</dt><dd><tt>If&nbsp;the&nbsp;ids&nbsp;in&nbsp;arr&nbsp;are&nbsp;from&nbsp;different&nbsp;distibutions,&nbsp;adds&nbsp;1&nbsp;to&nbsp;the&nbsp;pc&nbsp;denominator.<br>
-If&nbsp;the&nbsp;guess&nbsp;was&nbsp;the&nbsp;answer,&nbsp;adds&nbsp;1&nbsp;to&nbsp;the&nbsp;pc&nbsp;numerator.</tt></dd></dl>
-
-<hr>
-Static methods inherited from <a href="DylComp.html#Comparator">Comparator</a>:<br>
-<dl><dt><a name="NetComparator-optimize"><strong>optimize</strong></a>(objects:list, lookup:dict, res:bool, a, b) -&gt; int</dt><dd><tt>Recursive&nbsp;optimization&nbsp;algorithm&nbsp;for&nbsp;adding&nbsp;a&nbsp;node&nbsp;to&nbsp;a&nbsp;fully&nbsp;connected&nbsp;graph.<br>
-Returns&nbsp;the&nbsp;number&nbsp;of&nbsp;optimizations&nbsp;it&nbsp;did.</tt></dd></dl>
-
-<hr>
-Data descriptors inherited from <a href="DylComp.html#Comparator">Comparator</a>:<br>
-<dl><dt><strong>__dict__</strong></dt>
-<dd><tt>dictionary&nbsp;for&nbsp;instance&nbsp;variables&nbsp;(if&nbsp;defined)</tt></dd>
-</dl>
-<dl><dt><strong>__weakref__</strong></dt>
-<dd><tt>list&nbsp;of&nbsp;weak&nbsp;references&nbsp;to&nbsp;the&nbsp;object&nbsp;(if&nbsp;defined)</tt></dd>
-</dl>
-</td></tr></table></td></tr></table><p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#55aa55">
-<td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
-    
-<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><strong>__annotations__</strong> = {}</td></tr></table>
-</body></html>
+  </body>
+</html>
