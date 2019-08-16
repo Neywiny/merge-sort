@@ -209,46 +209,47 @@ class AFC:
 			root.destroy()
 		except Exception: #root already destroyed
 			self.counter: int = 0 # to sate the linters
-HEIGHT: int = 700
-WIDTH: int = 1300
-IMGWIDTH: int = 600
-IMGHEIGHT: int = 600
-root = Tk()
-#canvas = Canvas(root, width=WIDTH, height=HEIGHT)
-#canvas.pack()
-#img = Image.open("repository-pic.png")
-#img.thumbnail((IMGWIDTH, IMGHEIGHT))
-#img = ImageTk.PhotoImage(img)
-label: Label = Label(root, text="Choose Most Likely to have Signal", font=('Arial', 56))
-label.grid(row=0, column=0)
-frame: Frame = Frame(root)
-img1: Label = Label(frame)#, image=img)
-img2: Label = Label(frame)#, image=img)
-img1.grid(row=0, column=0, sticky=E)
-img2.grid(row=0, column=2, sticky=W)
-if len(argv) < 9:
-	print(f"Usage: {__file__} [target present directory] [target absent directory] [answers directory] [merge ip] [merger port] [n0] [n1] [log file]")
-else:
-	modes: list = [
-		("Answers", "answers"),
-		("AFC Training", "training"),
-		("Study", "study")
-	]
-	frame.grid_columnconfigure(1, weight=1)
-	with AFC(*argv[1:]) as afc:
-		afc.title: Label = label
-		afc.mode = StringVar()
-		afc.mode.set("none")
-		afc.img1: Label = img1
-		afc.img2: Label = img2
-		buttons: Frame = Frame(frame)
-		for i, (text, mode) in enumerate(modes):
-			b: Radiobutton = Radiobutton(buttons, text=text, value=mode, variable=afc.mode, indicatoron=0, command=afc.switchModes)
-			b.grid(row=i, column=0)
-		buttons.grid(row=0, column=1)
-		root.bind("<Key>", afc.pressed)
-		root.bind("<Button-1>", afc.clicked)
-		root.protocol("WM_DELETE_WINDOW", afc.exit)
-		root.after(1, afc.run)
-		frame.grid(row=1, column=0)
-		mainloop()
+if __name__ == "__main__":
+	if len(argv) < 9:	
+		print(f"Usage: {__file__} [target present directory] [target absent directory] [answers directory] [merge ip] [merger port] [n0] [n1] [log file]")
+	else:
+		HEIGHT: int = 700
+		WIDTH: int = 1300
+		IMGWIDTH: int = 600
+		IMGHEIGHT: int = 600
+		root = Tk()
+		#canvas = Canvas(root, width=WIDTH, height=HEIGHT)
+		#canvas.pack()
+		#img = Image.open("repository-pic.png")
+		#img.thumbnail((IMGWIDTH, IMGHEIGHT))
+		#img = ImageTk.PhotoImage(img)
+		label: Label = Label(root, text="Choose Most Likely to have Signal", font=('Arial', 56))
+		label.grid(row=0, column=0)
+		frame: Frame = Frame(root)
+		img1: Label = Label(frame)#, image=img)
+		img2: Label = Label(frame)#, image=img)
+		img1.grid(row=0, column=0, sticky=E)
+		img2.grid(row=0, column=2, sticky=W)
+		modes: list = [
+			("Answers", "answers"),
+			("AFC Training", "training"),
+			("Study", "study")
+		]
+		frame.grid_columnconfigure(1, weight=1)
+		with AFC(*argv[1:]) as afc:
+			afc.title: Label = label
+			afc.mode = StringVar()
+			afc.mode.set("none")
+			afc.img1: Label = img1
+			afc.img2: Label = img2
+			buttons: Frame = Frame(frame)
+			for i, (text, mode) in enumerate(modes):
+				b: Radiobutton = Radiobutton(buttons, text=text, value=mode, variable=afc.mode, indicatoron=0, command=afc.switchModes)
+				b.grid(row=i, column=0)
+			buttons.grid(row=0, column=1)
+			root.bind("<Key>", afc.pressed)
+			root.bind("<Button-1>", afc.clicked)
+			root.protocol("WM_DELETE_WINDOW", afc.exit)
+			root.after(1, afc.run)
+			frame.grid(row=1, column=0)
+			mainloop()

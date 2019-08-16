@@ -126,71 +126,72 @@ class GradientFrame(Canvas):
 		self._gradient_photoimage = ImageTk.PhotoImage(image)
 		self.create_image(0, 0, anchor=NW, image=self._gradient_photoimage)
 
-if len(argv) == 2:
-	import ROC1
-	import matplotlib.pyplot as plt
-	import numpy as np
-	x0 = list()
-	x1 = list()
-	times = list()
-	with open(argv[1]) as f:
-		posDir, negDir = f.readline().strip().split()
-		for line in f:
-			line = line.strip().split()
-			score = int(line[1])
-			if negDir in line[0]:
-				x0.append(score)
-			else:
-				x1.append(score)
-			time = float(line[2])
-			if time < 30:
-				times.append(time)
-	x1, x0 = np.array(x1), np.transpose(x0)
-	print(len(x1), len(x0))
-	roc = ROC1.rocxy(x1, x0)
-	sm = ROC1.successmatrix(x1, x0)
-	AUC = np.mean(sm)
-	VAR = ROC1.unbiasedMeanMatrixVar(sm, 1)
-	fig, (ax1, ax2) = plt.subplots(ncols=2)
-	ax1.set_xlim(left=-0.01, right=1.01)
-	ax1.set_ylim(top=1.01, bottom=-0.01)
-	ax1.plot(roc['x'], roc['y'])
-	ax1.set_title(f"N:{len(x1) + len(x0)} AUC:{AUC} VAR:{VAR:0.05f}")
-	ax2.plot(times)
-	ax2.set_title(f"Avg time {np.mean(times):0.2f}s")
-	plt.show()
-elif len(argv) != 5 and len(argv) != 6:
-	print(f"Usage: \n\tpython3 {__file__} [signal present directory] [signal absent directory] [n] [output file] [offset (optional)]\n\tpython3 {__file__} [results file]")
-else:
-	IMGWIDTH: int = 600
-	IMGHEIGHT: int = 600
-	root = Tk()
-	#root.geometry("800x800")
-	title = Label(root, text="Choose the percent chance of there being a signal")
-	title.grid(row=0, column=0)
-	label = Label(root)
-	if len(argv) < 6:
-		argv.append("0")
-	try:
-		rating = Rating(*argv[1:], label)
-		label.configure(image=rating.images[0])
-		label.grid(row=1, column=0)
-		ticks = Frame(root)
-		ticks.grid(row=1, column=1)
-		for tickmark in range(0, 110, 10):
-			text = Label(ticks, text=str(tickmark))
-			row: int = 10-(tickmark//10)
-			text.grid(row=row, column=0, sticky=E, pady=18)
-		gradient = GradientFrame(root, from_color="#000000", to_color="#FFFFFF", height=IMGHEIGHT, width=100, orient=HORIZONTAL)
-		gradient.grid(row=1, column=2)
-		rating.canvas = gradient
-		gradient.bind("<Button-1>", rating.drawBar)
-		button = Button(text="next", command=rating.next)
-		button.grid(row=2, column=2)
-		root.bind("<Return>", rating.next)
-		rating.t1 = time()
-		root.mainloop()
+if __name__ == "__main__":
+	if len(argv) == 2:
+		import ROC1
+		import matplotlib.pyplot as plt
+		import numpy as np
+		x0 = list()
+		x1 = list()
+		times = list()
+		with open(argv[1]) as f:
+			posDir, negDir = f.readline().strip().split()
+			for line in f:
+				line = line.strip().split()
+				score = int(line[1])
+				if negDir in line[0]:
+					x0.append(score)
+				else:
+					x1.append(score)
+				time = float(line[2])
+				if time < 30:
+					times.append(time)
+		x1, x0 = np.array(x1), np.transpose(x0)
+		print(len(x1), len(x0))
+		roc = ROC1.rocxy(x1, x0)
+		sm = ROC1.successmatrix(x1, x0)
+		AUC = np.mean(sm)
+		VAR = ROC1.unbiasedMeanMatrixVar(sm, 1)
+		fig, (ax1, ax2) = plt.subplots(ncols=2)
+		ax1.set_xlim(left=-0.01, right=1.01)
+		ax1.set_ylim(top=1.01, bottom=-0.01)
+		ax1.plot(roc['x'], roc['y'])
+		ax1.set_title(f"N:{len(x1) + len(x0)} AUC:{AUC} VAR:{VAR:0.05f}")
+		ax2.plot(times)
+		ax2.set_title(f"Avg time {np.mean(times):0.2f}s")
+		plt.show()
+	elif len(argv) != 5 and len(argv) != 6:
+		print(f"Usage: \n\tpython3 {__file__} [signal present directory] [signal absent directory] [n] [output file] [offset (optional)]\n\tpython3 {__file__} [results file]")
+	else:
+		IMGWIDTH: int = 600
+		IMGHEIGHT: int = 600
+		root = Tk()
+		#root.geometry("800x800")
+		title = Label(root, text="Choose the percent chance of there being a signal")
+		title.grid(row=0, column=0)
+		label = Label(root)
+		if len(argv) < 6:
+			argv.append("0")
+		try:
+			rating = Rating(*argv[1:], label)
+			label.configure(image=rating.images[0])
+			label.grid(row=1, column=0)
+			ticks = Frame(root)
+			ticks.grid(row=1, column=1)
+			for tickmark in range(0, 110, 10):
+				text = Label(ticks, text=str(tickmark))
+				row: int = 10-(tickmark//10)
+				text.grid(row=row, column=0, sticky=E, pady=18)
+			gradient = GradientFrame(root, from_color="#000000", to_color="#FFFFFF", height=IMGHEIGHT, width=100, orient=HORIZONTAL)
+			gradient.grid(row=1, column=2)
+			rating.canvas = gradient
+			gradient.bind("<Button-1>", rating.drawBar)
+			button = Button(text="next", command=rating.next)
+			button.grid(row=2, column=2)
+			root.bind("<Return>", rating.next)
+			rating.t1 = time()
+			root.mainloop()
 
-	except ValueError:
-		print("Invalid Arguments")
-		root.destroy()
+		except ValueError:
+			print("Invalid Arguments")
+			root.destroy()
