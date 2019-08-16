@@ -1,12 +1,27 @@
 # Merge Sort
 
+[![forthebadge made-with-python](http://ForTheBadge.com/images/badges/made-with-python.svg)](https://www.python.org/)
+
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/96b3634f1abe48dc93b5ac19307bb394)](https://www.codacy.com/app/Neywiny/merge-sort?utm_source=github.com&utm_medium=referral&utm_content=Neywiny/merge-sort&utm_campaign=Badge_Grade)
+[![Python 3.6|3.7](https://img.shields.io/badge/python-3.6%20%7C%203.7-blue)](https://www.python.org/downloads/release/python-370/)
+[![Maintenance](https://img.shields.io/badge/Maintained%3F-yes-green.svg)](https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity)
+[![Open Source Love png2](https://badges.frapsoft.com/os/v2/open-source.png?v=103)](https://github.com/ellerbrock/open-source-badges/)
 
 ![alt text](https://github.com/Neywiny/merge-sort/blob/master/repository-pic.png)
 
 ## Documentation
 
 [Link to documentation](https://neywiny.github.io/merge-sort/)
+
+## Reproducing many simulations
+
+### merge/elo
+
+```python3 main.py/elo.py <iters> <distributions> <aucs>```
+
+Where distributions and aucs are each delimited by commas and no spaces.
+
+This will output a single results file per distribution per auc, ex. resultsMergeNormal85, resultsEloExponential95. This command is also safe to be run accross many different nodes accessing the same file system, and has been tested with up to 19 nodes running simulations.
 
 ## Reproducing a single Simulation
 
@@ -37,7 +52,7 @@ where
 -   minSeps is the minimum number of comparisons between comparing the same image again for that image (it's a vector not a float)
 -   pc is the percent of corrent comparisons from images of different distributions
 
-To analyze the results, run `DylAnalyzer.py <results filename>`
+To analyze the results, run `python3 DylAnalyzer.py <results filename>`
 
 ### elo
 
@@ -69,19 +84,19 @@ where
 
 ### Scale Rating System
 
-Run `DylScale.py <signal present directory> <signal absent directory> <n> <output file> <offset (defualts to 0)>`. This will output the results to the output filename with the start time in Unix time and ".csv" after. This is because the sale ratings are all independant from each other so if you want to do half at one time and half at a later time you can, just change the offset parameter and append the new file to the old one.
+Run `python3 DylScale.py <signal present directory> <signal absent directory> <n> <output file> <offset (defualts to 0)>`. This will output the results to the output filename with the start time in Unix time and ".csv" after. This is because the sale ratings are all independant from each other so if you want to do half at one time and half at a later time you can, just change the offset parameter and append the new file to the old one.
 
-For a quick analysis, you can run `DylScale.py <input file>` where the input file was the output file from the previous command.
+For a quick analysis, you can run `python3 DylScale.py <input file>` where the input file was the output file from the previous command.
 
 ### AFC System
 
-To do testing/training run `DylAFC.py <target present directory> <target absent directory> <answers directory> <merge ip> <merger port> <n0> <n1> <log file>`
+To do testing/training run `python3 DylAFC.py <target present directory> <target absent directory> <answers directory> <merge ip> <merger port> <n0> <n1> <log file>`
 
 If you do not want to connect to a merge sort comparator, just give any value for ip and port
 
 To do a merge sort study, run the same command with ip and port.
 
-To start up the comparator, run `DylComp.py <desired name of log file> <tcp port> <desired name of roc file>`
+To start up the comparator, run `python3 DylComp.py <desired name of log file> <tcp port> <desired name of roc file>`
 
 In the directory of DylComp a file called "figure.svg" will exist. If you open "dash.html" you will see a dashboard of how the reader is doing which is just automatically refreshing "figure.svg". It is recommended to keep "figure.svg" as a result. "dash.html" should not be seen by the reader while they are doing the study.
 
@@ -121,12 +136,18 @@ Example:
 
 If there is no log file from DylScale, the analysis will not be able to show the results from the scale study.
 
-To analyze the results, run `DylAnalyzer <json file> <optional output file name>`
+To analyze the results, run `python3 DylAnalyzer.py <json file> <optional output file name>`
 
 ## Graphs and Where to Find Them
 
-Graph of the green/red success matrix ROC curve -> `DylSort 1`
-Dashboard of a merge sort simulatio file -> `DylAnalyzer 1 <filename>`
-Reader study p vals and time analysis -> `DylAnalyzer 2 <results json filename> <names.txt filename (in case it was moved or renamed; required)> <graph output filename (optional)>`
-Canonical bottom up merge sort vs tree based merge sort -> `DylSort 5`
-Average ROC for each layer as a merge simulation progresses -> `DylSort 3 <overlapping (defualt True)>`
+-   Graph of the green/red success matrix ROC curve -> `python3 DylSort.py 1 <n0> <n1> <directory to save file into (optional)>`
+
+-   Dashboard of a merge sort simulation file -> `python3 DylAnalyzer.py 1 <filename>`
+
+-   Reader study p vals and time analysis -> `python3 DylAnalyzer.py 2 <results json filename> <names.txt filename (in case it was moved or renamed; required)> <graph output filename (optional)>`
+
+-   Canonical bottom up merge sort vs tree based merge sort -> `python3 DylSort.py 5`
+
+-   Average ROC for each layer as a merge simulation progresses -> `python3 DylSort.py 3 <overlapping (defualt True)>`
+
+-   ROC curves for merge sort vs elo -> `python3 Elo.py`

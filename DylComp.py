@@ -345,7 +345,7 @@ if __name__ == "__main__":
 		import matplotlib.pyplot as plt
 		from os import replace
 		fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(nrows=2, ncols=3)
-		with open(argv[1], "w") as f, NetComparator('127.0.0.1', int(arv[2]), f) as comp:
+		with open(argv[1], "w") as f, NetComparator('127.0.0.1', int(argv[2]), f) as comp:
 			data, D0, D1 = continuousScale(comp.n0, comp.n1)
 			comp.genLookup(data)
 			comp.layers = layers = calcNLayers(comp.n0 + comp.n1)

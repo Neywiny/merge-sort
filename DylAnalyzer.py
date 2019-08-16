@@ -252,14 +252,14 @@ if __name__ == "__main__":
 		else:
 			test: int = -1
 	else:
-		arv.append("1")
+		argv.append("1")
 		argv.append("resultsMerge85") # default value
 		test: int = 1
 	if test == 1:
 		# Shows the 5 plot dashboard for studies
 		length: int = 256
 		layers: int = 8
-		varEstimate, avgAUC, avgMSETrues, avgMSEEmpiric, avgComps, avgHanleyMNeil, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters = analyzeMergeSims(arv[2], length, layers, bar=True)
+		varEstimate, avgAUC, avgMSETrues, avgMSEEmpiric, avgComps, avgHanleyMNeil, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters = analyzeMergeSims(argv[2], length, layers, bar=True)
 		labels: list = [f'{np.median(list(filter(lambda x: x != 0, avgMinSeps[0]))):3.02f}']
 		for val in np.median(avgMinSeps, axis=0)[1:]:
 			labels.append(f'{val:3.02f}')
@@ -269,7 +269,7 @@ if __name__ == "__main__":
 		fig = plt.figure()
 		ax1 = fig.add_subplot(2, 3, 1)
 		ax1.errorbar(xVals, avgAUC, yerr=np.sqrt(varEstimate), capsize=5, c='r', lw=1, elinewidth=2, label="$\pm\sqrt{var_{estimate}}$")
-		ax1.set_ylim(top=0.96)
+		#ax1.set_ylim(top=0.96)
 		ax1.legend()
 		ax1.set_ylabel('AUC', color='b')
 		ax1.set_title("Average AUC per Layer")
@@ -443,8 +443,8 @@ if __name__ == "__main__":
 
 			print(f"{reader} {np.mean(scaleTimes):0.3f}\t\t{np.std(scaleTimes):0.3f}\t\t{np.mean(mergeTimes):0.3f}\t\t\t{np.std(mergeTimes):0.3f}\t\t{tau:0.3f}\t{np.std(taus):0.3f}")
 		fig.set_size_inches(12, 8)
-		if len(argv) == 4:
-			plt.savefig(argv[3], bbox_inches = 'tight', pad_inches = 0)
+		if len(argv) == 5:
+			plt.savefig(argv[4], bbox_inches = 'tight', pad_inches = 0)
 		else:
 			plt.show()
 	else:

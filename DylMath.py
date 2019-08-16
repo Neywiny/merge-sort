@@ -2,11 +2,9 @@ import ROC1
 import numpy as np
 np.set_printoptions(threshold=np.inf)
 np.seterr(all="ignore")
-from tqdm import tqdm
 from multiprocessing import Pool
 from scipy.interpolate import interp1d
 from scipy.stats import norm
-#from p_tqdm import p_map
 try:
 	import matplotlib
 	matplotlib.use('QT4Agg')
@@ -28,14 +26,15 @@ def paramToParams(predicted: list, D0: list=None, D1: list=None) -> (list, list,
 
 def auc(results: tuple, D0: list=None, D1: list=None) -> float:
 	""" Takes an ROC curve from genROC and returns the AUC.
-	If results is a prediction not an ROC curve, generates the ROC curve."""
+	If results is a prediction not an ROC curve, generates the ROC curve.
+	If results is already an ROC curve, D0 and D1 are not required."""
 	if not isinstance(results[0], (list, tuple)):
 		results: list = genROC(results, D0, D1)
 	total: float = 0.0
 	for i,(x,y) in enumerate(results[:-1], start=1):
 		# start=1 means i is actually i + 1
 		total += 0.5*(y + results[i][1]) * (x - results[i][0])
-	return -total
+	return abs(total)
 
 def hanleyMcNeil(auc: float, n0: int, n1: int) -> float:
 	"""The very good power-law variance estimate from Hanley/McNeil"""
@@ -109,8 +108,15 @@ def genD0D1(d0d1: list, arr: list) -> tuple:
 
 def genROC(predicted: tuple, D1: list=None, D0: list=None) -> list:
 	"""Returns a list of collections of x,y coordinates in order of the threshold"""
-	x0, x1 = genX0X1(predicted, D1, D0)
-	roc: dict = ROC1.rocxy(x1, x0)
+	predicted, D0, D1 = paramToParams(predicted, D0, D1)
+	x0 = list()
+	x1 = list()
+	for i, val in enumerate(predicted):
+		if val in D1:
+			x1.append(i)
+		elif val in D0:
+			x0.append(i)
+	roc = ROC1.rocxy(x1, x0)
 	return list(zip(roc['x'], roc['y']))
 
 def graphROC(predicted: tuple, D0: list=None, D1: list=None):
@@ -143,8 +149,6 @@ def graphROCs(arrays: list, withPatches: bool=False, withLine: bool=True, D0: li
 		else:
 			with Pool() as p:
 				results: list = list(p.imap(genROC,params))
-	if withPatches:
-		pbar = tqdm(total=len(arrays)*(len(arrays[0])//2)**2)
 	for i, ax in enumerate(axes.flat if (rows * cols > 1) else [axes]):
 		if i >= len(arrays):
 			continue
@@ -168,7 +172,6 @@ def graphROCs(arrays: list, withPatches: bool=False, withLine: bool=True, D0: li
 					yes.append(Rectangle((x/xLen,y/yLen),1/xLen,1/yLen))
 				else:
 					no.append(Rectangle((x/xLen,y/yLen),1/xLen,1/yLen))
-			pbar.update(1)
 			patches = PatchCollection(no, facecolor = 'r', alpha=0.75, edgecolor='None')
 			ax.add_collection(patches)
 			patches = PatchCollection(yes, facecolor = 'g', alpha=0.75, edgecolor='None')
@@ -178,8 +181,6 @@ def graphROCs(arrays: list, withPatches: bool=False, withLine: bool=True, D0: li
 			ax.set_xlim(left=0, right=1)
 			ax.set_title(f"Iteration #{i} AUC: {area:.5f}")
 			ax.set_aspect('equal', 'box')
-	if withPatches:
-		pbar.close()
 	figManager = plt.get_current_fig_manager()
 	figManager.window.showMaximized()
 	#plt.show()
@@ -368,7 +369,7 @@ if __name__ == "__main__":
 			rocs.reverse()
 			mse: float = MSE(7.72, 'exponential', rocs)
 			#print(*mse, auc(rocs))
-			print(f"{mse[0]:03.3e}, {-auc(rocs):0.3f}, {len(comp)}")
+			print(f"{mse[0]:03.3e}, {auc(rocs):0.3f}, {len(comp)}")
 			ax = fig.add_subplot(3, 4, level + 1)
 			ax.set_aspect('equal', 'box')
 			approx = interp1d(*zip(*rocs), 'linear')

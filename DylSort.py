@@ -1,7 +1,9 @@
 import numpy as np
 from sys import argv
-from DylMath import runStats
+from DylMath import runStats, graphROCs
 from DylMerger import MultiMerger
+from DylComp import Comparator
+from DylData import continuousScale
 
 def validate(arr: list):
 	"""Throws errors if the array to be validated is invalid.
@@ -12,7 +14,7 @@ def validate(arr: list):
 		if arr.count(v) > 1:
 			raise EnvironmentError(f"duplicated {v}")
 
-def mergeSort(arr: list, statParams: list=None, n: int=2, combGroups: bool=True, sortGroups: bool=False) -> list:
+def mergeSort(arr: list, comp: Comparator, statParams: list=None, n: int=2, combGroups: bool=True, sortGroups: bool=False) -> list:
 	"""mergeSort(arr: list)
 	statParams must be the format ((D0, D1), dist, target AUC)
 	combGroups determins if the returned array is one list or each group as its own list.
@@ -132,23 +134,17 @@ def treeMergeSort(arr: list, comp, statParams=None, n: int=2, combGroups: bool=T
 		yield (arr, runStats(groups, statParams + [n, layer, len(mergerss)], comp)) if statParams else arr
 
 if __name__ == "__main__":
-	test: int = int(arv[1]) if len(argv) > 1 else 1
+	test: int = int(argv[1]) if len(argv) > 1 else 1
 	if test == 1:
-		if len(argv) < 3:
+		if len(argv) > 5:
 			print("Usage:")
-			print(f"{__file__} 1 <directory to save file into>")
+			print(f"{__file__} 1 <n0> <n1> <directory to save file into (optional)>")
 		else:
-			from DylComp import Comparator
-			from DylData import continuousScale
 			import matplotlib.pyplot as plt
 			plt.rcParams["font.size"]: int = 10
-			data, D0, D1 = continuousScale(32, 32)
+			data, D0, D1 = continuousScale(int(argv[2]), int(argv[3]))
 			comp: Comparator = Comparator(data, rand=True)
-			#arrays = [data[:]]
-			print(data)
 			for arr in treeMergeSort(data, comp):
-				#arrays.append(arr)
-				#print(arr)
 				pass
 			arrays: list = [arr]
 			D0.sort(key=arr.index)
@@ -158,9 +154,11 @@ if __name__ == "__main__":
 			ax.set_title("")
 			plt.title("")
 			plt.gcf().suptitle("")
-			plt.savefig(arv[2] + "/patches.pdf", bbox_inches = 'tight', pad_inches = 0)
+			if len(argv) > 4: 
+				plt.savefig(argv[4] + "/patches.pdf", bbox_inches = 'tight', pad_inches = 0)
+			else:
+				plt.show()
 	elif test == 2:
-		from DylComp import Comparator
 		print("treeMergeSort")
 		for n in range(2, 18):
 			data: list = [*reversed(range(197))]
@@ -176,17 +174,14 @@ if __name__ == "__main__":
 				pass
 			print(n, len(comp))
 	elif test == 3:
-		if len(argv) < 3:
+		if len(argv) > 3:
 			print("Usage:")
 			print(f"{__file__} 3 <overlapping? True/False>")
 		else:
-			from DylData import continuousScale
-			from DylComp import Comparator
 			import matplotlib
 			matplotlib.use("QT4Agg")
 			import matplotlib.pyplot as plt
-			font: dict = {"size" : 24}
-			matplotlib.rc("font", **font)
+			from DylMath import genROC, avROC, auc
 			data, D0, D1 = continuousScale(16, 16)
 			comp: Comparator = Comparator(data, rand=True)
 			comp.genRand(len(D0), len(D1), 7.72, "exponential")
@@ -211,7 +206,8 @@ if __name__ == "__main__":
 				for i,ax in enumerate(axes.flat):
 					if i >= len(rocs):
 						continue
-					ax.set(xlabel="False Positive Fraction", ylabel="True Positive Fraction")
+					ax.set_aspect('equal', 'box')
+					ax.set(xlabel="FPF", ylabel="TPF")
 					ax.label_outer()
 					ax.plot((0,1),(0,1),c='red', linestyle=":")
 					ax.plot(*zip(*rocs[i]), c='blue')
@@ -219,6 +215,8 @@ if __name__ == "__main__":
 					ax.set_xlim(left=-0.01, right=1)
 					ax.set_title(f"Iteration #{i + 1} AUC: {auc(rocs[i]):.5f}")
 			else:
+				font: dict = {"size" : 24}
+				matplotlib.rc("font", **font)
 				fig = plt.figure(figsize=(8, 8))
 				plt.title("ROC Curves")
 				ax = fig.add_subplot(1, 1, 1)
@@ -227,6 +225,7 @@ if __name__ == "__main__":
 				ax.plot([], [], lw=0, label='Comparisons, AUC')
 				for i, roc in enumerate(rocs):
 					ax.plot(*zip(*roc), linestyle=linestyle_tuple[i], label=f"{comps[i]:03d}, {auc(list(roc)):0.4f}", lw=(i + 3))
+				ax.set_aspect('equal', 'box')
 				ax.legend()
 				ax.set_ylim(top=1, bottom=0)
 				ax.set_xlim(left=0, right=1)
@@ -234,8 +233,6 @@ if __name__ == "__main__":
 			plt.tight_layout()
 			plt.show()
 	elif test == 4:
-		from DylComp import Comparator
-		from DylData import continuousScale
 		data, D0, D1 = continuousScale(135, 87)
 		comp: Comparator = Comparator(data, rand=True)
 		comp.genRand(len(D0), len(D1), 7.72, 'exponential')

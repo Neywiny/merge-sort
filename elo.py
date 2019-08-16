@@ -3,15 +3,15 @@ from numpy import matlib as mb
 from ROC1 import *
 from warnings import filterwarnings
 from DylMath import MSE, genSep
-from tqdm import tqdm, trange
 from sys import argv
 
 filterwarnings('ignore')
 
-def simulation_ELO_targetAUC(args: list, rounds: int=14):
+def simulation_ELO_targetAUC(args: list, rounds: int=14, retRoc=False):
 	"""
 	Args is of the form (dist, auc, n0, n1).
 	Rounds is how many rounds of (n0 + n1)/2 comparisons it will so.
+	retRoc determines if the function will return its ROC curve or its statistics.
 
 	@Author: Francesc Massanes (fmassane@iit.edu)
 	@Version: 0.1 (really beta)
@@ -88,11 +88,14 @@ def simulation_ELO_targetAUC(args: list, rounds: int=14):
 
 		x0 = np.array(rating[0:N])[:,0]
 		x1 = np.array(rating[N:])[:,0]
-		sm = successmatrix(x1, np.transpose(x0))
-		auc, var = np.mean(sm), unbiasedMeanMatrixVar(sm)
 		roc = rocxy(x1, x0)
-		mseTruth, mseEmpiric, auc = MSE(sep, dist, roc, empiricROC)
-		results.append((N, cnt, ncmp, var, auc, mseTruth, mseEmpiric, pc[-1]))
+		if retRoc:
+			results.append((roc, ncmp))
+		else:
+			sm = successmatrix(x1, np.transpose(x0))
+			auc, var = np.mean(sm), unbiasedMeanMatrixVar(sm)
+			mseTruth, mseEmpiric, auc = MSE(sep, dist, roc, empiricROC)
+			results.append((N, cnt, ncmp, var, auc, mseTruth, mseEmpiric, pc[-1]))
 	return results
 if __name__ == '__main__':
 	if len(argv) > 1:
@@ -108,7 +111,9 @@ if __name__ == '__main__':
 			import matplotlib.pyplot as plt
 			from matplotlib.animation import FuncAnimation
 			from matplotlib.animation import PillowWriter
-			results = simulation_ELO_targetAUC(True)
+			from tqdm import tqdm
+			frames = 100
+			results = simulation_ELO_targetAUC(('normal', 0.8853, 128, 128), rounds=frames)
 			fig, ax = plt.subplots()
 			fig.set_tight_layout(True)
 			pbar = tqdm(total=len(results))
@@ -121,7 +126,7 @@ if __name__ == '__main__':
 				ax.plot(roc['x'], roc['y'])
 				ax.set_title(f"{i:02d}")
 				return label, ax
-			anim = FuncAnimation(fig, update, frames=np.arange(0, 100), interval=100)
+			anim = FuncAnimation(fig, update, frames=np.arange(0, frames), interval=100)
 			anim.save("rocs.gif", writer=PillowWriter(fps=10))
 			pbar.close()
 		else:
@@ -173,16 +178,17 @@ if __name__ == '__main__':
 		from DylComp import Comparator
 		from DylSort import treeMergeSort
 		from DylData import continuousScale
-		from DylMath import genROC, avROC
+		from DylMath import genROC, avROC, auc
 		import matplotlib.pyplot as plt
 		data, D0, D1 = continuousScale(128, 128)
 		comp = Comparator(data, rand=True, level=0, seed=20)
-		results = [res for res in simulation_ELO_targetAUC(('normal', 0.9953, 128, 128))]
+		results = [res for res in simulation_ELO_targetAUC(('normal', 0.8853, 128, 128), retRoc=True)]
 		mergeResults = list()
 		for groups in treeMergeSort(data, comp, combGroups=False):
 			rocs = list()
 			for group in groups:
-				rocs.append(genROC(group, D1, D0))
+				roc = genROC(group, D1, D0)
+				rocs.append(roc)
 			mergeResults.append((avROC(rocs), len(comp)))
 		matches = [(np.argmin([abs(res[1] - mergeLen) for res in results])) for (groups, mergeLen) in mergeResults]
 		fig, axes = plt.subplots(nrows=4, ncols=2, sharex=True, sharey=True)
@@ -195,7 +201,6 @@ if __name__ == '__main__':
 			axes[axn][1].set_aspect('equal', 'box')
 			axes[axn][0].set_title(str(mergeResults[layer][1]))
 			axes[axn][1].set_title(str(results[matches[layer]][1]))
-			print(layer)
 		fig.suptitle("Merge    Massanes")
 		figManager = plt.get_current_fig_manager()
 		figManager.window.showMaximized()
