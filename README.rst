@@ -28,7 +28,7 @@ merge/elo
 Where distributions and aucs are each delimited by commas and no spaces.
 
 This will output a single results file per distribution per auc, ex.
-resultsMergeNormal85, resultsEloExponential95. This command is also safe
+resultsMergeNormal85 or resultsEloExponential95. This command is also safe
 to be run accross many different nodes accessing the same file system,
 and has been tested with up to 19 nodes running simulations.
 
@@ -81,7 +81,7 @@ where
 To analyze the results, run
 ``python3 DylAnalyzer.py <results filename>``
 
-elo
+ELO
 ~~~
 
 .. code:: python
@@ -204,7 +204,7 @@ Graphs and Where to Find Them
    ``python3 DylSort.py 5``
 -  Average ROC for each layer as a merge simulation progresses ->
    ``python3 DylSort.py 3 <overlapping (defualt True)>``
--  ROC curves for merge sort vs elo -> ``python3 elo.py``
+-  ROC curves for merge sort vs ELO -> ``python3 elo.py``
 
 .. |forthebadge made-with-python| image:: http://ForTheBadge.com/images/badges/made-with-python.svg
    :target: https://www.python.org/
