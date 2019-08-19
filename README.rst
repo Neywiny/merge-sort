@@ -213,7 +213,7 @@ Graphs and Where to Find Them
 .. |Python 3.6,3.7| image:: https://img.shields.io/badge/python-3.6%20%7C%203.7-blue?style=for-the-badge&logo=python&logoColor=yellow
    :target: https://www.python.org/downloads/release/python-370/
 .. |Maintenance| image:: https://img.shields.io/badge/Maintained%3F-yes-green.svg?style=for-the-badge
-   :target: https://GitHub.com/Naereen/StrapDown.js/graphs/commit-activity
+   :target: https://GitHub.com/Neywiny/merge-sort/graphs/commit-activity
 .. |Open Source Love png2| image:: https://badges.frapsoft.com/os/v2/open-source.png?v=103
    :target: https://github.com/ellerbrock/open-source-badges/
 .. |rtd-badge| image:: https://readthedocs.org/projects/merge-sort/badge/?version=latest&style=for-the-badge
