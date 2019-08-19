@@ -137,7 +137,7 @@ def treeMergeSort(arr: list, comp, statParams=None, n: int=2, combGroups: bool=T
 if __name__ == "__main__":
 	test: int = int(argv[1]) if len(argv) > 1 else 1
 	if test == 1:
-		if len(argv) > 5:
+		if len(argv) > 5 or len(argv) < 4:
 			print("Usage:")
 			print(f"{__file__} 1 <n0> <n1> <directory to save file into (optional)>")
 		else:
@@ -159,21 +159,6 @@ if __name__ == "__main__":
 				plt.savefig(argv[4] + "/patches.pdf", bbox_inches = 'tight', pad_inches = 0)
 			else:
 				plt.show()
-	elif test == 2:
-		print("treeMergeSort")
-		for n in range(2, 18):
-			data: list = [*reversed(range(197))]
-			comp: Comparator = Comparator(data, level=0, rand=False)
-			for _ in treeMergeSort(data, comp, n=n):
-				pass
-			print(n, len(comp))
-		print("regular mergeSort")
-		for n in range(2, 18):
-			data: list = [*reversed(range(197))]
-			comp: Comparator = Comparator(data, level=0, rand=False)
-			for _ in mergeSort(data, comp, n=n):
-				pass
-			print(n, len(comp))
 	elif test == 3:
 		if len(argv) > 3:
 			print("Usage:")
@@ -268,13 +253,10 @@ if __name__ == "__main__":
 		power += 1
 		yStep: float = length / power
 		fig, axes = plt.subplots(ncols=2, nrows=1)
-		for ax in axes:
-			if ax == axes[0]:
-				color: str = 'r'
-				sorter = mergeSort
-			else:
-				color: str = 'lime'
-				sorter = treeMergeSort
+		sorters = [mergeSort, treeMergeSort]
+		colors = ['r', 'lime']
+		names = ['regular', 'tree']
+		for ax, color, sorter, name in zip(axes, colors, sorters, names):
 			data: list = list(range(int(2**(power - 1)*(2/3))))
 			img: np.ndarray = np.zeros((power, length))
 			np.random.shuffle(data)
@@ -299,4 +281,5 @@ if __name__ == "__main__":
 			ax.set_yticks([])
 			ax.set_ylabel("Layer")
 			ax.set_xlabel("Position")
+			print(name, len(comp), "comparisons")
 		plt.show()

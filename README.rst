@@ -1,9 +1,9 @@
 Merge Sort
 ==========
 
-|forthebadge made-with-python| 
+|forthebadge made-with-python|
 
-|Python 3.6,3.7| |rtd-badge| |Maintenance| 
+|Python 3.6,3.7| |rtd-badge| |Maintenance|
 
 |Codacy Badge| |Open Source Love png2|
 
@@ -12,10 +12,10 @@ Merge Sort
 
 .. contents::
 
-Documentation
+API Reference
 -------------
 
-`Link to documentation <https://merge-sort.readthedocs.io/>`__
+`Link to API reference <https://merge-sort.readthedocs.io/>`__
 
 Reproducing many simulations
 ----------------------------
@@ -31,6 +31,15 @@ This will output a single results file per distribution per auc, ex.
 resultsMergeNormal85, resultsEloExponential95. This command is also safe
 to be run accross many different nodes accessing the same file system,
 and has been tested with up to 19 nodes running simulations.
+
+Installation
+------------
+
+Clone/download the repository. To install the requirements run
+
+``pip3 install -r requirements.txt``.
+
+This will install all the requirements needed to run everything in the paper and in this readme.
 
 Reproducing a single Simulation
 -------------------------------
@@ -188,9 +197,9 @@ Graphs and Where to Find Them
 -  Graph of the green/red success matrix ROC curve ->
    ``python3 DylSort.py 1 <n0> <n1> <directory to save file into (optional)>``
 -  Dashboard of a merge sort simulation file ->
-   ``python3 DylAnalyzer.py 1 <filename>``
+   ``python3 DylAnalyzer.py <filename>``
 -  Reader study p vals and time analysis ->
-   ``python3 DylAnalyzer.py 2 <results json filename> <names.txt filename (in case it was moved or renamed; required)> <graph output filename (optional)>``
+   ``python3 DylAnalyzer.py <results json filename> <names.txt filename (in case it was moved or renamed; required)> <graph output filename (optional)>``
 -  Canonical bottom up merge sort vs tree based merge sort ->
    ``python3 DylSort.py 5``
 -  Average ROC for each layer as a merge simulation progresses ->

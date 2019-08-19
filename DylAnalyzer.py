@@ -263,20 +263,12 @@ def permutation(arr: list, D0: list, D1: list):
 
 
 if __name__ == "__main__":
-	if len(sys.argv) > 1:
-		if sys.argv[1] == '2' and len(sys.argv) >= 4:
-			test: int = 2
-		elif sys.argv[1] == '1':
-			test: int = 1
-		else:
-			test: int = -1
-	else:
-		test: int = -1
+	test = len(sys.argv) - 1
 	if test == 1:
 		# Shows the 5 plot dashboard for studies
 		length: int = 256
 		layers: int = 8
-		varEstimate, avgAUC, avgMSETrues, avgMSEEmpiric, avgComps, avgHanleyMNeil, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters = analyzeMergeSims(sys.argv[2], length, layers, bar=True)
+		varEstimate, avgAUC, avgMSETrues, avgMSEEmpiric, avgComps, avgHanleyMNeil, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters = analyzeMergeSims(sys.argv[1], length, layers, bar=True)
 		labels: list = [f'{np.median(list(filter(lambda x: x != 0, avgMinSeps[0]))):3.02f}']
 		for val in np.median(avgMinSeps, axis=0)[1:]:
 			labels.append(f'{val:3.02f}')
@@ -339,9 +331,9 @@ if __name__ == "__main__":
 		n0: int = 128
 		n1: int = 128
 
-		with open(sys.argv[2]) as f:
+		with open(sys.argv[1]) as f:
 			results: dict = json.load(f)
-		with open(sys.argv[3]) as f:
+		with open(sys.argv[2]) as f:
 			names: list = f.read().split()
 		if max((len(files) for files in results.values())) == 4:
 			fig, (scatterAxes, timeAxes, tauAxes) = plt.subplots(ncols=3, nrows=3)
@@ -443,10 +435,10 @@ if __name__ == "__main__":
 			print(f"{reader} {np.mean(scaleTimes):0.3f}\t\t{np.std(scaleTimes):0.3f}\t\t{np.mean(mergeTimes):0.3f}\t\t\t{np.std(mergeTimes):0.3f}\t\t{tau:0.3f}\t{np.std(taus):0.3f}")
 		fig.set_size_inches(12, 8)
 		if len(sys.argv) == 5:
-			plt.savefig(sys.argv[4], bbox_inches = 'tight', pad_inches = 0)
+			plt.savefig(sys.argv[3], bbox_inches = 'tight', pad_inches = 0)
 		else:
 			plt.show()
 	else:
 		print("Usage:")
-		print(f"{__file__} 1 [simulation results file]")
-		print(f"{__file__} 2 [json results file for reader studies] [names.txt filename] [optional output directory]")
+		print(f"{__file__} [simulation results file]")
+		print(f"{__file__} [json results file for reader studies] [names.txt filename] [optional output directory]")

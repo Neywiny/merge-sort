@@ -107,8 +107,8 @@ if __name__ == '__main__':
 		from main import multiRunner
 		multiRunner(simulation_ELO_targetAUC, "Elo")
 	elif test == 2:
-		animation = False
-		if animation:
+		both = False
+		if both:
 			import matplotlib.pyplot as plt
 			from matplotlib.animation import FuncAnimation
 			from matplotlib.animation import PillowWriter
