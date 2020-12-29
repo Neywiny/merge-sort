@@ -1,1 +1,6 @@
 tqdm
+numpy
+scipy
+matplotlib
+tk
+Pillow

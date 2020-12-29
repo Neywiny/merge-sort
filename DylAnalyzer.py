@@ -1,6 +1,7 @@
 #!/usr/bin/python3.6
 import pickle
 import json
+from typing import Dict, List
 import ROC1
 import tqdm
 import sys
@@ -31,9 +32,9 @@ def analyzeMergeSims(fileName: str, length: int, layers: int, justOne: bool=Fals
 	avgMSETrues: np.ndarray = np.zeros((layers,))
 	avgMSEEmpiric: np.ndarray = np.zeros((layers,))
 	avgPC: np.ndarray = np.zeros((layers,))
-	avgEstimates: np.ndarray = np.array([np.zeros((i)) for i in range(layers)])
-	avgMinSeps: np.ndarray = np.ones((layers, length))
-	varEstimates: np.ndarray = np.zeros((layers, 0))
+	avgEstimates: np.ndarray[float] = np.array([np.zeros((i)) for i in range(layers)])
+	avgMinSeps: np.ndarray[float] = np.ones((layers, length))
+	varEstimates: np.ndarray[float] = np.zeros((layers, 0))
 	aucs: np.ndarray = np.zeros((layers, 0))
 	iters: int = 0
 	fileLength: int = os.stat(fileName).st_size
@@ -64,8 +65,8 @@ def analyzeMergeSims(fileName: str, length: int, layers: int, justOne: bool=Fals
 				del new # we don't need it anymore
 			for iLevel, (auc, varEstimate, hanleyMcNeil, estimates, mseTrue, mseEmpiric, compLen, minSeps, pc) in enumerate(iteration):
 				# store results
-				varEstimates[iLevel][iters - 1]: float = varEstimate
-				aucs[iLevel][iters - 1]: float = auc
+				varEstimates[iLevel][iters - 1] = varEstimate
+				aucs[iLevel][iters - 1] = auc
 
 				# add to running total
 				avgHanleyMNeil[iLevel] += hanleyMcNeil
@@ -79,7 +80,7 @@ def analyzeMergeSims(fileName: str, length: int, layers: int, justOne: bool=Fals
 
 				# update how many bytes were read
 				pBar.update(f.tell() - old)
-				pBar.desc: str = f"{iters}/{iterEstimate}, {reshapeCount}, {sys.getsizeof(unpickler)}"
+				pBar.desc = f"{iters}/{iterEstimate}, {reshapeCount}, {sys.getsizeof(unpickler)}"
 				old: int = f.tell()
 
 				if justOne:
@@ -150,7 +151,7 @@ def analyzeScaleStudy(fileName:str, names:list=None) -> tuple:
 	times = list()
 	x0 = list()
 	x1 = list()
-	scores = dict()
+	scores: Dict[int] = dict()
 	with open(fileName) as f:
 		posDir, negDir = f.readline().strip().split()
 		for line in f:
@@ -160,7 +161,7 @@ def analyzeScaleStudy(fileName:str, names:list=None) -> tuple:
 			# DylScale may do more ratings than are needed
 			# this ensures (if the user wants) that they aren't included
 			if not names or line[0] in names:
-				scores[line[0]]: int = score
+				scores[line[0]] = score
 
 	for name in sorted(scores.keys()):
 		if negDir in name:
@@ -266,7 +267,7 @@ if __name__ == "__main__":
 	if len(sys.argv) > 1:
 		if sys.argv[1] == '2' and len(sys.argv) >= 4:
 			test: int = 2
-		elif sys.argv[1] == '1':
+		elif sys.argv[1] == '1' and len(sys.argv) == 5:
 			test: int = 1
 		else:
 			test: int = -1
@@ -274,8 +275,8 @@ if __name__ == "__main__":
 		test: int = -1
 	if test == 1:
 		# Shows the 5 plot dashboard for studies
-		length: int = 256
-		layers: int = 8
+		length: int = int(sys.argv[3])
+		layers: int = int(sys.argv[4])
 		varEstimate, avgAUC, avgMSETrues, avgMSEEmpiric, avgComps, avgHanleyMNeil, avgEstimates, avgMinSeps, varAUCnp, stdVarEstimate, avgPC, iters = analyzeMergeSims(sys.argv[2], length, layers, bar=True)
 		labels: list = [f'{np.median(list(filter(lambda x: x != 0, avgMinSeps[0]))):3.02f}']
 		for val in np.median(avgMinSeps, axis=0)[1:]:
@@ -305,10 +306,10 @@ if __name__ == "__main__":
 		ax2.set_title("Variance Estimate per Layer")
 
 		ax3 = fig.add_subplot(2, 3, 3)
-		info: list = [-1 for i in range(layers - 1)]
+		info: List[float] = [-1 for i in range(layers - 1)]
 		for layer in range(layers - 1):
 			try:
-				info[layer]: float = ((1/varEstimate[layer + 1]) - (1/varEstimate[layer]))/(avgComps[layer + 1] - avgComps[layer])
+				info[layer] = ((1/varEstimate[layer + 1]) - (1/varEstimate[layer]))/(avgComps[layer + 1] - avgComps[layer])
 			except ZeroDivisionError:
 				print(varEstimate, avgComps)
 		ax3.plot(xVals[1:], info, marker='.')
@@ -336,23 +337,40 @@ if __name__ == "__main__":
 		plt.show()
 	elif test == 2:
 
-		n0: int = 128
-		n1: int = 128
+		n0: int = -1
+		n1: int = -1
 
 		with open(sys.argv[2]) as f:
 			results: dict = json.load(f)
 		with open(sys.argv[3]) as f:
 			names: list = f.read().split()
 		if max((len(files) for files in results.values())) == 4:
-			fig, (scatterAxes, timeAxes, tauAxes) = plt.subplots(ncols=3, nrows=3)
+			fig, (scatterAxes, timeAxes, tauAxes) = plt.subplots(ncols=len(results), nrows=3)
 		else:
-			fig, (timeAxes) = plt.subplots(ncols=3, nrows=1)
-		fontSize: int = 8
+			fig, (timeAxes) = plt.subplots(ncols=len(results), nrows=1)
+		fontSize: int = 16
 		plt.rcParams["font.size"] = fontSize
 		line = "reader\t(scaleTimes)\tstd(scaleTimes)\tmean(mergeTimes)\tstd(mergeTimes)\ttau\tstd(taus)"
 		print(line)
 		print('-' * int(len(line) * 1.2))
 		for i, (reader, files) in enumerate(results.items()):
+			if n0 == -1: # run n0/n1 detection
+				with open(files[2]) as f:
+					header = True
+					for line in f:
+						if header:
+							header = False
+						elif n0 == -1:
+							# the first comparison is between image 0 and image [n0]
+							n0 = int(line.split(',')[1])
+						else:
+							#the last comparison is between image [n0-1] and image [n1]
+							# so keep feeding lines until we get it
+							if len(line.split(',')) == 3:
+								lastLine = line
+							else:
+								n1 = int(lastLine.split(',')[1]) - n0 + 1
+								break
 
 			afcTime, afcX0, afcX1, afcRanks = analyzeAFCStudies(files[0], files[2], n0, n1)
 			mergeTimes: list = list(filter(lambda x: x < 5, afcTime))
@@ -361,8 +379,6 @@ if __name__ == "__main__":
 				scaleTimes, x0, x1, scoresScale = analyzeScaleStudy(files[3], names=names)
 				scaleSMData: np.ndarray = ROC1.successmatrix(x1, x0)
 				scaleTimes: list = list(filter(lambda x: x < 10, scaleTimes))
-
-			if len(files) == 4:
 				xmax: float = np.append(scaleTimes, mergeTimes).max()
 				kernal = stats.gaussian_kde(scaleTimes)
 				xVals: np.ndarray = np.linspace(0, xmax, 1000)
@@ -377,8 +393,8 @@ if __name__ == "__main__":
 			timeAxes[i].legend()
 			timeAxes[i].set_ylim(bottom=0)
 			timeAxes[i].set_xlim(left=0, right=xmax)
-			timeAxes[i].set_ylabel("Percentage")
-			timeAxes[i].set_xlabel("Time")
+			timeAxes[i].set_ylabel("Percentage", fontsize=fontSize)
+			timeAxes[i].set_xlabel("Time", fontsize=fontSize)
 			timeAxes[i].set_title("Times")
 			if len(files) == 4:
 				ranks: np.ndarray = np.zeros((2, n0 + n1))
@@ -402,9 +418,9 @@ if __name__ == "__main__":
 
 				scatterAxes[i].plot([0, n0 + n1], [0, n0 + n1], 'r:')
 				for x in range(n0):
-					scatterAxes[i].scatter(ranks[0][x], ranks[1][x], c="b", marker="^", s=2)
+					scatterAxes[i].scatter(ranks[0][x], ranks[1][x], c="b", marker="^", s=4)
 				for x in range(n0, n0 + n1):
-					scatterAxes[i].scatter(ranks[0][x], ranks[1][x], c="g", marker="o", s=2)
+					scatterAxes[i].scatter(ranks[0][x], ranks[1][x], c="g", marker="o", s=4)
 				#scatterAxes[i].text(20, (n0 + n1)*0.9, reader[-1])
 				scatterAxes[i].set_aspect('equal', 'box')
 				tau: float = stats.kendalltau(ranks[0], ranks[1])[0]
@@ -416,7 +432,7 @@ if __name__ == "__main__":
 				scatterAxes[i].set_xlabel("Image Ranks from Rating Data", fontsize=fontSize)
 				scatterAxes[i].set_ylabel("Image Ranks from 2AFC Merge", fontsize=fontSize)
 
-				with Pool(8, initializer=np.random.seed) as p:
+				with Pool(initializer=np.random.seed) as p:
 						taus = p.map(bootstrapTau, (ranks for _ in range(1_000)))
 						mses = p.starmap(permutation, ((ranks, list(range(n0)), list(range(n0, n1))) for _ in range(1_000)))
 
@@ -426,6 +442,8 @@ if __name__ == "__main__":
 				tauAxes[i].set_title("Kendall's Tau")
 				tauAxes[i].fill_between(xVals, kernal(xVals))
 				tauAxes[i].set_ylim(bottom=0)
+				tauAxes[i].set_xlabel("Tau", fontsize=fontSize)
+				tauAxes[i].set_ylabel("Percentage", fontsize=fontSize)
 
 				p = np.mean([mse < permutted for permutted in mses])
 
@@ -436,12 +454,14 @@ if __name__ == "__main__":
 				z: float = np.abs(dAUC / stdDSM) # how many standard deviations away it is
 				wald: float = 2 * (1 - stats.norm.cdf(z))
 			else:
+				timeAxes[i].set_title(reader)
 				scaleTimes: list = [0]
 				taus: list = [0]
 				tau: int = 0
 
 			print(f"{reader} {np.mean(scaleTimes):0.3f}\t\t{np.std(scaleTimes):0.3f}\t\t{np.mean(mergeTimes):0.3f}\t\t\t{np.std(mergeTimes):0.3f}\t\t{tau:0.3f}\t{np.std(taus):0.3f}")
-		fig.set_size_inches(12, 8)
+		fig.set_size_inches(24, 16)
+		fig.tight_layout()
 		if len(sys.argv) == 5:
 			plt.savefig(sys.argv[4], bbox_inches = 'tight', pad_inches = 0)
 		else:

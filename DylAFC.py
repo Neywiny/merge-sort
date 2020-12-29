@@ -6,6 +6,8 @@ import numpy as np
 from sys import argv
 from tkinter import *
 from PIL import ImageTk, Image
+
+
 class AFC:
 	"""A Class for doing AFC studies. This one only does 2AFC. It is used for integrating with a tkinter interface as seen in DylAFC."""
 	def __init__(self, posDir: str, negDir: str, ansDir: str, ip: str, port: str, n0: int, n1: int, logFile: str):
@@ -27,6 +29,8 @@ class AFC:
 		self.exit = self.__exit__
 		self.connected: bool = False
 		self.f = open(logFile, 'w')
+		self.key_left = -2
+		self.key_right = -2
 	def connect(self):
 		"""Connects to the comparator. Waits until connection is established, therefore this method is blocking."""
 		s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -74,7 +78,7 @@ class AFC:
 		self.correct = ImageTk.PhotoImage(Image.open("correct.png"))
 		self.wrong = ImageTk.PhotoImage(Image.open("wrong.png"))
 		return self
-	def showPics(self, pic1: int, pic2: int=None):
+	def showPics(self, pic1, pic2: int=None):
 		""" show the pictures identified by the image number arguments.
 		If pic2 is not provided, pic1 is a boolean value for displaying either correct or incorrect."""
 		if self.mode.get() == 'answers':
@@ -118,9 +122,9 @@ class AFC:
 					self.decision: int = -1
 				else: # default place, pseudo main loop
 					self.showPics(self.imgID1, self.imgID2)
-			elif not self.ready and (self.decision == 113 or self.decision == 114):
+			elif not self.ready and (self.decision == self.key_left or self.decision == self.key_right):
 				self.counter: int = 1000
-				self.showPics((self.decision == 114 and self.answer == 'right') or (self.decision == 113 and self.answer == 'left'))
+				self.showPics((self.decision == self.key_right and self.answer == 'right') or (self.decision == self.key_left and self.answer == 'left'))
 				self.decision: int = -1
 				self.ready: bool = True
 			elif self.counter > 0:
@@ -154,11 +158,11 @@ class AFC:
 				except BrokenPipeError:
 					print("Client Disconnected")
 					self.exit()
-			if self.decision == 113 or self.decision == 114:
-				if self.decision == 114: #right key
+			if self.decision == self.key_left or self.decision == self.key_right:
+				if self.decision == self.key_right: #right key
 					payload: bytes = (1).to_bytes(4, 'little') + self.data[5:9]
 					des: int = self.imgID2
-				elif self.decision == 113: #left key
+				elif self.decision == self.key_left: #left key
 					payload: bytes = (0).to_bytes(4, 'little') + self.data[1:5]
 					des: int = self.imgID2
 				try:
@@ -177,30 +181,47 @@ class AFC:
 				self.showPics(self.imgIndex)
 				self.ready: bool = False
 				root.update()
-			elif self.decision == 114:
+			elif self.decision == self.key_right:
 				#print("saw the event")
 				self.imgIndex += 1 if self.imgIndex < self.n1 - 1 else 0
 				self.decision: int = -1
 				self.ready: bool = True
-			elif self.decision == 113:
-				self.imgIndex -= 1if self.imgIndex > 0 else 0
+			elif self.decision == self.key_left:
+				self.imgIndex -= 1 if self.imgIndex > 0 else 0
 				self.decision: int = -1
 				self.ready: bool = True
+		else:
+			if self.counter == 0:
+				self.img1.configure(text="Press the key you want to indicate left")
+			elif self.counter == 1:
+				self.img1.configure(text="Press the key you want to indicate right")
+			else:
+				self.img1.configure(text="Click the mode you want")
+			label.grid(row=0, column=0)
+
 		root.after(16, self.run)
 	def pressed(self, event: Event):
 		"""Call this when the user has pressed a keyboard button"""
-		#print("event!")
+		#print("event!", event.keycode)
+		if self.key_left == -2:
+			self.key_left = event.keycode
+			self.counter += 1
+			return
+		if self.key_right == -2:
+			self.key_right = event.keycode
+			self.counter += 1
+			return
 		self.counter: int = 0
-		if event.keycode == 113 or event.keycode == 114:
+		if event.keycode == self.key_left or event.keycode == self.key_right:
 			self.decision: int = event.keycode
 	def clicked(self, event: Event):
 		"""Call this when the user has clicked the mouse"""
 		self.counter: int = 0
 		if event.y > 100:
 			if event.x > WIDTH - IMGWIDTH:
-				self.decision: int = 114
+				self.decision: int = self.key_right
 			elif event.x < IMGWIDTH:
-				self.decision: int = 113
+				self.decision: int = self.key_left
 	def __exit__(self, *args):
 		self.f.close()
 		if self.connected:
@@ -237,11 +258,11 @@ if __name__ == "__main__":
 		]
 		frame.grid_columnconfigure(1, weight=1)
 		with AFC(*argv[1:]) as afc:
-			afc.title: Label = label
+			afc.title = label
 			afc.mode = StringVar()
 			afc.mode.set("none")
-			afc.img1: Label = img1
-			afc.img2: Label = img2
+			afc.img1 = img1
+			afc.img2 = img2
 			buttons: Frame = Frame(frame)
 			for i, (text, mode) in enumerate(modes):
 				b: Radiobutton = Radiobutton(buttons, text=text, value=mode, variable=afc.mode, indicatoron=0, command=afc.switchModes)

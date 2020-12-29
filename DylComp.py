@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pickle
+from typing import Dict, Tuple, List
 import numpy as np
 from scipy.stats import kendalltau
 from ROC1 import rocxy
@@ -56,7 +57,8 @@ class Comparator:
 		self.n0: int = n0
 		self.n1: int = n1
 		if self.seed == None:
-			from os import getpid, uname
+			from os import getpid
+			from platform import uname
 			from time import time
 			self.seed: int = (int(str(ord(uname()[1][-1])) + str(getpid()) + str(int(time()))) % 2**31)
 		np.random.seed(self.seed)
@@ -103,18 +105,18 @@ class Comparator:
 	def genSeps(self) -> list:
 		"""Goes throguh the stored records and returns a list of the minimum separations.
 		If there is no minimum separation (the image has not been seen more than once), uses 2*(n0+n1) as a palceholder"""
-		minseps: list = [2*len(self.objects) for i in range(len(self.objects))]
+		minseps: List[int] = [2*len(self.objects) for i in range(len(self.objects))]
 		for img, times in self.seps.items():
 			if len(times) > 1:
-				minseps[img]: int = min(map(lambda x: times[x + 1] - times[x], range(len(times) - 1)))
+				minseps[img] = min(map(lambda x: times[x + 1] - times[x], range(len(times) - 1)))
 		return minseps
 
 	def genLookup(self, objects: list):
 		"""Generate the lookup table for each object provided"""
-		self.lookup:dict = dict()
+		self.lookup:Dict[Dict] = dict()
 		self.objects: list = objects
 		for datum in objects:
-			self.lookup[datum]: dict = dict()
+			self.lookup[datum] = dict()
 		self.clearHistory()
 
 	def clearHistory(self):
@@ -124,8 +126,8 @@ class Comparator:
 			self.last: tuple = None
 			self.dupCount: int = 0
 			for datum in self.objects:
-				self.counts[datum]: int = 0
-				self.seps[datum]: list = list()
+				self.counts[datum] = 0
+				self.seps[datum] = list()
 
 	def learn(self, arr: list, img: int=None, maxi: bool=False):
 		"""Learn the order of the array provided, assuming the current optimization level allows it
@@ -142,19 +144,19 @@ class Comparator:
 			if img == None and self.level > 1:
 				for i, a in enumerate(arr):
 					for b in arr[i + 1:]:
-						self.lookup[a][b]: bool = True
-						self.lookup[b][a]: bool = False
+						self.lookup[a][b] = True
+						self.lookup[b][a] = False
 						if self.level > 2:
 							Comparator.optimize(self.objects, self.lookup, True, a, b)
 			elif img != None and self.level > 1:
 				for b in arr:
 					if b != img:
-						self.lookup[img][b]: bool = not maxi
-						self.lookup[b][img]: bool = maxi
+						self.lookup[img][b] = not maxi
+						self.lookup[b][img] = maxi
 						if self.level > 2:
 							Comparator.optimize(self.objects, self.lookup, maxi, b, img)
 
-	def max(self, arr, tryingAgain=False) -> (int, int):
+	def max(self, arr, tryingAgain=False) -> Tuple[int, int]:
 		"""Gets the maximum of the array with respect to the latent scores.
 		tryingAgain should always be False unless a network comparator is used.
 		Returns the undex of the maximum ID and the maximum ID."""
@@ -189,7 +191,7 @@ class Comparator:
 		self.desHist.append(maxVal)
 		return maxInd, maxVal
 
-	def min(self, arr) -> (int, int):
+	def min(self, arr) -> Tuple[int, int]:
 		"""Gets the minimum of the array with respect to the latent scores.
 		Returns the undex of the minimum ID and the minimum ID."""
 		if len(arr) == 0:
@@ -243,8 +245,8 @@ class Comparator:
 					# s.t. a > b > c or a < b < c
 					nObjects.append(c)
 					# print("optimized", a, c)
-					lookup[a][c]:bool = res
-					lookup[c][a]:bool = not res
+					lookup[a][c] = res
+					lookup[c][a] = not res
 					return 1 + Comparator.optimize(nObjects, lookup, res, b, c)
 		return 0
 
@@ -286,7 +288,7 @@ class NetComparator(Comparator):
 		self.conn.close()
 		self.s.close()
 
-	def min(self, arr: list) -> (int, int):
+	def min(self, arr: list) -> Tuple[int, int]:
 		"""Gets the minimum of the array with respect to the latent scores as the opposite of the maximum.
 		Returns the undex of the minimum ID and the minimum ID."""
 		res = self.max(arr)
@@ -297,7 +299,7 @@ class NetComparator(Comparator):
 			return mini, arr[mini]
 		else:
 			return 'done'
-	def max(self, arr: list, tryingAgain=False) -> (int, int):
+	def max(self, arr: list, tryingAgain=False) -> Tuple[int, int]:
 		"""Gets the maximum of the array with respect to the latent scores.
 		tryingAgain is only used for if there was a hiccup in the network.
 		Returns the undex of the maximum ID and the maximum ID."""
@@ -334,7 +336,7 @@ class NetComparator(Comparator):
 
 if __name__ == "__main__":
 	from sys import argv
-	if len(argv != 4):
+	if len(argv) != 4:
 		print("Usage:")
 		print(f"{__file__} <log file output> <port> <roc file output>")
 	else:
@@ -344,17 +346,19 @@ if __name__ == "__main__":
 		import matplotlib.pyplot as plt
 		from os import replace
 		fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(nrows=2, ncols=3)
+		avgROC = None # this way when it dumps to file from an empty result there's no issues
+		roc4 = None # ''
 		with open(argv[1], "w") as f, NetComparator('127.0.0.1', int(argv[2]), f) as comp:
 			data, D0, D1 = continuousScale(comp.n0, comp.n1)
 			comp.genLookup(data)
 			comp.layers = layers = calcNLayers(comp.n0 + comp.n1)
 			xVals: list = list(range(1, layers + 1))
 			xLabels: list = ['' for _ in xVals]
-			aucs: np.ndarray = np.full((layers,), np.nan)
-			varEstimates: np.ndarray = np.full((layers,), np.nan)
-			hmnEstimates: np.ndarray = np.full((layers, layers), np.nan)
-			compLens: np.ndarray = np.full((layers,), np.nan)
-			info: list = [np.nan for i in range(layers)]
+			aucs: np.ndarray[float] = np.full((layers,), np.nan)
+			varEstimates: np.ndarray[float] = np.full((layers,), np.nan)
+			hmnEstimates: np.ndarray[np.ndarray] = np.full((layers, layers), np.nan)
+			compLens: np.ndarray[int] = np.full((layers,), np.nan)
+			info: List[float] = [np.nan for i in range(layers)]
 			comp.aucs = aucs
 			comp.pax = ax1
 			comp.plt = plt
@@ -398,10 +402,10 @@ if __name__ == "__main__":
 				auc, varEstimate, hanleyMcNeil, lowBoot, highBoot, lowSine, highSine, smVAR, npVAR, *estimates = stats
 				f.write(''.join([str(val)+',' for val in stats]))
 				f.write('\n')
-				aucs[currLayer]: float = auc
-				varEstimates[currLayer]: float = varEstimate
-				hmnEstimates[currLayer]: np.ndarray = np.append(np.full((layers - len(estimates)), np.nan), estimates)
-				compLens[currLayer]: int = len(comp)
+				aucs[currLayer] = auc
+				varEstimates[currLayer] = varEstimate
+				hmnEstimates[currLayer] = np.append(np.full((layers - len(estimates)), np.nan), estimates)
+				compLens[currLayer] = len(comp)
 				for plot in plots:
 					for line in plot:
 						try:
@@ -416,7 +420,7 @@ if __name__ == "__main__":
 				ax2.plot(xVals, hmnEstimates[currLayer], 'b-', lw=5, label=f"prediction {currLayer + 1}", alpha=0.2)
 				ax2.set_xticklabels(xLabels, rotation="vertical")
 				if currLayer > 0:
-					info[currLayer]: float = ((1 / varEstimates[currLayer]) - (1 / varEstimates[currLayer - 1])) / (compLens[currLayer] - compLens[currLayer - 1])
+					info[currLayer] = ((1 / varEstimates[currLayer]) - (1 / varEstimates[currLayer - 1])) / (compLens[currLayer] - compLens[currLayer - 1])
 				else:
 					plots.append(ax3.plot(xVals, xVals, lw=0))
 				plots.append(ax3.plot(xVals, info, c='orange', marker='.', ls='-'))
