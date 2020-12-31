@@ -18,8 +18,8 @@ sys.path.insert(0, os.path.abspath(".."))
 # -- Project information -----------------------------------------------------
 
 project = 'merge sort'
-copyright = '2019, Dylan Shekter, Frank Samuelson,'
-author = 'Dylan Shekter, Frank Samuelson,'
+copyright = '2020, Dylan Shekter, Frank Samuelson'
+author = 'Dylan Shekter, Frank Samuelson'
 
 # The short X.Y version
 version = '1.0'
