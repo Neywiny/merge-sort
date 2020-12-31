@@ -1,4 +1,5 @@
 #!/usr/bin/python3.6
+from typing import Dict, Tuple
 import ROC1
 import numpy as np
 np.set_printoptions(threshold=np.inf)
@@ -18,7 +19,7 @@ except BaseException as e:
 	pass
 from DylData import *
 unbiasedMeanMatrixVar = ROC1.unbiasedMeanMatrixVar
-def paramToParams(predicted: list, D0: list=None, D1: list=None) -> (list, list, list):
+def paramToParams(predicted: list, D0: list=None, D1: list=None) -> Tuple[list, list, list]:
 	"""Takes one parameter and splits it into three if predicted is a 2d list"""
 	if isinstance(predicted[0], (list, tuple)):
 		return predicted[0], predicted[1], predicted[2]
@@ -52,7 +53,7 @@ def calcNLayers(arr: list) -> int:
 		length: int = arr
 	else:
 		length: int = len(arr)
-	return np.ceil(np.log2(length))
+	return int(np.ceil(np.log2(length)))
 
 def genSep(dist: str, auc: float) -> float:
 	"""Returns the sep parameter needed for the target AUC for the given distribution."""
@@ -62,7 +63,7 @@ def genSep(dist: str, auc: float) -> float:
 		return norm.ppf(auc)*(2**0.5)
 	raise NotImplementedError("Cannot gen sep for that distribution")
 
-def MSE(sep: float, dist: str, ROC: list, rocEmpiric: list=None) -> (float, float, float):
+def MSE(sep: float, dist: str, ROC: list, rocEmpiric: list=None) -> Tuple[float, float, float]:
 	"""Returns the MSE of the given ROC with respect to:
 	If sep and dist are not None: the true ROC from sep and dist
 	If rocEmpiric is not None: the MSE between the Empiric and ROC
@@ -86,10 +87,12 @@ def MSE(sep: float, dist: str, ROC: list, rocEmpiric: list=None) -> (float, floa
 		else:
 			trueApprox = interp1d(*zip(*rocEmpiric))
 		mseEmpiric: float = np.mean((approx - (trueApprox(fpf)))**2)
+	else:
+		mseEmpiric = None
 	calcAUC: float = np.trapz(approx) / (1/step)
 	return (mseTrue, calcAUC) if rocEmpiric == None else (mseTrue, mseEmpiric, calcAUC)
 
-def genX0X1(predicted: tuple, D1: tuple=None, D0: tuple=None) -> (list, list):
+def genX0X1(predicted: tuple, D1: tuple=None, D0: tuple=None) -> Tuple[list, list]:
 	"""Generates x0 and x1 vectors out of the given parameters.
 	D1 and D0 should never be smaller than the predicted array, but are often bigger."""
 	predicted, D0, D1 = paramToParams(predicted, D0, D1)
@@ -202,7 +205,7 @@ def avROC(rocs: list) -> tuple:
 	for iRoc, roc in enumerate(rotrocs):
 		inter = interp1d(roc['u'], roc['v'])
 		for iU, u in enumerate(stdA):
-			aprotrocs[iRoc][iU]: float = inter(u)
+			aprotrocs[iRoc][iU] = inter(u)
 	ymean: np.ndarray = np.zeros((1, len(stdA)))
 	for apro in aprotrocs:
 		ymean += apro
@@ -216,12 +219,12 @@ def successMatrix(predicted: list, D0: list, D1: list):
 	"""Creates the success matrix for the predicted ordering.
 	Checks to make sure it got every entry filled."""
 	arr: np.ndarray = np.full((len(D1), len(D0)), -1)
-	indecies: dict = dict()
+	indecies: Dict[int] = dict()
 	for val in D0 + D1:
-		indecies[val]: int = predicted.index(val)
+		indecies[val] = predicted.index(val)
 	for col, x in enumerate(reversed(D0)):
 		for row, y in enumerate(reversed(D1)):
-			arr[row, col]: bool = indecies[x] < indecies[y]
+			arr[row, col] = indecies[x] < indecies[y]
 	if -1 in arr:
 		raise EnvironmentError("failed to create success matrix")
 	return arr
@@ -268,18 +271,19 @@ def runStats(groups: list, params: list, comp) -> list:
 		estimateNs[-1].sort(key=sum)
 		estimates.append(hanleyMcNeil(avgAUC, estimateNs[-1][-1][0], estimateNs[-1][-1][1]) / len(estimateNs[-1]))
 	for i, (N0, N1) in enumerate(hanleyMcNeils):
-		hanleyMcNeils[i]: float = hanleyMcNeil(avgAUC, N0, N1)
+		hanleyMcNeils[i] = hanleyMcNeil(avgAUC, N0, N1)
 	if len(varOfSM) == 0:
 		varEstimate: float = float(varOfAverageAUC)
 	else:
 		varEstimate: float = (sum(varOfSM) / (len(varOfSM)**2))
 
 	avgROC: tuple = avROC(rocs)
-	empiricROC: tuple = comp.empiricROC()
-	sep: float = genSep(dist, float(targetAUC)) # float in case it's a string
-
-	stats: list = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, estimates, *MSE(sep, dist, avgROC, empiricROC)[:2]]
-
+	if dist != 0: # not a net comparator
+		empiricROC: tuple = comp.empiricROC()
+		sep: float = genSep(dist, float(targetAUC)) # float in case it's a string
+		stats: list = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, estimates, *MSE(sep, dist, avgROC, empiricROC)[:2]]
+	else:
+		stats: list = [avgAUC, varEstimate, sum(hanleyMcNeils) / len(hanleyMcNeils)**2, estimates]
 	return stats
 
 if __name__ == "__main__":
@@ -296,7 +300,7 @@ if __name__ == "__main__":
 		graphROCs(arrays)
 	elif test == 3:
 		predicted: list = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 9, 11, 12, 13, 14, 15, 16, 17, 18, 19]
-		print(aucSM(successMatrix(predicted, [*range(10)], [*range(10,20)])))
+		print(np.mean(successMatrix(predicted, [*range(10)], [*range(10,20)])))
 	elif test == 4:
 		arrays: list = [[0, 1, 4, 2, 5, 3, 6],
 			[0, 1, 2, 4, 3, 5, 6],

@@ -1,5 +1,6 @@
 #! /usr/bin/python3
 import pickle
+from time import time
 from typing import Dict, Tuple, List
 import numpy as np
 from scipy.stats import kendalltau
@@ -344,20 +345,20 @@ if __name__ == "__main__":
 		from DylSort import treeMergeSort
 		from DylMath import avROC, genROC, calcNLayers
 		import matplotlib.pyplot as plt
-		from os import replace
 		fig, ((ax1, ax2, ax3), (ax4, ax5, ax6)) = plt.subplots(nrows=2, ncols=3)
+		fig.set_size_inches(16, 9)
 		avgROC = None # this way when it dumps to file from an empty result there's no issues
 		roc4 = None # ''
 		with open(argv[1], "w") as f, NetComparator('127.0.0.1', int(argv[2]), f) as comp:
 			data, D0, D1 = continuousScale(comp.n0, comp.n1)
 			comp.genLookup(data)
 			comp.layers = layers = calcNLayers(comp.n0 + comp.n1)
-			xVals: list = list(range(1, layers + 1))
+			xVals: list = list(range(1, int(layers) + 1))
 			xLabels: list = ['' for _ in xVals]
-			aucs: np.ndarray[float] = np.full((layers,), np.nan)
-			varEstimates: np.ndarray[float] = np.full((layers,), np.nan)
-			hmnEstimates: np.ndarray[np.ndarray] = np.full((layers, layers), np.nan)
-			compLens: np.ndarray[int] = np.full((layers,), np.nan)
+			aucs: np.ndarray = np.full((layers,), np.nan)
+			varEstimates: np.ndarray = np.full((layers,), np.nan)
+			hmnEstimates: np.ndarray = np.full((layers, layers), np.nan)
+			compLens: np.ndarray = np.full((layers,), np.nan)
 			info: List[float] = [np.nan for i in range(layers)]
 			comp.aucs = aucs
 			comp.pax = ax1
@@ -384,22 +385,23 @@ if __name__ == "__main__":
 			ax5.set_xlim(left=-0.01, right=1.01)
 			ax5.set_ylim(bottom=-0.01, top=1.01)
 			ax5.set_aspect('equal', 'box')
+			ax5.set_title("avg ROC")
 			fig.delaxes(ax6)
 			plt.tight_layout()
-			plt.savefig("temp.svg")
-			replace("temp.svg", "figure.svg")
+			plt.savefig("figure.svg")
 			comp.xVals = xVals
 			comp.xLabels = xLabels
 			print(data)
 			plots = list()
-			for currLayer, (groups, stats) in enumerate(treeMergeSort(data, comp, [(D0, D1)], combGroups=False)):
+			#														give dummy 0 vals for dist and target AUC
+			for currLayer, (groups, stats) in enumerate(treeMergeSort(data, comp, [(D0, D1), 0, 0], combGroups=False)):
 				print(groups)
 				rocs = list()
 				for group in groups:
 					rocs.append(genROC(group, D0, D1))
 				avgROC = avROC(rocs)
 				xLabels[currLayer] = len(comp)
-				auc, varEstimate, hanleyMcNeil, lowBoot, highBoot, lowSine, highSine, smVAR, npVAR, *estimates = stats
+				auc, varEstimate, hanleyMcNeil, estimates = stats
 				f.write(''.join([str(val)+',' for val in stats]))
 				f.write('\n')
 				aucs[currLayer] = auc
@@ -431,7 +433,7 @@ if __name__ == "__main__":
 					roc4: dict = avgROC
 				plt.tight_layout()
 				ax5.set_aspect('equal', 'box')
-				plt.savefig("temp.svg")
-				replace("temp.svg", "figure.svg")
+				plt.savefig("figure.svg")
+		plt.savefig('figureBACKUP' + str(time()) + '.svg')
 		with open(argv[3], "wb") as f:
 			pickle.dump((avgROC, roc4), f)

@@ -58,11 +58,11 @@ class AFC:
 		negNames: list = [self.negDir + img for img in sorted(os.listdir(self.negDir))][offset:offset + self.n0]
 		self.n0: int = len(negNames)
 		self.n1: int = len(posNames)
-		#print(len(posNames), len(negNames), len(ansNames))
 		names: list = negNames + posNames
 		with open("names.txt", "w") as f:
 			for name in names:
-				f.write(name + ' ')
+				# write all the files to the file, separated with the file separator
+				f.write(name + '\x1C')
 		self.images: list = [Image.open(name) for name in names]
 		for img in self.images:
 			img.thumbnail((IMGWIDTH, IMGHEIGHT))
@@ -234,6 +234,9 @@ if __name__ == "__main__":
 	if len(argv) < 9:	
 		print(f"Usage: {__file__} [target present directory] [target absent directory] [answers directory] [merge ip] [merger port] [n0] [n1] [log file]")
 	else:
+		for i in range(1, 4):
+			if not argv[i].endswith('/'):
+				argv[i] += '/'
 		HEIGHT: int = 700
 		WIDTH: int = 1300
 		IMGWIDTH: int = 600

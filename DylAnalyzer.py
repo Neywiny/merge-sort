@@ -182,13 +182,14 @@ def analyzeAFCStudies(log: str, results: str, n0: int, n1: int) -> tuple:
 
 	data, D0, D1 = continuousScale(n0, n1)
 	comp = Comparator(data, rand=True)
+	# this redoes the study with the decisions of the reader
 	comp.learn(results)
 	for arr in treeMergeSort(data[:], comp):
 		pass
-	indeciesAFC: list = [arr.index(i) for i in range(256)]
+	indeciesAFC: list = [arr.index(i) for i in range(n0 + n1)]
 	x0, x1 = genX0X1(arr, D1, D0)
-	x0: np.ndarray = np.array([indeciesAFC[i] for i in range(128)])
-	x1: np.ndarray = np.array([indeciesAFC[i] for i in range(128, 256)])
+	x0: np.ndarray = np.array([indeciesAFC[i] for i in range(n0)])
+	x1: np.ndarray = np.array([indeciesAFC[i] for i in range(n0, n0 + n1)])
 	return times, x0, x1, indeciesAFC
 
 def analyzeReaderStudies(resultsFile, directory, n0):
@@ -198,9 +199,8 @@ def analyzeReaderStudies(resultsFile, directory, n0):
 	AUCss = list()
 	VARss = list()
 	PCss = list()
-	with open("results.json") as f:
+	with open(resultsFile) as f:
 		results = json.load(f)
-	results = {"Reader A":("resGabi/scaleGabi.csv1565102893.2022426", "resGabi/log2.csv", "resGabi/rocs", "resGabi/compGabi.csv"), "Reader B":("resFrank/scaleFrank.csv1565098562.1623092", "resFrank/log2.csv", "resFrank/rocs", "resFrank/results.csv"), "Reader C":("resDylan/scaleDylan2.csv", "resDylan/log2.csv", "resDylan/rocs", "resDylan/compDylan.csv")}
 	readers = results.keys()
 	for reader, val in results.items():
 		AUCs = list()
@@ -241,34 +241,37 @@ def analyzeReaderStudies(resultsFile, directory, n0):
 		roc8s.append((roc8, reader, auc(list(zip(*roc8)))))
 		roc4s.append((roc4, reader, auc(list(zip(*roc4)))))
 		rocScales.append((scaleROC, reader, scaleAUC, scaleVAR))
-	#plt.axis('equal')
 	return AUCss, VARss, PCss, readers, rocScales, roc8s, roc4s
 
 def bootstrapTau(arr: list):
-	"""Cunction for permuting the columns of the array with replacement"""
+	"""Function for permuting the columns of the array with replacement"""
 	ranks: np.ndarray = arr[:,np.random.randint(len(arr[0]), size=len(arr[0]))]
 	return stats.kendalltau(ranks[0], ranks[1])[0]
 
-def permutation(arr: list, D0: list, D1: list):
+def permutation(arr: list, D0: list, D1: list, n0: int, n1: int):
 	"""Permutation test for MSEs"""
 	indecies: np.ndarray = np.random.randint(2, size=len(arr[0]))
 	scales: np.ndarray = arr[indecies, range(len(arr[0]))]
 	afcs: np.ndarray = arr[1 - indecies, range(len(arr[0]))]
-	x0 = [scales[i] + 1 for i in range(128)]
-	x1 = [scales[i] + 1 for i in range(128, 256)]
+	x0 = [scales[i] + 1 for i in range(n0)]
+	x1 = [scales[i] + 1 for i in range(n0, n0 + n1)]
 	scaleROC: dict = ROC1.rocxy(x1, x0)
-	x0 = [afcs[i] + 1 for i in range(128)]
-	x1 = [afcs[i] + 1 for i in range(128, 256)]
+	x0 = [afcs[i] + 1 for i in range(n0)]
+	x1 = [afcs[i] + 1 for i in range(n0, n0 + n1)]
 	afcROC: dict = ROC1.rocxy(x1, x0)
 	return MSE(None, None, scaleROC, afcROC)[1]
 
 
 if __name__ == "__main__":
+	# if the first argument is a 1, analyze simulation
+	# if the first argument is a 2, analyze study
 	if len(sys.argv) > 1:
 		if sys.argv[1] == '2' and len(sys.argv) >= 4:
 			test: int = 2
 		elif sys.argv[1] == '1' and len(sys.argv) == 5:
 			test: int = 1
+		elif sys.argv[1] == '3' and len(sys.argv) == 3:
+			test: int = 3
 		else:
 			test: int = -1
 	else:
@@ -343,11 +346,13 @@ if __name__ == "__main__":
 		with open(sys.argv[2]) as f:
 			results: dict = json.load(f)
 		with open(sys.argv[3]) as f:
-			names: list = f.read().split()
-		if max((len(files) for files in results.values())) == 4:
+			# files are separated with... the file separator character. amazing
+			names: list = f.read().rstrip('\x1C').split('\x1C')
+		if min((len(files) for files in results.values())) == 4:
 			fig, (scatterAxes, timeAxes, tauAxes) = plt.subplots(ncols=len(results), nrows=3)
 		else:
 			fig, (timeAxes) = plt.subplots(ncols=len(results), nrows=1)
+			scatterAxes = None; tauAxes = None # appease the linter
 		fontSize: int = 16
 		plt.rcParams["font.size"] = fontSize
 		line = "reader\t(scaleTimes)\tstd(scaleTimes)\tmean(mergeTimes)\tstd(mergeTimes)\ttau\tstd(taus)"
@@ -374,6 +379,13 @@ if __name__ == "__main__":
 
 			afcTime, afcX0, afcX1, afcRanks = analyzeAFCStudies(files[0], files[2], n0, n1)
 			mergeTimes: list = list(filter(lambda x: x < 5, afcTime))
+			xmax = max(mergeTimes)
+
+			timeAxes[i].set_ylim(bottom=0, top=100)
+			timeAxes[i].set_xlim(left=0, right=xmax)
+			timeAxes[i].set_ylabel("Percentage", fontsize=fontSize)
+			timeAxes[i].set_xlabel("Time", fontsize=fontSize)
+			timeAxes[i].set_title("Times")
 
 			if len(files) == 4:
 				scaleTimes, x0, x1, scoresScale = analyzeScaleStudy(files[3], names=names)
@@ -382,21 +394,12 @@ if __name__ == "__main__":
 				xmax: float = np.append(scaleTimes, mergeTimes).max()
 				kernal = stats.gaussian_kde(scaleTimes)
 				xVals: np.ndarray = np.linspace(0, xmax, 1000)
-				timeAxes[i].fill_between(xVals, kernal(xVals), label="scale", alpha=0.5)
-			else:
-				xmax = max(mergeTimes)
-
-			kernal = stats.gaussian_kde(mergeTimes)
-			xVals: np.ndarray = np.linspace(0, xmax, 1000)
-			timeAxes[i].fill_between(xVals, kernal(xVals), label="merge", alpha=0.5)
-
-			timeAxes[i].legend()
-			timeAxes[i].set_ylim(bottom=0)
-			timeAxes[i].set_xlim(left=0, right=xmax)
-			timeAxes[i].set_ylabel("Percentage", fontsize=fontSize)
-			timeAxes[i].set_xlabel("Time", fontsize=fontSize)
-			timeAxes[i].set_title("Times")
-			if len(files) == 4:
+				timeAxes[i].fill_between(xVals, kernal(xVals) * 100, label="scale", alpha=0.5)
+				kernal = stats.gaussian_kde(mergeTimes)
+				xVals: np.ndarray = np.linspace(0, xmax, 1000)
+				timeAxes[i].fill_between(xVals, kernal(xVals) * 100, label="merge", alpha=0.5)
+				timeAxes[i].set_xlim(left=0, right=xmax)
+				timeAxes[i].legend()
 				ranks: np.ndarray = np.zeros((2, n0 + n1))
 				for x, name in enumerate(sorted(names)):
 					ranks[0, x] = scoresScale[name]
@@ -417,10 +420,11 @@ if __name__ == "__main__":
 				mse: float = MSE(None, None, scaleROC, afcROC)[1]
 
 				scatterAxes[i].plot([0, n0 + n1], [0, n0 + n1], 'r:')
-				for x in range(n0):
-					scatterAxes[i].scatter(ranks[0][x], ranks[1][x], c="b", marker="^", s=4)
 				for x in range(n0, n0 + n1):
-					scatterAxes[i].scatter(ranks[0][x], ranks[1][x], c="g", marker="o", s=4)
+					#only apply the label if it's the last marker, because I'm not doing just one scatter plot
+					scatterAxes[i].scatter(ranks[0][x], ranks[1][x], c="g", marker="o", linestyle='None', s=4, label='+' if x == n0 + n1 - 1 else '')
+				for x in range(n0):
+					scatterAxes[i].scatter(ranks[0][x], ranks[1][x], c="b", marker="^", linestyle='None', s=4, label='-' if x == n0 - 1 else '')
 				#scatterAxes[i].text(20, (n0 + n1)*0.9, reader[-1])
 				scatterAxes[i].set_aspect('equal', 'box')
 				tau: float = stats.kendalltau(ranks[0], ranks[1])[0]
@@ -431,10 +435,12 @@ if __name__ == "__main__":
 				scatterAxes[i].set_title(reader)
 				scatterAxes[i].set_xlabel("Image Ranks from Rating Data", fontsize=fontSize)
 				scatterAxes[i].set_ylabel("Image Ranks from 2AFC Merge", fontsize=fontSize)
+				#tighten up legend. No need for so much white space
+				scatterAxes[i].legend(loc='lower right', numpoints=1, handletextpad=0.1, borderaxespad=0.05, labelspacing=0.1)
 
 				with Pool(initializer=np.random.seed) as p:
 						taus = p.map(bootstrapTau, (ranks for _ in range(1_000)))
-						mses = p.starmap(permutation, ((ranks, list(range(n0)), list(range(n0, n1))) for _ in range(1_000)))
+						mses = p.starmap(permutation, ((ranks, list(range(n0)), list(range(n0, n1)), n0, n1) for _ in range(1_000)))
 
 				xmax: float = max(taus)
 				kernal = stats.gaussian_kde(taus)
@@ -458,6 +464,10 @@ if __name__ == "__main__":
 				scaleTimes: list = [0]
 				taus: list = [0]
 				tau: int = 0
+				timeAxes[i].legend()
+				kernal = stats.gaussian_kde(mergeTimes)
+				xVals: np.ndarray = np.linspace(0, xmax, 1000)
+				timeAxes[i].fill_between(xVals, kernal(xVals) * 100, label="merge", alpha=0.5)
 
 			print(f"{reader} {np.mean(scaleTimes):0.3f}\t\t{np.std(scaleTimes):0.3f}\t\t{np.mean(mergeTimes):0.3f}\t\t\t{np.std(mergeTimes):0.3f}\t\t{tau:0.3f}\t{np.std(taus):0.3f}")
 		fig.set_size_inches(24, 16)
@@ -466,7 +476,27 @@ if __name__ == "__main__":
 			plt.savefig(sys.argv[4], bbox_inches = 'tight', pad_inches = 0)
 		else:
 			plt.show()
+	elif test == 3:
+		with open(sys.argv[2]) as f:
+			results: dict = json.load(f)
+		statistics = list()
+		readers = list()
+		for i, (reader, files) in enumerate(results.items()):
+			statistics.append(list())
+			readers.append(reader)
+			with open(files[2]) as f:
+				for line in f:
+					line = line.replace('[', '').replace(']', '').rstrip()
+					split = line.split(',')
+					if len(split) > 3:
+						statistics[-1].append(split[:2]) # only AUC and variance
+		print('reader\tlayer\tauc\tvariance')
+		for (reader, stats) in zip(readers, statistics):
+			for layer, (auc, var) in enumerate(stats):
+				print(reader, layer, auc, var, sep='\t')
+		
 	else:
 		print("Usage:")
 		print(f"{__file__} 1 [simulation results file]")
 		print(f"{__file__} 2 [json results file for reader studies] [names.txt filename] [optional output directory]")
+		print(f"{__file__} 3 [json results file for reader studies]")

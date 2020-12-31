@@ -22,12 +22,19 @@ Code is provided for the standard scale ranking system, where a score is given b
 This code also does the study described in the paper, a 2AFC study with the software taking care of which images to display at what times. There are a few result files for this. A results.csv is a table where each row (except the first which is a header) contains the two images as their numbers given by the software displayed and then the image chosen. log2.csv is more similar to the scale result file, where it gives the images as their paths, the image chosen, and the amount of time taken.
 Along with that, at every layer the statistics of the layer are outputted.
 
-Terminology
------------
+Terminology and General Notes
+-----------------------------
 * n0: the number of images without a signal/disease
 * n1: the number of images with a signal/disease
 * merge: often used as a shorthand for the mergesort algorithm or a mergesort simulation/study
 * elo: the Massanes and Brankov method
+* scale: where the reader assigns each image a score based on how likely it is to have a disease
+* AFC: where the reader compares images and selects the one more likely to have a disease
+
+Note: for all data output to the console, they can easily be stored as a file by appending "> filename" to the command.
+For example, the analysis command for extracting reader results can be done as 
+
+``python DylAnalyzer.py 3 results.json > analysis.txt``
 
 How to use the repository
 -------------------------
@@ -37,9 +44,9 @@ For help, click the question mark that appears after clicking the button. If the
 
 After reading this section, decide what you want to do. If you want to run a reader study, proceed to the section on that. Likewise for simulations, proceed to the respective sections.
 
-When running files, on Windows "python" should be used, on other systems "python3" should be used before any of the .py files.
+When running files, on Windows "python" should be used, on other systems "python3" should be used before any of the .py files. Likewise, "pip3" should be used on Linux/MacOS systems, "pip" on Windows systems.
 
-All filed are run from the command line, though there are some user interfaces such as for the studies or analyses without output files.
+All files are run from the command line, though there are some user interfaces such as for the studies or analyses without output files.
 
 Installation
 ------------
@@ -52,9 +59,9 @@ This will install all the requirements needed to run everything in the paper and
 
 API Reference
 -------------
+This is the documentation of all functions/classes in all modules
 
 `Link to API reference <https://merge-sort.readthedocs.io/>`__
-
 
 Doing a Reader Study
 --------------------
@@ -82,14 +89,16 @@ To do testing/training run
 Where the answers directory is the directory of the target present images with the target highlighted for training the reader. These need to be in the same alphabetical order as the target present directory images.
 
 If you do not want to connect to a merge sort comparator, just give any
-value for ip and port. This is used when you only need AFC training or training on what signals look like.
+value for ip and port. This is used when you only need AFC training or training on what signals look like ("Answers" mode).
+
+The images chosen are the first n0 and n1 images in their respective folders, sorted alphabetically. So if you want to separate training data and evaluation data, put the images in different directories.
 
 Note that once the "study" button is pressed the program will try to connect to the study, so do not press it unless you are doing a study. It will just wait forever.
 
 To do a merge sort study, run the same command with ip and port.
 
 To start up the comparator, run
-``python3 DylComp.py <desired name of log file> <tcp port> <desired name of roc file>``
+``python3 DylComp.py <desired name of log file> <tcp port> <desired name of ROC file>``
 
 In the directory of DylComp a file called "figure.svg" will exist. If
 you open "dash.html" you will see a dashboard of how the reader is doing
@@ -97,15 +106,17 @@ which is just automatically refreshing "figure.svg". It is recommended
 to keep "figure.svg" as a results file. "dash.html" and "figure.svg" should not be seen by the
 reader while they are doing the study.
 
-Analysis
-~~~~~~~~
+Comparison Analysis
+~~~~~~~~~~~~~~~~~~~
+
+This code analyzes either the amount of time taken for an AFC study, or the difference between AFC and scale performance.
 
 Results for reader study analysis are referenced with a json file. Each
 key should be a reader. Each reader should contain a list of 3 or 4
 elements ordered as:
 
 1. The log from DylAFC
-2. The roc file from DylComp
+2. The ROC file from DylComp
 3. The log file from DylComp
 4. The log from DylScale (optional)
 
@@ -116,40 +127,69 @@ Example:
     {
         "Reader A":[
             "resA/log.csv",
-            "resA/rocs",
+            "resA/ROCs",
             "resA/compA.csv",
             "resA/scaleA123456.123.csv"
         ],
         "Reader B":[
             "resB/log.csv",
-            "resB/rocs",
+            "resB/ROCs",
             "resB/compB.csv",
             "resB/scaleB456789.012.csv"
         ],
         "Reader C":[
             "resC/log.csv",
-            "resC/rocs",
+            "resC/ROCs",
             "resC/compC.csv",
             "resC/scaleC345678.901.csv"
         ]
     }
 
-If there is no log file from DylScale, the analysis will not be able to
-show the results from the scale study.
+If there is no log file from DylScale, the analysis will not be able to show the results from the scale study. As a result, the only analysis done here is the amount of time taken for each comparison.
 
 To analyze the results, run
 
 ``python3 DylAnalyzer.py 2 <json file> <names.txt> [optional output file name]``
 
-Where names.txt is the path of all the images in the study. They must match up with the paths in the scale.ccsv results file.
+Where names.txt is the file generated by DylAFC.py.
 
+A set of graphs is either stored at the output file if provided, or displayed in a GUI. More numeric results are outputted to the console.
+
+Extract Results
+~~~~~~~~~~~~~~~
+To get the results of the study back, use the JSON file from the previous section and run
+
+``python3 DylAnalyzer.py 3 <json file>``
+
+It will output the results to the console, of the format
+
+.. list-table::
+   :widths: 25 25 25 25
+   :header-rows: 0
+
+   * - reader
+     - layer
+     - auc
+     - variance
+   * - Reader A
+     - 0
+     - 0.875
+     - 0.007291666666666667
+   * - Reader A
+     - 1
+     - 0.89
+     - 0.004464285714285714
+   * - ...
+     - ...
+     - ...
+     - ...
 Reproducing many simulations
 ----------------------------
 
 merge/elo
 ~~~~~~~~~
 
-``python3 <main.py or elo.py> <iters> <distributions> <aucs>``
+``python3 <main.py or elo.py> <iterations> <distributions> <aucs>``
 
 Where distributions and aucs are each delimited by commas and no spaces.
 
@@ -167,7 +207,9 @@ merge
 .. code:: python
 
     from main import sort
-    resultss = sort((<dist>, <auc>, <n0>, <n1>))
+    resultss = sort((dist, auc, n0, n1))
+
+Where dist is one of 'exponential' or 'normal', and auc is a floating point number between 0 and 1.
 
 Each element in resultss will be the results for that layer (such that
 in general index 0 is then there are groups of 2, index 1 is groups of
@@ -177,7 +219,7 @@ The format for a result is:
 
 .. code:: python
 
-    (auc, varEstimate, hanleyMcNeil, estimates, mseTrue, mseEmpiric, compLen, minSeps, pc) = resultss[layer index]
+    (auc, varEstimate, hanleyMcNeil, estimates, mseTrue, mseEmpiric, compLen, minSeps, pc) = resultss[layer_index]
 
 where
 
@@ -204,7 +246,7 @@ ELO
 .. code:: python
 
     # don't forget the ()
-    resultss = simulation_ELO_targetAUC((<dist>, <auc>, <n0>, <n1>), rounds=14)
+    resultss = simulation_ELO_targetAUC((dist, auc, n0, n1), rounds=14)
 
 Each element in resultss will be one round.
 
@@ -212,7 +254,7 @@ The format for a result is:
 
 .. code:: python
 
-    (N, cnt, ncmp, var, auc, mseTruth, mseEmpiric, pc) = resultss[layer index]
+    (N, cnt, ncmp, var, auc, mseTruth, mseEmpiric, pc) = resultss[layer_index]
 
 where
 
@@ -232,7 +274,7 @@ Graphs and Where to Find Them
 -----------------------------
 
 -  Graph of the green/red success matrix ROC curve ->
-   ``python3 DylSort.py 1 <n0> <n1> <directory to save file into (optional)>``
+   ``python3 DylSort.py 1 <n0> <n1> <output file (optional)>``
 -  Dashboard of a merge sort simulation file ->
    ``python3 DylAnalyzer.py 1 <filename> <total number of images> <layers>``
 -  Reader study p vals and time analysis ->

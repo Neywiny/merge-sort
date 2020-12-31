@@ -1,7 +1,8 @@
 #!/usr/bin/python3.6
+from typing import List
 import numpy as np
 from sys import argv
-from DylMath import runStats, graphROCs
+from DylMath import genD0D1, runStats, graphROCs
 from DylMerger import MultiMerger
 from DylComp import Comparator
 from DylData import continuousScale
@@ -87,6 +88,7 @@ def treeMergeSort(arr: list, comp, statParams=None, n: int=2, combGroups: bool=T
 	# do the first layer, which pulls from the array
 	mergerss: list = [[], []]
 	i: int = 0
+	segments = n # appease the linter
 	while i < len(sizess[-1]) - 1:
 		segments: int = min(n, len(sizess[-1]) - i)
 		groups: list = list()
@@ -142,9 +144,10 @@ if __name__ == "__main__":
 			print(f"{__file__} 1 <n0> <n1> <directory to save file into (optional)>")
 		else:
 			import matplotlib.pyplot as plt
-			plt.rcParams["font.size"]: int = 10
+			plt.rcParams["font.size"] = 10
 			data, D0, D1 = continuousScale(int(argv[2]), int(argv[3]))
 			comp: Comparator = Comparator(data, rand=True)
+			arr = [] # appease the linter
 			for arr in treeMergeSort(data, comp):
 				pass
 			arrays: list = [arr]
@@ -187,7 +190,7 @@ if __name__ == "__main__":
 			comp: Comparator = Comparator(data, rand=True)
 			comp.genRand(len(D0), len(D1), 7.72, "exponential")
 			comps: list = list()
-			rocs: list = list()
+			rocs: List[tuple] = list()
 			overlapping: bool = argv[2] == "True" if len(argv) == 3 else True
 			for groups in treeMergeSort(data, comp, combGroups=False):
 				rocs.append(list())
@@ -196,7 +199,7 @@ if __name__ == "__main__":
 				for group in groups:
 					arr.extend(group)
 					rocs[-1].append(genROC(group, D0, D1))
-				rocs[-1]: tuple = list(zip(*avROC(rocs[-1])))
+				rocs[-1] = list(zip(*avROC(rocs[-1])))
 				#rocs[-1].reverse()
 				#print(comp.kendalltau(arr), MSE(7.72, rocs[-1], comp.empiricROC()))
 			if not overlapping:
@@ -278,7 +281,7 @@ if __name__ == "__main__":
 			data: list = list(range(int(2**(power - 1)*(2/3))))
 			img: np.ndarray = np.zeros((power, length))
 			np.random.shuffle(data)
-			img[0]: list = data[:]
+			img[0] = data[:]
 			comp: Comparator = Comparator(data, level=0)
 
 			for gIndex, group in enumerate(data):
@@ -293,8 +296,8 @@ if __name__ == "__main__":
 					x += len(group)
 				if len(arr) < len(img[0]):
 					arr.extend([0 for i in range(len(img[0]) - len(arr))])
-				img[y]: list = arr
-			ax.imshow(img, cmap='Greys', extent=[0, length, 0, length], aspect=1)
+				img[y] = arr
+			ax.imshow(img, cmap='Greys', extent=[0, length, 0, length], aspect=1, interpolation='none')
 			ax.set_xticks([])
 			ax.set_yticks([])
 			ax.set_ylabel("Layer")
