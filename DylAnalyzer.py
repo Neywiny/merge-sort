@@ -18,7 +18,8 @@ from DylSort import treeMergeSort
 from DylMath import genX0X1, MSE, auc
 
 def analyzeMergeSims(fileName: str, length: int, layers: int, justOne: bool=False, bar: bool=False) -> tuple:
-	""" analyze a merge sort results file.
+	"""Analyze a merge sort results file.
+
 	If justOne is True, only does the first simulation
 	If bar is True, shows a tqdm progress bar"""
 
@@ -114,6 +115,7 @@ def analyzeMergeSims(fileName: str, length: int, layers: int, justOne: bool=Fals
 
 def analyzeEloSims(filename: str, passes) -> list:
 	"""Analyze an ELO simulation.
+
 	Returns AUC, true Var, bad Var, the lsit of bad vars, mse True, mse Emperic and PC"""
 	aucs = [list() for _ in range(passes)]
 	masVars = [list() for _ in range(passes)]
@@ -146,6 +148,7 @@ def analyzeEloSims(filename: str, passes) -> list:
 
 def analyzeScaleStudy(fileName:str, names:list=None) -> tuple:
 	"""Analyzes a scale study.
+
 	If names parameter given, filters for only those names.
 	Names can be any type of iterable."""
 	times = list()
@@ -172,7 +175,8 @@ def analyzeScaleStudy(fileName:str, names:list=None) -> tuple:
 	return times, x0, x1, scores
 
 def analyzeAFCStudies(log: str, results: str, n0: int, n1: int) -> tuple:
-	"""Extracts the times out of the log file generated from DylAFC
+	"""Extracts the times out of the log file generated from DylAFC.
+
 	extracts the x0 and x1 vectors and the ranks from the results file from DylComp"""
 	times = list()
 	with open(log) as f:
@@ -244,12 +248,12 @@ def analyzeReaderStudies(resultsFile, directory, n0):
 	return AUCss, VARss, PCss, readers, rocScales, roc8s, roc4s
 
 def bootstrapTau(arr: list):
-	"""Function for permuting the columns of the array with replacement"""
+	"""Function for permuting the columns of the array with replacement."""
 	ranks: np.ndarray = arr[:,np.random.randint(len(arr[0]), size=len(arr[0]))]
 	return stats.kendalltau(ranks[0], ranks[1])[0]
 
 def permutation(arr: list, D0: list, D1: list, n0: int, n1: int):
-	"""Permutation test for MSEs"""
+	"""Permutation test for MSEs."""
 	indecies: np.ndarray = np.random.randint(2, size=len(arr[0]))
 	scales: np.ndarray = arr[indecies, range(len(arr[0]))]
 	afcs: np.ndarray = arr[1 - indecies, range(len(arr[0]))]
@@ -491,10 +495,9 @@ if __name__ == "__main__":
 					if len(split) > 3:
 						statistics[-1].append(split[:2]) # only AUC and variance
 		print('reader\tlayer\tauc\tvariance')
-		for (reader, stats) in zip(readers, statistics):
-			for layer, (auc, var) in enumerate(stats):
-				print(reader, layer, auc, var, sep='\t')
-		
+		for (reader, statistic) in zip(readers, statistics):
+			for layer, (_auc, var) in enumerate(statistic):
+				print(reader, layer, _auc, var, sep='\t')
 	else:
 		print("Usage:")
 		print(f"{__file__} 1 [simulation results file]")

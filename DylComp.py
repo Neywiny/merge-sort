@@ -9,14 +9,22 @@ np.seterr(all="ignore")
 from warnings import filterwarnings
 filterwarnings("ignore")
 import socket
+
 class Comparator:
+
 	"""A class for comparing 2 values.
+	
 	Controlled with the optimizaiton level and if you want random decisions or not
 	Either provide objects in init or call .genLookup before you do any comparing
 	Optimization levels: will not optimize, store result, do abc association, do recursive association
-	Rand: defaults to False. If True will create data from random distributions with seed parameter
-	"""
+	Rand: defaults to False. If True will create data from random distributions with seed parameter"""
 	def __init__(self, objects: list = None, level: int = 3, rand: bool=False, seed: int=None):
+		"""Initializes the Comparator.
+		
+		objects can be the list of objects to compare or None if they will be provided later.
+		level determines the amount of optimization attempted. For a merge-sort run this does not matter.
+		rand determines, if the objects are None, if the comparator should split the objects in half and generate random distributions.
+		seed sets the RNG seed."""
 		self.clearHistory()
 		self.rand: bool = rand
 		self.seed: int = seed
@@ -38,21 +46,23 @@ class Comparator:
 		self.desHist: list = list()
 
 	def __len__(self) -> int:
-		"""Returns either the number of comparisons done"""
+		"""Returns either the number of comparisons done."""
 		return self.compHistory if isinstance(self.compHistory, int) else len(self.compHistory)
 
 	def resetPC(self):
-		"""Resets the pc statistics. Call this once per layer if you only want that layer's PC"""
+		"""Resets the pc statistics. Call this once per layer if you only want that layer's PC."""
 		self.c: int = 0
 		self.pc: list = list()
 
 	def kendalltau(self, predicted: list) -> float:
 		"""Returns the kendalltau statistic between the predicted image ID ordering and the true ordering of the image IDs with respect to latent score.
+
 		This method filters image IDs by what's in predicted, so only the ids in predicted are used."""
 		return kendalltau(self.getLatentScore(predicted), list(filter(lambda x: x in self.getLatentScore(predicted), sorted(self.vals))))[0]
 
 	def genRand(self, n0: int, n1: int, sep: float, dist: str):
 		"""Generates the random data. If a seed has not previously been provided, it will be assigned here.
+
 		This new seeding may not work on Windows, so Windows users should assign the seed on their own."""
 		# get a random seed for each node and each process on that node, and the time
 		self.n0: int = n0
@@ -60,7 +70,6 @@ class Comparator:
 		if self.seed == None:
 			from os import getpid
 			from platform import uname
-			from time import time
 			self.seed: int = (int(str(ord(uname()[1][-1])) + str(getpid()) + str(int(time()))) % 2**31)
 		np.random.seed(self.seed)
 		if dist == 'normal':
@@ -72,6 +81,7 @@ class Comparator:
 
 	def empiricROC(self) -> dict:
 		"""Generates and stores the empiric ROC if it needs to.
+
 		Returns the stored ROC curve."""
 		empiric: dict = getattr(self, 'empiric', None)
 		if empiric == None:
@@ -80,6 +90,7 @@ class Comparator:
 
 	def record(self, vals: list):
 		"""Record that these values were seen.
+
 		This is automatically called by min and max."""
 		if not self.bRecord:
 			return
@@ -95,6 +106,7 @@ class Comparator:
 
 	def getLatentScore(self, imgID: int) -> float:
 		"""gets the latent score of a given imgID or array of imgIDs.
+
 		If only one index is provided, also returns if the image is from the disease negative distribution."""
 		if isinstance(imgID, (tuple, list)):
 			return [self.getLatentScore(val)[0] for val in imgID]
@@ -104,7 +116,8 @@ class Comparator:
 			return imgID
 
 	def genSeps(self) -> list:
-		"""Goes throguh the stored records and returns a list of the minimum separations.
+		"""Goes through the stored records and returns a list of the minimum separations.
+
 		If there is no minimum separation (the image has not been seen more than once), uses 2*(n0+n1) as a palceholder"""
 		minseps: List[int] = [2*len(self.objects) for i in range(len(self.objects))]
 		for img, times in self.seps.items():
@@ -113,7 +126,7 @@ class Comparator:
 		return minseps
 
 	def genLookup(self, objects: list):
-		"""Generate the lookup table for each object provided"""
+		"""Generate the lookup table for each object provided."""
 		self.lookup:Dict[Dict] = dict()
 		self.objects: list = objects
 		for datum in objects:
@@ -121,7 +134,7 @@ class Comparator:
 		self.clearHistory()
 
 	def clearHistory(self):
-		"""Clears the history statistics of comparisons"""
+		"""Clears the history statistics of comparisons."""
 		if hasattr(self, "objects"):
 			self.compHistory: list = list()
 			self.last: tuple = None
@@ -131,7 +144,9 @@ class Comparator:
 				self.seps[datum] = list()
 
 	def learn(self, arr: list, img: int=None, maxi: bool=False):
-		"""Learn the order of the array provided, assuming the current optimization level allows it
+		"""Learn the order of the array provided.
+		
+		assuming the current optimization level allows it:
 		if img is provided, learns the arr w.r.t. the img and if it is max or min. arr can also be
 		a filename, in whichcase it will read the file to learn"""
 		if isinstance(arr, str):
@@ -159,6 +174,7 @@ class Comparator:
 
 	def max(self, arr, tryingAgain=False) -> Tuple[int, int]:
 		"""Gets the maximum of the array with respect to the latent scores.
+
 		tryingAgain should always be False unless a network comparator is used.
 		Returns the undex of the maximum ID and the maximum ID."""
 		if len(arr) == 0 or tryingAgain:
@@ -194,6 +210,7 @@ class Comparator:
 
 	def min(self, arr) -> Tuple[int, int]:
 		"""Gets the minimum of the array with respect to the latent scores.
+		
 		Returns the undex of the minimum ID and the minimum ID."""
 		if len(arr) == 0:
 			raise NotImplementedError("I can't take the min of nothing")
@@ -228,6 +245,7 @@ class Comparator:
 
 	def updatePC(self, arr: list, guess, answer):
 		"""If the ids in arr are from different distibutions, adds 1 to the pc denominator.
+
 		If the guess was the answer, adds 1 to the pc numerator."""
 		if self.rand and (arr[0] < self.n0) ^ (arr[1] < self.n0):
 			if guess == answer:
@@ -237,6 +255,7 @@ class Comparator:
 	@staticmethod
 	def optimize(objects: list, lookup: dict, res: bool, a, b) -> int:
 		"""Recursive optimization algorithm for adding a node to a fully connected graph.
+
 		Returns the number of optimizations it did."""
 		if objects:
 			nObjects: list = []
@@ -252,12 +271,16 @@ class Comparator:
 		return 0
 
 class NetComparator(Comparator):
+
 	"""A class for doing comparisons over a network."""
 	# keep payloads to 10 bytes, try for little endian
 	# 'op codes'
 	# cmd -> [0010, 8 bytes, 0011]
 	# max -> [0010 (image 1 32 bits) (image 2 32 bits) 0011], receive 2 32 bit ints denoting index and val respectively
 	def __init__(self, ip: str, port: int, recorder=None, objects: list = None, level: int = 3):
+		"""Initializes the comparator server with the given ip and port.
+
+		See documentation on Comparator for information on objects and level parameters."""
 		super(NetComparator, self).__init__(objects, level)
 		self.ip: str = ip
 		self.port: int = port
@@ -269,6 +292,7 @@ class NetComparator(Comparator):
 		self.plots: list = list()
 
 	def __enter__(self):
+		"""Starts the connection in a context-safe way."""
 		self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		print("getting connected")
 		self.s.bind(('', self.port))
@@ -285,12 +309,16 @@ class NetComparator(Comparator):
 		return self
 
 	def __exit__(self, *args):
+		"""Closes the connection when the context is finished.
+		
+		This can be when the code is done or an error"""
 		self.conn.send(b"I'm going!")
 		self.conn.close()
 		self.s.close()
 
 	def min(self, arr: list) -> Tuple[int, int]:
 		"""Gets the minimum of the array with respect to the latent scores as the opposite of the maximum.
+
 		Returns the undex of the minimum ID and the minimum ID."""
 		res = self.max(arr)
 		if res != 'done':

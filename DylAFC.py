@@ -4,11 +4,12 @@ import socket
 import time
 import numpy as np
 from sys import argv
-from tkinter import *
+from tkinter import Tk, Frame, Label, E, W, Event, StringVar, Radiobutton, mainloop
 from PIL import ImageTk, Image
 
 
 class AFC:
+
 	"""A Class for doing AFC studies. This one only does 2AFC. It is used for integrating with a tkinter interface as seen in DylAFC."""
 	def __init__(self, posDir: str, negDir: str, ansDir: str, ip: str, port: str, n0: int, n1: int, logFile: str):
 		"""Creates a new AFC class with the given parameters. Opens the file name provided for logging. Does not connect yet."""
@@ -51,6 +52,7 @@ class AFC:
 		self.s = s
 		self.connected: bool = True
 	def __enter__(self):
+		"""Sets up the images needed for the study."""
 		# get pics, use sorted() to ensure it's the same ones every time
 		offset: int = 0
 		posNames: list = [self.posDir + img for img in sorted(os.listdir(self.posDir))][offset:offset + self.n1]
@@ -79,7 +81,8 @@ class AFC:
 		self.wrong = ImageTk.PhotoImage(Image.open("wrong.png"))
 		return self
 	def showPics(self, pic1, pic2: int=None):
-		""" show the pictures identified by the image number arguments.
+		"""show the pictures identified by the image number arguments.
+		
 		If pic2 is not provided, pic1 is a boolean value for displaying either correct or incorrect."""
 		if self.mode.get() == 'answers':
 			self.img1.configure(image=self.ansPairs[pic1][0])
@@ -97,12 +100,13 @@ class AFC:
 			self.img2.configure(image=self.images[pic2])
 		root.update()
 	def switchModes(self):
-		"""Call this when switching modes to make sure the class is ready to start a mode"""
+		"""Call this when switching modes to make sure the class is ready to start a mode."""
 		self.ready: bool = True
 		self.decision: int = -1
 		self.imgIndex: int = 0
 	def run(self):
 		"""Finite state machine based on the mode, the connection status, and whether the reader has decided an image or not.
+		
 		This will call itself on its own, so just make sure to call this method once with <root>.after()"""
 		root.update()
 		if self.mode.get() == 'training':
@@ -201,7 +205,7 @@ class AFC:
 
 		root.after(16, self.run)
 	def pressed(self, event: Event):
-		"""Call this when the user has pressed a keyboard button"""
+		"""Call this when the user has pressed a keyboard button."""
 		#print("event!", event.keycode)
 		if self.key_left == -2:
 			self.key_left = event.keycode
@@ -215,7 +219,7 @@ class AFC:
 		if event.keycode == self.key_left or event.keycode == self.key_right:
 			self.decision: int = event.keycode
 	def clicked(self, event: Event):
-		"""Call this when the user has clicked the mouse"""
+		"""Call this when the user has clicked the mouse."""
 		self.counter: int = 0
 		if event.y > 100:
 			if event.x > WIDTH - IMGWIDTH:
@@ -223,6 +227,7 @@ class AFC:
 			elif event.x < IMGWIDTH:
 				self.decision: int = self.key_left
 	def __exit__(self, *args):
+		"""Shuts down the connection and closes the window."""
 		self.f.close()
 		if self.connected:
 			self.s.close()

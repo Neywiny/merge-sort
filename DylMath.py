@@ -15,12 +15,12 @@ try:
 	#matplotlib.rc('font', **font)
 	from matplotlib.collections import PatchCollection
 	from matplotlib.patches import Rectangle
-except BaseException as e:
+except BaseException:
 	pass
-from DylData import *
+from DylData import continuousScale
 unbiasedMeanMatrixVar = ROC1.unbiasedMeanMatrixVar
 def paramToParams(predicted: list, D0: list=None, D1: list=None) -> Tuple[list, list, list]:
-	"""Takes one parameter and splits it into three if predicted is a 2d list"""
+	"""Takes one parameter and splits it into three if predicted is a 2d list."""
 	if isinstance(predicted[0], (list, tuple)):
 		return predicted[0], predicted[1], predicted[2]
 	else:
@@ -28,6 +28,7 @@ def paramToParams(predicted: list, D0: list=None, D1: list=None) -> Tuple[list, 
 
 def auc(results: tuple, D0: list=None, D1: list=None) -> float:
 	""" Takes an ROC curve from genROC and returns the AUC.
+
 	If results is a prediction not an ROC curve, generates the ROC curve.
 	If results is already an ROC curve, D0 and D1 are not required."""
 	if not isinstance(results[0], (list, tuple)):
@@ -39,7 +40,7 @@ def auc(results: tuple, D0: list=None, D1: list=None) -> float:
 	return abs(total)
 
 def hanleyMcNeil(auc: float, n0: int, n1: int) -> float:
-	"""The very good power-law variance estimate from Hanley/McNeil"""
+	"""The very good power-law variance estimate from Hanley/McNeil."""
 	auc2=auc*auc
 	q1=auc/(2.-auc)
 	q2=2.*auc2/(1.+auc)
@@ -47,6 +48,7 @@ def hanleyMcNeil(auc: float, n0: int, n1: int) -> float:
 
 def calcNLayers(arr: list) -> int:
 	"""Returns the number of layers that would be needed to sort.
+
 	If arr is the a tuple or list, uses the length.
 	If arr is already the length, uses that."""
 	if isinstance(arr, int):
@@ -64,7 +66,8 @@ def genSep(dist: str, auc: float) -> float:
 	raise NotImplementedError("Cannot gen sep for that distribution")
 
 def MSE(sep: float, dist: str, ROC: list, rocEmpiric: list=None) -> Tuple[float, float, float]:
-	"""Returns the MSE of the given ROC with respect to:
+	"""Returns the MSE of the given ROC.
+
 	If sep and dist are not None: the true ROC from sep and dist
 	If rocEmpiric is not None: the MSE between the Empiric and ROC
 	If sep and dist are None, the first value returned is always 0
@@ -94,6 +97,7 @@ def MSE(sep: float, dist: str, ROC: list, rocEmpiric: list=None) -> Tuple[float,
 
 def genX0X1(predicted: tuple, D1: tuple=None, D0: tuple=None) -> Tuple[list, list]:
 	"""Generates x0 and x1 vectors out of the given parameters.
+
 	D1 and D0 should never be smaller than the predicted array, but are often bigger."""
 	predicted, D0, D1 = paramToParams(predicted, D0, D1)
 	x0, x1 = genD0D1((D0, D1), predicted)
@@ -101,6 +105,7 @@ def genX0X1(predicted: tuple, D1: tuple=None, D0: tuple=None) -> Tuple[list, lis
 
 def genD0D1(d0d1: list, arr: list) -> tuple:
 	"""Generates filtered D0 and D1 vectors.
+
 	d0d1 is (D0, D1) together as a tuple/list."""
 	D0, D1 = list(), list()
 	for item in arr:
@@ -111,7 +116,7 @@ def genD0D1(d0d1: list, arr: list) -> tuple:
 	return D0, D1
 
 def genROC(predicted: tuple, D1: list=None, D0: list=None) -> list:
-	"""Returns a list of collections of x,y coordinates in order of the threshold"""
+	"""Returns a list of collections of x,y coordinates in order of the threshold."""
 	predicted, D0, D1 = paramToParams(predicted, D0, D1)
 	x0 = list()
 	x1 = list()
@@ -139,6 +144,7 @@ def graphROC(predicted: tuple, D0: list=None, D1: list=None):
 
 def graphROCs(arrays: list, withPatches: bool=False, withLine: bool=True, D0: list=None, D1: list=None):
 	"""Graphs a collection of array predictions. Takes the arrays as they would come out of DylSort sorts.
+
 	If withPatches, puts a color coded success matrix behind the line.
 	If withLine, graphs the line.
 	Returns the plt handle, does not display the results."""
@@ -191,7 +197,7 @@ def graphROCs(arrays: list, withPatches: bool=False, withLine: bool=True, D0: li
 	return plt
 
 def avROC(rocs: list) -> tuple:
-	""" Averages ROC curves. Rocs parameter are ROC curves from genROC."""
+	"""Averages ROC curves. Rocs parameter are ROC curves from genROC."""
 	#hard coded SeSp
 	#e = 9*sys.float_info.epsilon
 	# convert [(x1, y1), (x2, y2) ...] into np array for better arithmatic
@@ -217,6 +223,7 @@ def avROC(rocs: list) -> tuple:
 
 def successMatrix(predicted: list, D0: list, D1: list):
 	"""Creates the success matrix for the predicted ordering.
+
 	Checks to make sure it got every entry filled."""
 	arr: np.ndarray = np.full((len(D1), len(D0)), -1)
 	indecies: Dict[int] = dict()
@@ -231,6 +238,7 @@ def successMatrix(predicted: list, D0: list, D1: list):
 
 def runStats(groups: list, params: list, comp) -> list:
 	"""Runs stats on the groups provided.
+
 	Params parameter must be: ((d0d1), dist, targetAUC, n, currLayer, len(mergers))"""
 
 	aucs, varOfSM, hanleyMcNeils, estimates = list(), list(), list(), list()

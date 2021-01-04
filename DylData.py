@@ -3,6 +3,7 @@ import numpy as np
 np.seterr(all="ignore")
 def continuousScale(*args):
 	"""Creates a set of continuous scale data.
+
 	If provided a filename, returns the indecies for sorting, D0, and D1
 	If provided a number, just creates and returns the indecies alternating from D0 and D1 indecies
 	If provided 2 numbers, returns D0 and D1 interleaved evenly into arr, D0, and D1"""
@@ -25,7 +26,7 @@ def continuousScale(*args):
 			newData: list = [-1 for i in range(len(data))]
 			#print(data)
 			for i, d in enumerate(sorted(data)):
-				newData[i]: int = data.index(d)
+				newData[i] = data.index(d)
 				D0.sort()
 				D1.sort()
 			return newData, D0, D1

@@ -1,22 +1,22 @@
 #!/usr/bin/python3.6
 import numpy as np
 from numpy import matlib as mb
-from ROC1 import *
+from ROC1 import rocxy, successmatrix, unbiasedMeanMatrixVar
 from warnings import filterwarnings
 from DylMath import MSE, genSep
 from sys import argv
+from tqdm import trange, tqdm
 
 filterwarnings('ignore')
 
 def simulation_ELO_targetAUC(args: list, rounds: int=14, retRoc=False):
-	"""
-	Args is of the form (dist, auc, n0, n1).
+	"""Args is of the form (dist, auc, n0, n1).
 	Rounds is how many rounds of (n0 + n1)/2 comparisons it will so.
 	retRoc determines if the function will return its ROC curve or its statistics.
 
 	@Author: Francesc Massanes (fmassane@iit.edu)
-	@Version: 0.1 (really beta)
-	"""
+	@Version: 0.1 (really beta)"""
+	
 	dist, auc, n0, n1 = args
 	if n0 != n1:
 		raise NotImplementedError("n0 must equal n1")
@@ -112,7 +112,6 @@ if __name__ == '__main__':
 			import matplotlib.pyplot as plt
 			from matplotlib.animation import FuncAnimation
 			from matplotlib.animation import PillowWriter
-			from tqdm import tqdm
 			frames = 100
 			results = simulation_ELO_targetAUC(('normal', 0.8853, 128, 128), rounds=frames)
 			fig, ax = plt.subplots()
@@ -170,8 +169,8 @@ if __name__ == '__main__':
 				ax2.plot(*roc, label='predicted')
 				ax2.legend()
 				ax2.set_title(f"merge\n{i+1}, {mseTheo[0]*1000:02.3f}E(-3), {mseEmp[0]*1000:02.3f}E(-3)")
-				plt.savefig(f"both")
-				im.append_file(f"both.png", delay=1000)
+				plt.savefig("both")
+				im.append_file("both.png", delay=1000)
 				ax1.clear()
 				ax2.clear()
 			im.save("both.png")
@@ -179,7 +178,7 @@ if __name__ == '__main__':
 		from DylComp import Comparator
 		from DylSort import treeMergeSort
 		from DylData import continuousScale
-		from DylMath import genROC, avROC, auc
+		from DylMath import genROC, avROC
 		import matplotlib.pyplot as plt
 		data, D0, D1 = continuousScale(128, 128)
 		comp = Comparator(data, rand=True, level=0, seed=20)

@@ -14,6 +14,7 @@ from DylSort import treeMergeSort
 from DylData import continuousScale
 def sort(args) -> list:
 	"""Performs a sort based on the given args.
+	
 	Args is of the format (dist, auc, n0, n1) and is one tuple/list.
 	Throws an error if the array did not sort correctly.
 	Returns the results."""
@@ -34,7 +35,8 @@ def sort(args) -> list:
 	return results
 
 def multiRunner(sorter, sorterName: str, distributions: list=None, aucs: list=None):
-	"""Calls the given sorter for either the provided distributions and aucs or the command line arguments:
+	"""Calls the given sorter for either the provided distributions and aucs or the command line arguments.
+
 	command line args as: distributions and aucs each separated by commas no spaces, separated by a space
 	sorter must take: one argument that equals (unique threadID, distribution, auc, n0, n1)
 	sorter must return: a list of results to be pickled and appended to the file"""

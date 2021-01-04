@@ -1,7 +1,8 @@
 
 def bLen(*args):
-	"""bLen(*args) -> len(args)
-	a better version of len, which takes args because in python3 everything is a generator"""
+	"""bLen(*args) -> len(args).
+	
+	A better version of len, which takes args because in python3 everything is a generator"""
 	return len(args)
 true = True
 false = False

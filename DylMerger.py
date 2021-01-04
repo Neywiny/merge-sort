@@ -1,6 +1,10 @@
 #!/usr/bin/python3.6
 class MultiMerger:
 	def __init__(self, groups: list, comp, start=0, stop=0, toggle:bool=True):
+		"""Initializes a Merger object mergning on the groups parameter.
+		
+		start and stop are not needed.
+		toggle determines if it merges from both ends."""
 		groups: list = list(filter(lambda x: len(x) > 0, groups))
 		self.groups: list = [group for group in groups]
 		self.comp = comp
@@ -22,7 +26,7 @@ class MultiMerger:
 			if res == 'done':
 				return 'done'
 			minInd, minVal = res
-			self.output[self.OIndex]: int = minVal
+			self.output[self.OIndex] = minVal
 			self.indecies[minInd] += 1
 			self.OIndex += 1
 		elif self.left == False:
@@ -31,7 +35,7 @@ class MultiMerger:
 			if res == 'done':
 				return 'done'
 			maxInd, maxVal = res
-			self.output[self.OIndexRight]: int = maxVal
+			self.output[self.OIndexRight] = maxVal
 			self.indeciesRight[maxInd] -= 1
 			self.OIndexRight -= 1
 		# check to see if that group is doneski
@@ -42,7 +46,7 @@ class MultiMerger:
 				self.indeciesRight.pop(i)
 		if len(self.groups) == 1:
 			for i in range(self.indecies[0], self.indeciesRight[0] + 1):
-				self.output[self.OIndex]: int = self.groups[0][i]
+				self.output[self.OIndex] = self.groups[0][i]
 				self.OIndex += 1
 			return True
 		self.left ^= self.toggle # toggle self.left if self.toggle == True
@@ -50,6 +54,7 @@ class MultiMerger:
 
 def MultiMergerGenerator(groups: list, comp, start=0, stop=0, toggle:bool=True, left:bool=True):
 	"""A generator version of the MultiMerger class.
+
 	Not in use due to the inability to see what's currently inside a generator object."""
 	groups: list = list(filter(lambda x: len(x) > 0, groups))
 	indecies: list = [0 for group in groups]
@@ -66,7 +71,7 @@ def MultiMergerGenerator(groups: list, comp, start=0, stop=0, toggle:bool=True, 
 			if res == 'done':
 				yield 'done'
 			minInd, minVal = res
-			output[OIndex]: int = minVal
+			output[OIndex] = minVal
 			indecies[minInd] += 1
 			OIndex += 1
 		elif left == False:
@@ -75,7 +80,7 @@ def MultiMergerGenerator(groups: list, comp, start=0, stop=0, toggle:bool=True, 
 			if res == 'done':
 				yield 'done'
 			maxInd, maxVal = res
-			output[OIndexRight]: int = maxVal
+			output[OIndexRight] = maxVal
 			indeciesRight[maxInd] -= 1
 			OIndexRight -= 1
 		# check to see if that group is doneski
@@ -86,7 +91,7 @@ def MultiMergerGenerator(groups: list, comp, start=0, stop=0, toggle:bool=True, 
 				indeciesRight.pop(i)
 		if len(groups) == 1:
 			for i in range(indecies[0], indeciesRight[0] + 1):
-				output[OIndex]: int = groups[0][i]
+				output[OIndex] = groups[0][i]
 				OIndex += 1
 			yield output
 		left ^= toggle # toggle left if toggle == True

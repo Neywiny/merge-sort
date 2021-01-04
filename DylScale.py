@@ -2,15 +2,22 @@
 import os
 from numpy import random
 from sys import argv
-from tkinter.constants import *
-from tkinter import *
+from tkinter.constants import HORIZONTAL
+from tkinter import Event, Label, Tk, Canvas, Frame, Button, NW, E
 from PIL import ImageTk, Image, ImageDraw
 from time import time
+
 class Rating:
+
 	"""A class for displaying an image and recording the ratins and timings of the reader.
 	Label parameter is the label where the image is going to be drawn.
 	User must assign the instantiated rating class a canvas for drawing a bar where the reader clicked."""
 	def __init__(self, posDir: str, negDir: str, n: int, outputFile: str, offset: str, label: Label):
+		""" Initializes the scale rating object.
+
+		offset can be either the int or string representation of the int for the first [offset] images to exclude from the study.
+		label is the place to draw the current image."""
+
 		self.decision: int = -1
 		self.posDir: str = posDir
 		self.negDir: str = negDir
@@ -62,7 +69,7 @@ class Rating:
 		self.canvas.create_rectangle(0, event.y, 100, event.y + 2, fill="blue", tags=("bar"))
 
 def hex2rgb(str_rgb):
-	"""A function that takes hex values and converts them to rgb"""
+	"""A function that takes hex values and converts them to rgb."""
 	#https://github.com/vaab/colour/blob/master/colour.py
 	try:
 		rgb = str_rgb[1:]
@@ -75,10 +82,13 @@ def hex2rgb(str_rgb):
 	except:
 		raise ValueError("Invalid value %r provided for rgb color."% str_rgb)
 	return tuple(int(v, 16) for v in (r, g, b))
+
 class GradientFrame(Canvas):
+
 	"""A canvas with a gradient drawn on it."""
 	#https://stackoverflow.com/questions/11892521/tkinter-custom-window
 	def __init__(self, master, from_color, to_color, width=None, height=None, orient=HORIZONTAL, steps=None, **kwargs):
+		"""Creates the Gradient Frame of the specified parameters."""
 		Canvas.__init__(self, master, **kwargs)
 		if steps is None:
 			if orient == HORIZONTAL:
@@ -143,9 +153,9 @@ if __name__ == "__main__":
 					x0.append(score)
 				else:
 					x1.append(score)
-				time = float(line[2])
-				if time < 30:
-					times.append(time)
+				curr_time = float(line[2])
+				if curr_time < 30:
+					times.append(curr_time)
 		x1, x0 = np.array(x1), np.transpose(x0)
 		print(len(x1), len(x0))
 		roc = ROC1.rocxy(x1, x0)
@@ -170,6 +180,9 @@ if __name__ == "__main__":
 		title = Label(root, text="Choose the percent chance of there being a signal")
 		title.grid(row=0, column=0)
 		label = Label(root)
+		for i in range(1, 3):
+			if not argv[i].endswith('/'):
+				argv[i] += '/'
 		if len(argv) < 6:
 			argv.append("0")
 		try:

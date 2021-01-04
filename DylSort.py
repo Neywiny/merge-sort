@@ -9,6 +9,7 @@ from DylData import continuousScale
 
 def validate(arr: list):
 	"""Throws errors if the array to be validated is invalid.
+
 	Invalid is if there is a -1 in the array or if there are duplicates."""
 	if -1 in arr:
 		raise FloatingPointError("it didn't actually do it")
@@ -17,7 +18,8 @@ def validate(arr: list):
 			raise EnvironmentError(f"duplicated {v}")
 
 def mergeSort(arr: list, comp: Comparator, statParams: list=None, n: int=2, combGroups: bool=True, sortGroups: bool=False) -> list:
-	"""MergeSort(arr: list)
+	"""Sorts the array with the given comparator.
+	
 	statParams must be the format ((D0, D1), dist, target AUC)
 	combGroups determins if the returned array is one list or each group as its own list.
 	sortGroups determins if groups will be sorted by size in the sort.
@@ -57,12 +59,13 @@ def mergeSort(arr: list, comp: Comparator, statParams: list=None, n: int=2, comb
 			arr: list = groups
 		# run dem stats
 		if statParams:
-			stats: list = runStats(groups, statParams + [n, currLayer, len(mergerss)], comp)
+			stats: list = runStats(groups, statParams + [n, currLayer, len(mergers)], comp)
 			yield arr, stats
 		else:
 			yield arr
 def treeMergeSort(arr: list, comp, statParams=None, n: int=2, combGroups: bool=True):
 	"""Sorts an array with the provided comparator.
+
 	statParams must be the format ((D0, D1), dist, target AUC) if it is provided.
 	If n is provided, does at most nAFC type comparisons (ex if n=4, may do most 4AFC, maybe some 3AFC, rest 2AFC)
 	combGroups determins if the returned array is one list or each group as its own list.
